@@ -16,7 +16,7 @@ namespace PeluqueriaApp
             ConfigurarDataGrid();
             CargarUsuarios();
         }
-        // buenas
+        // buenas tardes familia bendiciones
         private void ConfigurarDataGrid()
         {
             UsuariosDataGrid.Columns.Clear();
