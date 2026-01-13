@@ -3,3 +3,15 @@
 ################################################################################
 
 /.vs
+# Ignorar carpetas temporales de Visual Studio
+.vs/
+*/.vs/
+
+# Ignorar resultados de compilación
+bin/
+obj/
+*/bin/
+*/obj/
+
+# Archivos de usuario
+*.user
