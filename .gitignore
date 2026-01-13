@@ -1,17 +1,31 @@
-﻿################################################################################
-# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
-################################################################################
+﻿## --- Visual Studio y Compilación ---
+# Carpetas de compilación
+[Bb]in/
+[Oo]bj/
 
-/.vs
-# Ignorar carpetas temporales de Visual Studio
+# Carpetas temporales y caché de Visual Studio
 .vs/
-*/.vs/
-
-# Ignorar resultados de compilación
-bin/
-obj/
-*/bin/
-*/obj/
-
-# Archivos de usuario
+.vscode/
+# Archivos de opciones de usuario (importante)
 *.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+
+## --- Sistema Operativo ---
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Mac (Apple)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## --- Otros ---
+# Archivos de log
+*.log
+# Archivos de bloqueo de paquetes (opcional, pero a veces útil)
+project.lock.json
