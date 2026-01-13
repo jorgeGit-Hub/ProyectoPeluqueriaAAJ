@@ -16,6 +16,8 @@ namespace PeluqueriaApp
         private TextBox ContrasenaTxt;
         private Label RolLbl;
         private ComboBox RolCombo;
+        private Label EspecialidadLbl;
+        private TextBox EspecialidadTxt;
         private Button GuardarBtn;
         private Button CancelarBtn;
         private Panel FormPanel;
@@ -34,13 +36,15 @@ namespace PeluqueriaApp
             this.ContrasenaTxt = new TextBox();
             this.RolLbl = new Label();
             this.RolCombo = new ComboBox();
+            this.EspecialidadLbl = new Label();
+            this.EspecialidadTxt = new TextBox();
             this.GuardarBtn = new Button();
             this.CancelarBtn = new Button();
 
             // 
             // CrearEditarUsuarioForm
             // 
-            this.ClientSize = new Size(600, 550);
+            this.ClientSize = new Size(600, 650);
             this.Text = "Gestión de Usuario";
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = Color.FromArgb(250, 245, 240);
@@ -53,7 +57,7 @@ namespace PeluqueriaApp
             // 
             this.FormPanel.BackColor = Color.White;
             this.FormPanel.Location = new Point(50, 30);
-            this.FormPanel.Size = new Size(500, 480);
+            this.FormPanel.Size = new Size(500, 580);
 
             // 
             // TituloLbl
@@ -157,7 +161,27 @@ namespace PeluqueriaApp
             this.RolCombo.DropDownStyle = ComboBoxStyle.DropDownList;
             this.RolCombo.BackColor = Color.FromArgb(250, 245, 240);
             this.RolCombo.Items.AddRange(new object[] { "Administrador", "Alumno", "Cliente" });
-            this.RolCombo.SelectedIndex = 2; // Cliente por defecto
+            this.RolCombo.SelectedIndex = 1; // Alumno por defecto
+
+            // 
+            // EspecialidadLbl
+            // 
+            this.EspecialidadLbl.Text = "Especialidad *";
+            this.EspecialidadLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EspecialidadLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.EspecialidadLbl.AutoSize = true;
+            this.EspecialidadLbl.Location = new Point(50, 440);
+            this.EspecialidadLbl.Visible = false;
+
+            // 
+            // EspecialidadTxt
+            // 
+            this.EspecialidadTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.EspecialidadTxt.Size = new Size(400, 32);
+            this.EspecialidadTxt.Location = new Point(50, 465);
+            this.EspecialidadTxt.BorderStyle = BorderStyle.FixedSingle;
+            this.EspecialidadTxt.BackColor = Color.FromArgb(250, 245, 240);
+            this.EspecialidadTxt.Visible = false;
 
             // 
             // GuardarBtn
@@ -165,7 +189,7 @@ namespace PeluqueriaApp
             this.GuardarBtn.Text = "💾 Guardar";
             this.GuardarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             this.GuardarBtn.Size = new Size(180, 50);
-            this.GuardarBtn.Location = new Point(80, 440);
+            this.GuardarBtn.Location = new Point(80, 520);
             this.GuardarBtn.BackColor = Color.FromArgb(255, 140, 0);
             this.GuardarBtn.ForeColor = Color.White;
             this.GuardarBtn.FlatStyle = FlatStyle.Flat;
@@ -179,7 +203,7 @@ namespace PeluqueriaApp
             this.CancelarBtn.Text = "❌ Cancelar";
             this.CancelarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             this.CancelarBtn.Size = new Size(180, 50);
-            this.CancelarBtn.Location = new Point(280, 440);
+            this.CancelarBtn.Location = new Point(280, 520);
             this.CancelarBtn.BackColor = Color.FromArgb(139, 90, 60);
             this.CancelarBtn.ForeColor = Color.White;
             this.CancelarBtn.FlatStyle = FlatStyle.Flat;
@@ -201,6 +225,8 @@ namespace PeluqueriaApp
             this.FormPanel.Controls.Add(this.ContrasenaTxt);
             this.FormPanel.Controls.Add(this.RolLbl);
             this.FormPanel.Controls.Add(this.RolCombo);
+            this.FormPanel.Controls.Add(this.EspecialidadLbl);
+            this.FormPanel.Controls.Add(this.EspecialidadTxt);
             this.FormPanel.Controls.Add(this.GuardarBtn);
             this.FormPanel.Controls.Add(this.CancelarBtn);
 

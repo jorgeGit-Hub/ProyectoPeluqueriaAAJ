@@ -24,6 +24,8 @@ namespace PeluqueriaApp
         private Button BuscarBtn;
         private Button CrearUsuarioBtn;
         private DataGridView UsuariosDataGrid;
+        private Button EditarBtn;
+        private Button EliminarBtn;
 
         private void InitializeComponent()
         {
@@ -46,6 +48,8 @@ namespace PeluqueriaApp
             this.BuscarBtn = new Button();
             this.CrearUsuarioBtn = new Button();
             this.UsuariosDataGrid = new DataGridView();
+            this.EditarBtn = new Button();
+            this.EliminarBtn = new Button();
 
             ((System.ComponentModel.ISupportInitialize)(this.UsuariosDataGrid)).BeginInit();
 
@@ -307,7 +311,7 @@ namespace PeluqueriaApp
             // 
             this.UsuariosDataGrid.Name = "UsuariosDataGrid";
             this.UsuariosDataGrid.Location = new Point(290, 220);
-            this.UsuariosDataGrid.Size = new Size(1070, 550);
+            this.UsuariosDataGrid.Size = new Size(1070, 480);
             this.UsuariosDataGrid.BackgroundColor = Color.White;
             this.UsuariosDataGrid.BorderStyle = BorderStyle.None;
             this.UsuariosDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -327,6 +331,34 @@ namespace PeluqueriaApp
             this.UsuariosDataGrid.ReadOnly = true;
             this.UsuariosDataGrid.AllowUserToAddRows = false;
             this.UsuariosDataGrid.AllowUserToDeleteRows = false;
+
+            // 
+            // EditarBtn
+            // 
+            this.EditarBtn.Text = "✏️ Editar";
+            this.EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EditarBtn.Size = new Size(150, 45);
+            this.EditarBtn.Location = new Point(290, 720);
+            this.EditarBtn.BackColor = Color.FromArgb(255, 140, 0);
+            this.EditarBtn.ForeColor = Color.White;
+            this.EditarBtn.FlatStyle = FlatStyle.Flat;
+            this.EditarBtn.FlatAppearance.BorderSize = 0;
+            this.EditarBtn.Cursor = Cursors.Hand;
+            this.EditarBtn.Click += new System.EventHandler(this.EditarBtn_Click);
+
+            // 
+            // EliminarBtn
+            // 
+            this.EliminarBtn.Text = "🗑️ Eliminar";
+            this.EliminarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EliminarBtn.Size = new Size(150, 45);
+            this.EliminarBtn.Location = new Point(460, 720);
+            this.EliminarBtn.BackColor = Color.FromArgb(200, 50, 50);
+            this.EliminarBtn.ForeColor = Color.White;
+            this.EliminarBtn.FlatStyle = FlatStyle.Flat;
+            this.EliminarBtn.FlatAppearance.BorderSize = 0;
+            this.EliminarBtn.Cursor = Cursors.Hand;
+            this.EliminarBtn.Click += new System.EventHandler(this.EliminarBtn_Click);
 
             // 
             // Add controls to LateralPanel
@@ -351,6 +383,8 @@ namespace PeluqueriaApp
             // 
             // Add controls to Form
             // 
+            this.Controls.Add(this.EliminarBtn);
+            this.Controls.Add(this.EditarBtn);
             this.Controls.Add(this.UsuariosDataGrid);
             this.Controls.Add(this.CrearUsuarioBtn);
             this.Controls.Add(this.BuscarBtn);

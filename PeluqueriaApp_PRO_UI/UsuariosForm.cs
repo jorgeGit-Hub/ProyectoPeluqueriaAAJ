@@ -16,7 +16,7 @@ namespace PeluqueriaApp
             ConfigurarDataGrid();
             CargarUsuarios();
         }
-        // buenas tardes familia bendiciones
+
         private void ConfigurarDataGrid()
         {
             UsuariosDataGrid.Columns.Clear();
@@ -29,68 +29,41 @@ namespace PeluqueriaApp
             UsuariosDataGrid.Columns["idUsuario"].Width = 50;
         }
 
-        private void CargarUsuarios()
+        private async void CargarUsuarios()
         {
-            var url = "http://localhost:8090/api/usuarios";
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Accept = "application/json";
-
-            // Añadir token de autorización
-            if (!string.IsNullOrEmpty(ApiService.Token))
-            {
-                request.Headers.Add("Authorization", $"Bearer {ApiService.Token}");
-            }
-
             try
             {
-                using (WebResponse response = request.GetResponse())
+                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
+
+                UsuariosDataGrid.Rows.Clear();
+
+                if (usuarios != null && usuarios.Count > 0)
                 {
-                    using (Stream strReader = response.GetResponseStream())
+                    foreach (var usuario in usuarios)
                     {
-                        if (strReader == null) return;
-                        using (StreamReader objReader = new StreamReader(strReader))
-                        {
-                            string responseBody = objReader.ReadToEnd();
-
-                            // Deserializar la respuesta
-                            var usuarios = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Usuario>>(responseBody);
-
-                            // Limpiar DataGrid
-                            UsuariosDataGrid.Rows.Clear();
-
-                            // Cargar datos
-                            if (usuarios != null && usuarios.Count > 0)
-                            {
-                                foreach (var usuario in usuarios)
-                                {
-                                    UsuariosDataGrid.Rows.Add(
-                                        usuario.idUsuario,
-                                        usuario.nombre ?? "",
-                                        usuario.apellidos ?? "",
-                                        usuario.correo ?? "",
-                                        usuario.rol ?? ""
-                                    );
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show("No hay usuarios registrados", "Información",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            }
-                        }
+                        UsuariosDataGrid.Rows.Add(
+                            usuario.idUsuario,
+                            usuario.nombre ?? "",
+                            usuario.apellidos ?? "",
+                            usuario.correo ?? "",
+                            usuario.rol ?? ""
+                        );
                     }
                 }
+                else
+                {
+                    MessageBox.Show("No hay usuarios registrados", "Información",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar usuarios: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BuscarBtn_Click(object sender, EventArgs e)
+        private async void BuscarBtn_Click(object sender, EventArgs e)
         {
             string textoBusqueda = BuscarUsuariosTxt.Text.Trim();
 
@@ -100,60 +73,38 @@ namespace PeluqueriaApp
                 return;
             }
 
-            var url = "http://localhost:8090/api/usuarios";
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Accept = "application/json";
-
-            if (!string.IsNullOrEmpty(ApiService.Token))
-            {
-                request.Headers.Add("Authorization", $"Bearer {ApiService.Token}");
-            }
-
             try
             {
-                using (WebResponse response = request.GetResponse())
+                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
+
+                UsuariosDataGrid.Rows.Clear();
+
+                if (usuarios != null)
                 {
-                    using (Stream strReader = response.GetResponseStream())
+                    foreach (var usuario in usuarios)
                     {
-                        if (strReader == null) return;
-                        using (StreamReader objReader = new StreamReader(strReader))
+                        if ((usuario.nombre?.ToLower().Contains(textoBusqueda.ToLower()) == true) ||
+                            (usuario.apellidos?.ToLower().Contains(textoBusqueda.ToLower()) == true) ||
+                            (usuario.correo?.ToLower().Contains(textoBusqueda.ToLower()) == true))
                         {
-                            string responseBody = objReader.ReadToEnd();
-                            var usuarios = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Usuario>>(responseBody);
-
-                            UsuariosDataGrid.Rows.Clear();
-
-                            if (usuarios != null)
-                            {
-                                foreach (var usuario in usuarios)
-                                {
-                                    if ((usuario.nombre?.ToLower().Contains(textoBusqueda.ToLower()) == true) ||
-                                        (usuario.apellidos?.ToLower().Contains(textoBusqueda.ToLower()) == true) ||
-                                        (usuario.correo?.ToLower().Contains(textoBusqueda.ToLower()) == true))
-                                    {
-                                        UsuariosDataGrid.Rows.Add(
-                                            usuario.idUsuario,
-                                            usuario.nombre ?? "",
-                                            usuario.apellidos ?? "",
-                                            usuario.correo ?? "",
-                                            usuario.rol ?? ""
-                                        );
-                                    }
-                                }
-                            }
-
-                            if (UsuariosDataGrid.Rows.Count == 0)
-                            {
-                                MessageBox.Show($"No se encontraron usuarios con '{textoBusqueda}'",
-                                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            }
+                            UsuariosDataGrid.Rows.Add(
+                                usuario.idUsuario,
+                                usuario.nombre ?? "",
+                                usuario.apellidos ?? "",
+                                usuario.correo ?? "",
+                                usuario.rol ?? ""
+                            );
                         }
                     }
                 }
+
+                if (UsuariosDataGrid.Rows.Count == 0)
+                {
+                    MessageBox.Show($"No se encontraron usuarios con '{textoBusqueda}'",
+                        "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"Error al buscar usuarios: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -168,6 +119,65 @@ namespace PeluqueriaApp
             if (result == DialogResult.OK)
             {
                 CargarUsuarios();
+            }
+        }
+
+        private void EditarBtn_Click(object sender, EventArgs e)
+        {
+            if (UsuariosDataGrid.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, selecciona un usuario para editar",
+                    "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
+
+            CrearEditarUsuarioForm editarForm = new CrearEditarUsuarioForm(idUsuario);
+            DialogResult result = editarForm.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                CargarUsuarios();
+            }
+        }
+
+        private async void EliminarBtn_Click(object sender, EventArgs e)
+        {
+            if (UsuariosDataGrid.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, selecciona un usuario para eliminar",
+                    "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                "¿Estás seguro de que quieres eliminar este usuario?\n\nEsta acción no se puede deshacer.",
+                "Confirmar Eliminación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning
+            );
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
+
+                    bool eliminado = await ApiService.DeleteAsync($"api/usuarios/{idUsuario}");
+
+                    if (eliminado)
+                    {
+                        MessageBox.Show("Usuario eliminado correctamente", "Éxito",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        CargarUsuarios();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al eliminar usuario: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

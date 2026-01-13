@@ -19,9 +19,12 @@ namespace PeluqueriaApp
         private Button MiCuentaBoto;
         private Button TancarSessioBoto;
         private Label TitolPaginaLbl;
-        private TextBox BuscarServicisTxt;
+        private TextBox BuscarServiciosTxt;
         private Button BuscarBtn;
-        private FlowLayoutPanel TarjetesFlowPanel;
+        private Button CrearServicioBtn;
+        private DataGridView ServiciosDataGrid;
+        private Button EditarBtn;
+        private Button EliminarBtn;
         private Label BienvenidaLbl;
 
         private void InitializeComponent()
@@ -41,9 +44,14 @@ namespace PeluqueriaApp
             this.MiCuentaBoto = new Button();
             this.TancarSessioBoto = new Button();
             this.TitolPaginaLbl = new Label();
-            this.BuscarServicisTxt = new TextBox();
+            this.BuscarServiciosTxt = new TextBox();
             this.BuscarBtn = new Button();
-            this.TarjetesFlowPanel = new FlowLayoutPanel();
+            this.CrearServicioBtn = new Button();
+            this.ServiciosDataGrid = new DataGridView();
+            this.EditarBtn = new Button();
+            this.EliminarBtn = new Button();
+
+            ((System.ComponentModel.ISupportInitialize)(this.ServiciosDataGrid)).BeginInit();
 
             // 
             // ServiciosForm
@@ -252,22 +260,22 @@ namespace PeluqueriaApp
             // 
             // TitolPaginaLbl
             // 
-            this.TitolPaginaLbl.Text = "Catálogo de Servicios";
+            this.TitolPaginaLbl.Text = "Administrar Servicios";
             this.TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolPaginaLbl.AutoSize = true;
             this.TitolPaginaLbl.Location = new Point(290, 110);
 
             // 
-            // BuscarServicisTxt
+            // BuscarServiciosTxt
             // 
-            this.BuscarServicisTxt.Name = "BuscarServicisTxt";
-            this.BuscarServicisTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.BuscarServicisTxt.Size = new Size(400, 32);
-            this.BuscarServicisTxt.Location = new Point(290, 160);
-            this.BuscarServicisTxt.BorderStyle = BorderStyle.FixedSingle;
-            this.BuscarServicisTxt.BackColor = Color.White;
-            this.BuscarServicisTxt.ForeColor = Color.FromArgb(45, 35, 30);
+            this.BuscarServiciosTxt.Name = "BuscarServiciosTxt";
+            this.BuscarServiciosTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.BuscarServiciosTxt.Size = new Size(400, 32);
+            this.BuscarServiciosTxt.Location = new Point(290, 160);
+            this.BuscarServiciosTxt.BorderStyle = BorderStyle.FixedSingle;
+            this.BuscarServiciosTxt.BackColor = Color.White;
+            this.BuscarServiciosTxt.ForeColor = Color.FromArgb(45, 35, 30);
 
             // 
             // BuscarBtn
@@ -284,13 +292,73 @@ namespace PeluqueriaApp
             this.BuscarBtn.Click += new System.EventHandler(this.BuscarBtn_Click);
 
             // 
-            // TarjetesFlowPanel
+            // CrearServicioBtn
             // 
-            this.TarjetesFlowPanel.Name = "TarjetesFlowPanel";
-            this.TarjetesFlowPanel.Location = new Point(290, 220);
-            this.TarjetesFlowPanel.Size = new Size(1070, 550);
-            this.TarjetesFlowPanel.AutoScroll = true;
-            this.TarjetesFlowPanel.BackColor = Color.FromArgb(250, 245, 240);
+            this.CrearServicioBtn.Text = "➕ Crear Servicio";
+            this.CrearServicioBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CrearServicioBtn.Size = new Size(180, 40);
+            this.CrearServicioBtn.Location = new Point(1150, 157);
+            this.CrearServicioBtn.BackColor = Color.FromArgb(139, 90, 60);
+            this.CrearServicioBtn.ForeColor = Color.White;
+            this.CrearServicioBtn.FlatStyle = FlatStyle.Flat;
+            this.CrearServicioBtn.FlatAppearance.BorderSize = 0;
+            this.CrearServicioBtn.Cursor = Cursors.Hand;
+            this.CrearServicioBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.CrearServicioBtn.Click += new System.EventHandler(this.CrearServicioBtn_Click);
+
+            // 
+            // ServiciosDataGrid
+            // 
+            this.ServiciosDataGrid.Name = "ServiciosDataGrid";
+            this.ServiciosDataGrid.Location = new Point(290, 220);
+            this.ServiciosDataGrid.Size = new Size(1070, 480);
+            this.ServiciosDataGrid.BackgroundColor = Color.White;
+            this.ServiciosDataGrid.BorderStyle = BorderStyle.None;
+            this.ServiciosDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.ServiciosDataGrid.GridColor = Color.FromArgb(240, 240, 240);
+            this.ServiciosDataGrid.DefaultCellStyle.BackColor = Color.White;
+            this.ServiciosDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
+            this.ServiciosDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
+            this.ServiciosDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
+            this.ServiciosDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
+            this.ServiciosDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
+            this.ServiciosDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            this.ServiciosDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.ServiciosDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            this.ServiciosDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            this.ServiciosDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.ServiciosDataGrid.MultiSelect = false;
+            this.ServiciosDataGrid.ReadOnly = true;
+            this.ServiciosDataGrid.AllowUserToAddRows = false;
+            this.ServiciosDataGrid.AllowUserToDeleteRows = false;
+
+            // 
+            // EditarBtn
+            // 
+            this.EditarBtn.Text = "✏️ Editar";
+            this.EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EditarBtn.Size = new Size(150, 45);
+            this.EditarBtn.Location = new Point(290, 720);
+            this.EditarBtn.BackColor = Color.FromArgb(255, 140, 0);
+            this.EditarBtn.ForeColor = Color.White;
+            this.EditarBtn.FlatStyle = FlatStyle.Flat;
+            this.EditarBtn.FlatAppearance.BorderSize = 0;
+            this.EditarBtn.Cursor = Cursors.Hand;
+            this.EditarBtn.Click += new System.EventHandler(this.EditarBtn_Click);
+
+            // 
+            // EliminarBtn
+            // 
+            this.EliminarBtn.Text = "🗑️ Eliminar";
+            this.EliminarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EliminarBtn.Size = new Size(150, 45);
+            this.EliminarBtn.Location = new Point(460, 720);
+            this.EliminarBtn.BackColor = Color.FromArgb(200, 50, 50);
+            this.EliminarBtn.ForeColor = Color.White;
+            this.EliminarBtn.FlatStyle = FlatStyle.Flat;
+            this.EliminarBtn.FlatAppearance.BorderSize = 0;
+            this.EliminarBtn.Cursor = Cursors.Hand;
+            this.EliminarBtn.Click += new System.EventHandler(this.EliminarBtn_Click);
 
             // 
             // Add controls to LateralPanel
@@ -315,12 +383,17 @@ namespace PeluqueriaApp
             // 
             // Add controls to Form
             // 
-            this.Controls.Add(this.TarjetesFlowPanel);
+            this.Controls.Add(this.EliminarBtn);
+            this.Controls.Add(this.EditarBtn);
+            this.Controls.Add(this.ServiciosDataGrid);
+            this.Controls.Add(this.CrearServicioBtn);
             this.Controls.Add(this.BuscarBtn);
-            this.Controls.Add(this.BuscarServicisTxt);
+            this.Controls.Add(this.BuscarServiciosTxt);
             this.Controls.Add(this.TitolPaginaLbl);
             this.Controls.Add(this.CapcaleraPanel);
             this.Controls.Add(this.LateralPanel);
+
+            ((System.ComponentModel.ISupportInitialize)(this.ServiciosDataGrid)).EndInit();
         }
     }
 }

@@ -14,7 +14,20 @@ namespace PeluqueriaApp
         public ServiciosForm()
         {
             InitializeComponent();
+            ConfigurarDataGrid();
             CargarServicios();
+        }
+
+        private void ConfigurarDataGrid()
+        {
+            ServiciosDataGrid.Columns.Clear();
+            ServiciosDataGrid.Columns.Add("idServicio", "ID");
+            ServiciosDataGrid.Columns.Add("nombre", "Nombre");
+            ServiciosDataGrid.Columns.Add("descripcion", "Descripción");
+            ServiciosDataGrid.Columns.Add("duracion", "Duración (min)");
+            ServiciosDataGrid.Columns.Add("precio", "Precio (€)");
+
+            ServiciosDataGrid.Columns["idServicio"].Width = 50;
         }
 
         private async void CargarServicios()
@@ -22,40 +35,27 @@ namespace PeluqueriaApp
             try
             {
                 // Mostrar indicador de carga
-                TarjetesFlowPanel.Controls.Clear();
-                Label cargandoLbl = new Label
-                {
-                    Text = "Cargando servicios...",
-                    Font = new Font("Segoe UI", 14F, FontStyle.Italic),
-                    ForeColor = Color.FromArgb(139, 90, 60),
-                    AutoSize = true
-                };
-                TarjetesFlowPanel.Controls.Add(cargandoLbl);
+                ServiciosDataGrid.Rows.Clear();
 
                 // Llamar a la API
                 servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
 
-                // Limpiar y mostrar servicios
-                TarjetesFlowPanel.Controls.Clear();
-
                 if (servicios == null || servicios.Count == 0)
                 {
-                    Label sinDatosLbl = new Label
-                    {
-                        Text = "No hay servicios disponibles",
-                        Font = new Font("Segoe UI", 12F),
-                        ForeColor = Color.FromArgb(139, 90, 60),
-                        AutoSize = true
-                    };
-                    TarjetesFlowPanel.Controls.Add(sinDatosLbl);
+                    MessageBox.Show("No hay servicios disponibles", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                // Crear tarjetas para cada servicio
+                // Llenar el DataGrid
                 foreach (var servicio in servicios)
                 {
-                    Panel tarjeta = CrearTarjetaServicio(servicio);
-                    TarjetesFlowPanel.Controls.Add(tarjeta);
+                    ServiciosDataGrid.Rows.Add(
+                        servicio.idServicio,
+                        servicio.nombre ?? "",
+                        servicio.descripcion ?? "Sin descripción",
+                        servicio.duracion,
+                        servicio.precio.ToString("F2")
+                    );
                 }
             }
             catch (Exception ex)
@@ -64,88 +64,9 @@ namespace PeluqueriaApp
             }
         }
 
-        private Panel CrearTarjetaServicio(Servicio servicio)
-        {
-            Panel tarjeta = new Panel
-            {
-                Size = new Size(320, 220),
-                BackColor = Color.White,
-                Margin = new Padding(15),
-                Cursor = Cursors.Hand
-            };
-
-            // Icono
-            Label iconoLbl = new Label
-            {
-                Text = "✂️",
-                Font = new Font("Segoe UI Emoji", 32F),
-                ForeColor = Color.FromArgb(255, 140, 0),
-                AutoSize = false,
-                Size = new Size(320, 60),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(0, 15)
-            };
-
-            // Nombre
-            Label nombreLbl = new Label
-            {
-                Text = servicio.nombre,
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(45, 35, 30),
-                AutoSize = false,
-                Size = new Size(300, 30),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(10, 80)
-            };
-
-            // Descripción
-            Label descripcionLbl = new Label
-            {
-                Text = servicio.descripcion ?? "Sin descripción",
-                Font = new Font("Segoe UI", 9F),
-                ForeColor = Color.FromArgb(100, 100, 100),
-                AutoSize = false,
-                Size = new Size(300, 40),
-                TextAlign = ContentAlignment.TopCenter,
-                Location = new Point(10, 115)
-            };
-
-            // Duración
-            Label duracionLbl = new Label
-            {
-                Text = $"⏱️ {servicio.duracion} min",
-                Font = new Font("Segoe UI", 10F),
-                ForeColor = Color.FromArgb(139, 90, 60),
-                AutoSize = false,
-                Size = new Size(150, 25),
-                TextAlign = ContentAlignment.MiddleLeft,
-                Location = new Point(20, 165)
-            };
-
-            // Precio
-            Label precioLbl = new Label
-            {
-                Text = $"{servicio.precio:F2} €",
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(255, 140, 0),
-                AutoSize = false,
-                Size = new Size(150, 25),
-                TextAlign = ContentAlignment.MiddleRight,
-                Location = new Point(150, 165)
-            };
-
-            tarjeta.Controls.Add(iconoLbl);
-            tarjeta.Controls.Add(nombreLbl);
-            tarjeta.Controls.Add(descripcionLbl);
-            tarjeta.Controls.Add(duracionLbl);
-            tarjeta.Controls.Add(precioLbl);
-
-            return tarjeta;
-        }
-
         private async void BuscarBtn_Click(object sender, EventArgs e)
         {
-            string textoBusqueda = BuscarServicisTxt.Text.Trim();
+            string textoBusqueda = BuscarServiciosTxt.Text.Trim();
 
             if (string.IsNullOrEmpty(textoBusqueda))
             {
@@ -159,30 +80,94 @@ namespace PeluqueriaApp
                 servicios = await ApiService.GetAsync<List<Servicio>>($"api/servicios/buscar/empieza/{textoBusqueda}");
 
                 // Actualizar vista
-                TarjetesFlowPanel.Controls.Clear();
+                ServiciosDataGrid.Rows.Clear();
 
                 if (servicios == null || servicios.Count == 0)
                 {
-                    Label sinResultadosLbl = new Label
-                    {
-                        Text = $"No se encontraron servicios que empiecen con '{textoBusqueda}'",
-                        Font = new Font("Segoe UI", 12F),
-                        ForeColor = Color.FromArgb(139, 90, 60),
-                        AutoSize = true
-                    };
-                    TarjetesFlowPanel.Controls.Add(sinResultadosLbl);
+                    MessageBox.Show($"No se encontraron servicios que empiecen con '{textoBusqueda}'", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 foreach (var servicio in servicios)
                 {
-                    Panel tarjeta = CrearTarjetaServicio(servicio);
-                    TarjetesFlowPanel.Controls.Add(tarjeta);
+                    ServiciosDataGrid.Rows.Add(
+                        servicio.idServicio,
+                        servicio.nombre ?? "",
+                        servicio.descripcion ?? "Sin descripción",
+                        servicio.duracion,
+                        servicio.precio.ToString("F2")
+                    );
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al buscar servicios: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void CrearServicioBtn_Click(object sender, EventArgs e)
+        {
+            CrearEditarServicioForm crearForm = new CrearEditarServicioForm();
+            DialogResult result = crearForm.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                CargarServicios();
+            }
+        }
+
+        private void EditarBtn_Click(object sender, EventArgs e)
+        {
+            if (ServiciosDataGrid.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, selecciona un servicio para editar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int idServicio = Convert.ToInt32(ServiciosDataGrid.SelectedRows[0].Cells["idServicio"].Value);
+
+            CrearEditarServicioForm editarForm = new CrearEditarServicioForm(idServicio);
+            DialogResult result = editarForm.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                CargarServicios();
+            }
+        }
+
+        private async void EliminarBtn_Click(object sender, EventArgs e)
+        {
+            if (ServiciosDataGrid.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, selecciona un servicio para eliminar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                "¿Estás seguro de que quieres eliminar este servicio?",
+                "Confirmar Eliminación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning
+            );
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    int idServicio = Convert.ToInt32(ServiciosDataGrid.SelectedRows[0].Cells["idServicio"].Value);
+
+                    bool eliminado = await ApiService.DeleteAsync($"api/servicios/{idServicio}");
+
+                    if (eliminado)
+                    {
+                        MessageBox.Show("Servicio eliminado correctamente", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        CargarServicios();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al eliminar servicio: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -233,9 +218,6 @@ namespace PeluqueriaApp
             MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        // INSTRUCCIONES: Reemplazar el método TancarSessioBoto_Click en TODOS los formularios
-        // (HomeForm.cs, UsuariosForm.cs, ClientesForm.cs, ServiciosForm.cs)
-
         private void TancarSessioBoto_Click(object sender, EventArgs e)
         {
             DialogResult result = MessageBox.Show(
@@ -247,11 +229,8 @@ namespace PeluqueriaApp
 
             if (result == DialogResult.Yes)
             {
-                // CRÍTICO: Limpiar token y sesión antes de volver al login
                 ApiService.ClearAuthToken();
                 UserSession.CerrarSesion();
-
-                System.Diagnostics.Debug.WriteLine("Sesión cerrada - Token y datos de usuario eliminados");
 
                 LoginForm loginForm = new LoginForm();
                 loginForm.Show();
