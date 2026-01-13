@@ -2,8 +2,10 @@ package com.example.proyecto.controller;
 
 import com.example.proyecto.domain.Usuario;
 import com.example.proyecto.domain.Cliente;
+import com.example.proyecto.domain.Administrador;
 import com.example.proyecto.repository.UsuarioRepository;
 import com.example.proyecto.repository.ClienteRepository;
+import com.example.proyecto.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,9 @@ public class UsuarioController {
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private AdministradorRepository administradorRepository;
 
     @GetMapping
     public List<Usuario> all() {
@@ -86,6 +91,56 @@ public class UsuarioController {
             Map<String, Object> result = new HashMap<>();
             result.put("usuario", usuario);
             result.put("cliente", cliente);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            error.put("type", e.getClass().getSimpleName());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    // NUEVO: Endpoint para crear Usuario con Administrador
+    @Transactional
+    @PostMapping(value = "/with-administrador", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> createUserWithAdministrador(@RequestBody Map<String, Object> payload) {
+        try {
+            // Paso 1: Crear y guardar Usuario
+            Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+            Usuario usuario = new Usuario();
+            usuario.setNombre((String) userData.get("nombre"));
+            usuario.setApellidos((String) userData.get("apellidos"));
+            usuario.setCorreo((String) userData.get("correo"));
+            usuario.setContrasena((String) userData.get("contrasena"));
+
+            String rolStr = (String) userData.get("rol");
+            if (rolStr != null) {
+                usuario.setRol(Usuario.Rol.valueOf(rolStr));
+            }
+
+            // Guardar usuario
+            usuario = repo.save(usuario);
+
+            // Paso 2: Crear Administrador con el mismo ID
+            Map<String, Object> administradorData = (Map<String, Object>) payload.get("administrador");
+            Administrador administrador = new Administrador();
+
+            // Establecer el ID del usuario como ID del administrador
+            administrador.setIdUsuario(usuario.getIdUsuario());
+
+            // Establecer los campos del administrador
+            if (administradorData.get("especialidad") != null) {
+                administrador.setEspecialidad((String) administradorData.get("especialidad"));
+            }
+
+            // Guardar administrador
+            administrador = administradorRepository.save(administrador);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("usuario", usuario);
+            result.put("administrador", administrador);
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {

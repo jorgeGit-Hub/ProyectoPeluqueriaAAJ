@@ -67,6 +67,9 @@ public class WebSecurityConfig {
                         // Endpoints solo para ADMINISTRADOR
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
+                        // NUEVO: Permitir acceso público a los endpoints de creación de usuario con cliente/administrador
+                        .requestMatchers("/api/usuarios/with-cliente").permitAll()
+                        .requestMatchers("/api/usuarios/with-administrador").permitAll()
 
                         // Bloqueos: ADMINISTRADOR puede crear/modificar, ALUMNO solo consultar
                         .requestMatchers("/api/bloqueos").hasAnyRole("ADMINISTRADOR", "ALUMNO")

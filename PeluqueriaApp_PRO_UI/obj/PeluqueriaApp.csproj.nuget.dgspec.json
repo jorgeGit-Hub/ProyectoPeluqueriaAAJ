@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\aleix\\source\\repos\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj": {}
+    "C:\\Users\\aleix\\source\\repos\\ProyectoSole\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\aleix\\source\\repos\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj": {
+    "C:\\Users\\aleix\\source\\repos\\ProyectoSole\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\aleix\\source\\repos\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj",
+        "projectUniqueName": "C:\\Users\\aleix\\source\\repos\\ProyectoSole\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj",
         "projectName": "PeluqueriaApp",
-        "projectPath": "C:\\Users\\aleix\\source\\repos\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj",
+        "projectPath": "C:\\Users\\aleix\\source\\repos\\ProyectoSole\\PeluqueriaApp_PRO_UI\\PeluqueriaApp.csproj",
         "packagesPath": "C:\\Users\\aleix\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\aleix\\source\\repos\\PeluqueriaApp_PRO_UI\\obj\\",
+        "outputPath": "C:\\Users\\aleix\\source\\repos\\ProyectoSole\\PeluqueriaApp_PRO_UI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\aleix\\AppData\\Roaming\\NuGet\\NuGet.Config",
