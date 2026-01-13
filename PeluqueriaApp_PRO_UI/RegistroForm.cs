@@ -72,14 +72,14 @@ namespace PeluqueriaApp
 
         private void OcultarCamposAdministrador()
         {
-            /*EspecialidadLbl.Visible = false;
-            EspecialidadTxt.Visible = false;*/
+            EspecialidadLbl.Visible = false;
+            EspecialidadTxt.Visible = false;
         }
 
         private void MostrarCamposAdministrador()
         {
-            /*EspecialidadLbl.Visible = true;
-            EspecialidadTxt.Visible = true;*/
+            EspecialidadLbl.Visible = true;
+            EspecialidadTxt.Visible = true;
         }
 
         private async void RegistrarseBtn_Click(object sender, EventArgs e)
@@ -142,27 +142,19 @@ namespace PeluqueriaApp
 
             try
             {
-                // Crear objeto de registro
-                var signupData = new SignupRequest
-                {
-                    nombre = NombreTxt.Text.Trim(),
-                    apellidos = ApellidosTxt.Text.Trim(),
-                    correo = CorreoTxt.Text.Trim(),
-                    contrasena = ContrasenaTxt.Text.Trim(),
-                    rol = rolSeleccionado
-                };
-
-                // Agregar campos específicos solo si es cliente
+                // Según el rol, usar el endpoint correspondiente
                 if (rolSeleccionado == "cliente")
                 {
-                    signupData.telefono = TelefonoTxt.Text.Trim();
-                    signupData.direccion = DireccionTxt.Text.Trim();
-                    signupData.alergenos = AlergenosTxt.Text.Trim();
-                    signupData.observaciones = ObservacionesTxt.Text.Trim();
+                    await RegistrarCliente();
                 }
-
-                // Llamar al API de signup (el backend maneja la creación según el rol)
-                var resultado = await ApiService.PostAsync<MessageResponse>("api/auth/signup", signupData);
+                else if (rolSeleccionado == "administrador")
+                {
+                    await RegistrarAdministrador();
+                }
+                else if (rolSeleccionado == "alumno")
+                {
+                    await RegistrarAlumno();
+                }
 
                 MessageBox.Show("¡Registro exitoso! Ya puedes iniciar sesión con tu cuenta.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -181,6 +173,70 @@ namespace PeluqueriaApp
                 RegistrarseBtn.Enabled = true;
                 RegistrarseBtn.Text = "Registrarse";
             }
+        }
+
+        private async System.Threading.Tasks.Task RegistrarCliente()
+        {
+            // Crear el objeto payload para el endpoint /with-cliente
+            var payload = new
+            {
+                usuario = new
+                {
+                    nombre = NombreTxt.Text.Trim(),
+                    apellidos = ApellidosTxt.Text.Trim(),
+                    correo = CorreoTxt.Text.Trim(),
+                    contrasena = ContrasenaTxt.Text.Trim(),
+                    rol = "cliente"
+                },
+                cliente = new
+                {
+                    telefono = TelefonoTxt.Text.Trim(),
+                    direccion = DireccionTxt.Text.Trim(),
+                    alergenos = AlergenosTxt.Text.Trim(),
+                    observaciones = ObservacionesTxt.Text.Trim()
+                }
+            };
+
+            // Llamar al endpoint /api/usuarios/with-cliente
+            var resultado = await ApiService.PostAsync<object>("api/usuarios/with-cliente", payload, sendToken: false);
+        }
+
+        private async System.Threading.Tasks.Task RegistrarAdministrador()
+        {
+            // Crear el objeto payload para el endpoint /with-administrador
+            var payload = new
+            {
+                usuario = new
+                {
+                    nombre = NombreTxt.Text.Trim(),
+                    apellidos = ApellidosTxt.Text.Trim(),
+                    correo = CorreoTxt.Text.Trim(),
+                    contrasena = ContrasenaTxt.Text.Trim(),
+                    rol = "administrador"
+                },
+                administrador = new
+                {
+                    especialidad = EspecialidadTxt.Text.Trim()
+                }
+            };
+
+            // Llamar al endpoint /api/usuarios/with-administrador
+            var resultado = await ApiService.PostAsync<object>("api/usuarios/with-administrador", payload, sendToken: false);
+        }
+
+        private async System.Threading.Tasks.Task RegistrarAlumno()
+        {
+            // Para alumno, usar el endpoint de signup básico del AuthController
+            var signupData = new SignupRequest
+            {
+                nombre = NombreTxt.Text.Trim(),
+                apellidos = ApellidosTxt.Text.Trim(),
+                correo = CorreoTxt.Text.Trim(),
+                contrasena = ContrasenaTxt.Text.Trim(),
+                rol = "alumno"
+            };
+
+            var resultado = await ApiService.PostAsync<MessageResponse>("api/auth/signup", signupData, sendToken: false);
         }
 
         private void VolverLoginBtn_Click(object sender, EventArgs e)

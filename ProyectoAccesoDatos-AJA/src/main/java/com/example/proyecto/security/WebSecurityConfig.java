@@ -64,12 +64,13 @@ public class WebSecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/servicios/**").permitAll()
 
-                        // Endpoints solo para ADMINISTRADOR
-                        .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
-                        // NUEVO: Permitir acceso público a los endpoints de creación de usuario con cliente/administrador
+                        // IMPORTANTE: Estos endpoints ESPECÍFICOS deben ir ANTES de la regla general /api/usuarios/**
                         .requestMatchers("/api/usuarios/with-cliente").permitAll()
                         .requestMatchers("/api/usuarios/with-administrador").permitAll()
+
+                        // Endpoints solo para ADMINISTRADOR (regla general, va DESPUÉS de las específicas)
+                        .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 
                         // Bloqueos: ADMINISTRADOR puede crear/modificar, ALUMNO solo consultar
                         .requestMatchers("/api/bloqueos").hasAnyRole("ADMINISTRADOR", "ALUMNO")

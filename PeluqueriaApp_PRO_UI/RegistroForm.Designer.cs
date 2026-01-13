@@ -33,6 +33,10 @@ namespace PeluqueriaApp
         private Label ObservacionesLbl;
         private TextBox ObservacionesTxt;
 
+        // Campos específicos para ADMINISTRADOR
+        private Label EspecialidadLbl;
+        private TextBox EspecialidadTxt;
+
         private Button RegistrarseBtn;
         private Button VolverLoginBtn;
         private Label BienvenidaLbl;
@@ -67,6 +71,10 @@ namespace PeluqueriaApp
             this.AlergenosTxt = new TextBox();
             this.ObservacionesLbl = new Label();
             this.ObservacionesTxt = new TextBox();
+
+            // Campos de administrador
+            this.EspecialidadLbl = new Label();
+            this.EspecialidadTxt = new TextBox();
 
             this.RegistrarseBtn = new Button();
             this.VolverLoginBtn = new Button();
@@ -317,6 +325,25 @@ namespace PeluqueriaApp
             this.ObservacionesTxt.BorderStyle = BorderStyle.FixedSingle;
             this.ObservacionesTxt.BackColor = Color.FromArgb(250, 245, 240);
 
+            // ========== CAMPOS ESPECÍFICOS DE ADMINISTRADOR ==========
+
+            // 
+            // EspecialidadLbl y EspecialidadTxt
+            // 
+            this.EspecialidadLbl.Text = "Especialidad";
+            this.EspecialidadLbl.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            this.EspecialidadLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.EspecialidadLbl.AutoSize = true;
+            this.EspecialidadLbl.Location = new Point(columna1X, inicioY + espacioY * 4);
+            this.EspecialidadLbl.Visible = false;
+
+            this.EspecialidadTxt.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            this.EspecialidadTxt.Size = new Size(600, 27);
+            this.EspecialidadTxt.Location = new Point(columna1X, inicioY + espacioY * 4 + 20);
+            this.EspecialidadTxt.BorderStyle = BorderStyle.FixedSingle;
+            this.EspecialidadTxt.BackColor = Color.FromArgb(250, 245, 240);
+            this.EspecialidadTxt.Visible = false;
+
             // ========== BOTONES ==========
 
             // 
@@ -382,6 +409,10 @@ namespace PeluqueriaApp
             this.RegistroPanel.Controls.Add(this.AlergenosTxt);
             this.RegistroPanel.Controls.Add(this.ObservacionesLbl);
             this.RegistroPanel.Controls.Add(this.ObservacionesTxt);
+
+            // Campos de administrador
+            this.RegistroPanel.Controls.Add(this.EspecialidadLbl);
+            this.RegistroPanel.Controls.Add(this.EspecialidadTxt);
 
             this.RegistroPanel.Controls.Add(this.RegistrarseBtn);
             this.RegistroPanel.Controls.Add(this.VolverLoginBtn);
