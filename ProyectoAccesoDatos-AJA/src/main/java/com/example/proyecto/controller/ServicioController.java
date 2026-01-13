@@ -27,6 +27,24 @@ public class ServicioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // NUEVO: Buscar servicios por día de la semana (E.j: "Lunes")
+    @GetMapping("/dia/{dia}")
+    public List<Servicio> byDia(@PathVariable String dia) {
+        return repo.findByDiaSemana(dia);
+    }
+
+    // NUEVO: Buscar servicios por ID de Grupo
+    @GetMapping("/grupo/{id}")
+    public List<Servicio> byGrupo(@PathVariable int id) {
+        return repo.findByGrupo(id);
+    }
+
+    // NUEVO: Buscar por Día y Grupo a la vez (opcional, pero útil)
+    @GetMapping("/buscar/filtro")
+    public List<Servicio> byDiaAndGrupo(@RequestParam String dia, @RequestParam int idGrupo) {
+        return repo.findByDiaAndGrupo(dia, idGrupo);
+    }
+
     @GetMapping("/baratos/{max}")
     public List<Servicio> baratos(@PathVariable double max) {
         return repo.findAffordable(max);
@@ -37,13 +55,11 @@ public class ServicioController {
         return repo.top5Expensive();
     }
 
-    // Nuevo: Buscar servicios que contengan el texto en el nombre
     @GetMapping("/buscar/{texto}")
     public List<Servicio> buscarPorNombre(@PathVariable String texto) {
         return repo.findByNombreContaining(texto);
     }
 
-    // Nuevo: Buscar servicios que empiecen con el texto
     @GetMapping("/buscar/empieza/{texto}")
     public List<Servicio> buscarPorInicio(@PathVariable String texto) {
         return repo.findByNombreStartingWith(texto);
