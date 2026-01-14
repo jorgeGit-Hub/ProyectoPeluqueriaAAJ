@@ -185,7 +185,7 @@ namespace PeluqueriaApp
                     nombre = NombreTxt.Text.Trim(),
                     apellidos = ApellidosTxt.Text.Trim(),
                     correo = CorreoTxt.Text.Trim(),
-                    contrasena = ContrasenaTxt.Text.Trim(),
+                    contrasena = ContrasenaTxt.Text.Trim(), // ✅ Texto plano, el backend la cifrará
                     rol = "cliente"
                 },
                 cliente = new
@@ -197,7 +197,7 @@ namespace PeluqueriaApp
                 }
             };
 
-            // Llamar al endpoint /api/usuarios/with-cliente
+            // Llamar al endpoint /api/usuarios/with-cliente (sin token porque es registro público)
             var resultado = await ApiService.PostAsync<object>("api/usuarios/with-cliente", payload, sendToken: false);
         }
 
@@ -211,7 +211,7 @@ namespace PeluqueriaApp
                     nombre = NombreTxt.Text.Trim(),
                     apellidos = ApellidosTxt.Text.Trim(),
                     correo = CorreoTxt.Text.Trim(),
-                    contrasena = ContrasenaTxt.Text.Trim(),
+                    contrasena = ContrasenaTxt.Text.Trim(), // ✅ Texto plano, el backend la cifrará
                     rol = "administrador"
                 },
                 administrador = new
@@ -220,7 +220,7 @@ namespace PeluqueriaApp
                 }
             };
 
-            // Llamar al endpoint /api/usuarios/with-administrador
+            // Llamar al endpoint /api/usuarios/with-administrador (sin token porque es registro público)
             var resultado = await ApiService.PostAsync<object>("api/usuarios/with-administrador", payload, sendToken: false);
         }
 
@@ -232,10 +232,11 @@ namespace PeluqueriaApp
                 nombre = NombreTxt.Text.Trim(),
                 apellidos = ApellidosTxt.Text.Trim(),
                 correo = CorreoTxt.Text.Trim(),
-                contrasena = ContrasenaTxt.Text.Trim(),
+                contrasena = ContrasenaTxt.Text.Trim(), // ✅ Texto plano, el backend la cifrará
                 rol = "alumno"
             };
 
+            // Llamar al endpoint /api/auth/signup (sin token porque es registro público)
             var resultado = await ApiService.PostAsync<MessageResponse>("api/auth/signup", signupData, sendToken: false);
         }
 

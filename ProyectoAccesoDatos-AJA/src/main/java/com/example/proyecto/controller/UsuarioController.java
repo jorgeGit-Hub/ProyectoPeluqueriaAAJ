@@ -8,6 +8,7 @@ import com.example.proyecto.repository.ClienteRepository;
 import com.example.proyecto.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,10 @@ public class UsuarioController {
 
     @Autowired
     private AdministradorRepository administradorRepository;
+
+    // ✅ AÑADIR: Inyectar el PasswordEncoder para cifrar contraseñas
+    @Autowired
+    private PasswordEncoder encoder;
 
     @GetMapping
     public List<Usuario> all() {
@@ -50,15 +55,27 @@ public class UsuarioController {
         try {
             // Paso 1: Crear y guardar Usuario
             Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+
+            // ✅ VERIFICAR si el correo ya existe
+            String correo = (String) userData.get("correo");
+            if (repo.findByEmail(correo) != null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "El correo ya está en uso");
+                return ResponseEntity.badRequest().body(error);
+            }
+
             Usuario usuario = new Usuario();
             usuario.setNombre((String) userData.get("nombre"));
             usuario.setApellidos((String) userData.get("apellidos"));
-            usuario.setCorreo((String) userData.get("correo"));
-            usuario.setContrasena((String) userData.get("contrasena"));
+            usuario.setCorreo(correo);
+
+            // ✅ CIFRAR LA CONTRASEÑA antes de guardarla
+            String contrasenaPlana = (String) userData.get("contrasena");
+            usuario.setContrasena(encoder.encode(contrasenaPlana));
 
             String rolStr = (String) userData.get("rol");
             if (rolStr != null) {
-                usuario.setRol(Usuario.Rol.valueOf(rolStr));
+                usuario.setRol(Usuario.Rol.valueOf(rolStr.toLowerCase()));
             }
 
             // Guardar usuario
@@ -91,6 +108,7 @@ public class UsuarioController {
             Map<String, Object> result = new HashMap<>();
             result.put("usuario", usuario);
             result.put("cliente", cliente);
+            result.put("message", "Usuario y cliente creados exitosamente");
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
@@ -102,22 +120,34 @@ public class UsuarioController {
         }
     }
 
-    // NUEVO: Endpoint para crear Usuario con Administrador
+    // ENDPOINT para crear Usuario con Administrador
     @Transactional
     @PostMapping(value = "/with-administrador", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createUserWithAdministrador(@RequestBody Map<String, Object> payload) {
         try {
             // Paso 1: Crear y guardar Usuario
             Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+
+            // ✅ VERIFICAR si el correo ya existe
+            String correo = (String) userData.get("correo");
+            if (repo.findByEmail(correo) != null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "El correo ya está en uso");
+                return ResponseEntity.badRequest().body(error);
+            }
+
             Usuario usuario = new Usuario();
             usuario.setNombre((String) userData.get("nombre"));
             usuario.setApellidos((String) userData.get("apellidos"));
-            usuario.setCorreo((String) userData.get("correo"));
-            usuario.setContrasena((String) userData.get("contrasena"));
+            usuario.setCorreo(correo);
+
+            // ✅ CIFRAR LA CONTRASEÑA antes de guardarla
+            String contrasenaPlana = (String) userData.get("contrasena");
+            usuario.setContrasena(encoder.encode(contrasenaPlana));
 
             String rolStr = (String) userData.get("rol");
             if (rolStr != null) {
-                usuario.setRol(Usuario.Rol.valueOf(rolStr));
+                usuario.setRol(Usuario.Rol.valueOf(rolStr.toLowerCase()));
             }
 
             // Guardar usuario
@@ -131,7 +161,7 @@ public class UsuarioController {
             administrador.setIdUsuario(usuario.getIdUsuario());
 
             // Establecer los campos del administrador
-            if (administradorData.get("especialidad") != null) {
+            if (administradorData != null && administradorData.get("especialidad") != null) {
                 administrador.setEspecialidad((String) administradorData.get("especialidad"));
             }
 
@@ -141,6 +171,7 @@ public class UsuarioController {
             Map<String, Object> result = new HashMap<>();
             result.put("usuario", usuario);
             result.put("administrador", administrador);
+            result.put("message", "Usuario y administrador creados exitosamente");
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
