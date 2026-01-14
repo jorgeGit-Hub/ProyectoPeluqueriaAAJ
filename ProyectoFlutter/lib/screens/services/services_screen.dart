@@ -76,7 +76,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Container(
         height: MediaQuery.of(context).size.height * 0.7,
-        alignment: Center,
+        alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

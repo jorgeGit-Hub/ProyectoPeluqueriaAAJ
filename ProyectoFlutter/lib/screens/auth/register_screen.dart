@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/user_provider.dart'; // Cambiado para usar el Provider
+import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -38,9 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => loading = true);
 
     try {
-      // Usamos el provider para mantener la arquitectura limpia
       final userProvider = context.read<UserProvider>();
 
+      // Este método ahora sí existirá en el Provider
       final success = await userProvider.register(
         nombre: nombreCtrl.text.trim(),
         apellidos: apellidosCtrl.text.trim(),
@@ -99,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "Crear Cuenta",
                   style: TextStyle(
                     fontSize: 32,
@@ -113,8 +113,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 30),
-
-                // TARJETA DE REGISTRO
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -122,7 +120,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        // Corregido: withValues para evitar advertencias
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),

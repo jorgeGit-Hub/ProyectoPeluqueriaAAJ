@@ -1,95 +1,53 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // ------------------------------------------------------
-  // Paleta de Colores
-  // ------------------------------------------------------
-  static const Color primary = Color(0xFF6741D9); // Morado principal
-  static const Color pastelLavender = Color(0xFFE6E6FA); // Fondo lavanda
-  static const Color pastelPink = Color(0xFFFFD6E8); // Acento rosa
-  static const Color surfaceWhite = Colors.white;
+  // Definición de tus colores personalizados
+  static const Color primary = Color(0xFF6750A4); // Morado principal
+  static const Color pastelLavender = Color(0xFFF3E5F5);
 
-  // ------------------------------------------------------
-  // Tema Principal de la Aplicación
-  // ------------------------------------------------------
-  static final ThemeData theme = ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: primary,
-      primary: primary,
-      secondary: pastelPink,
-      surface: surfaceWhite,
-      background: pastelLavender,
-    ),
-
-    scaffoldBackgroundColor: pastelLavender,
-
-    // Estilo de la Barra Superior (AppBar)
-    appBarTheme: const AppBarTheme(
-      backgroundColor: primary,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
+  static ThemeData get lightTheme {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        primary: primary,
+        // CORRECCIÓN 1: 'background' ahora es 'surface'
+        surface: pastelLavender,
+        onSurface: Colors.black,
       ),
-    ),
 
-    // Estilo de las Tarjetas (Cards)
-    cardTheme: CardTheme(
-      color: Colors.white,
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ),
+      // CORRECCIÓN 2: Se debe usar CardThemeData, no CardTheme
+      cardTheme: CardThemeData(
+        color: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
 
-    // Estilo de los Botones Principales
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
+      appBarTheme: const AppBarTheme(
         backgroundColor: primary,
         foregroundColor: Colors.white,
-        elevation: 2,
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+        centerTitle: true,
       ),
-    ),
 
-    // Estilo de los Campos de Texto (Inputs)
-    // Esto hace que todos los formularios de tu app se vean iguales automáticamente
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primary, width: 2),
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      labelStyle: const TextStyle(color: Colors.grey),
-      prefixIconColor: primary,
-    ),
-
-    // Estilo de los textos
-    textTheme: const TextTheme(
-      displayLarge:
-          TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primary),
-      titleLarge: TextStyle(
-          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-      bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
-    ),
-  );
+    );
+  }
 }

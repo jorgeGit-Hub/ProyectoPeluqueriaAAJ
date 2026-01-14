@@ -55,18 +55,15 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
                         final Cita c = citaProv.citas[index];
 
                         // Buscamos el nombre del servicio usando el ID que tiene la cita
-                        final servicioNombre = servicioProv.servicios
-                                .firstWhere((s) => s.idServicio == c.idServicio,
-                                    orElse: () =>
-                                        servicioProv.servicios.isNotEmpty
-                                            ? servicioProv.servicios.first
-                                            : null)
-                                ?.nombre ??
-                            "Servicio Peluquería";
+                        // Buscamos el servicio de forma segura
+               final servicioEncontrado = servicioProv.servicios.where(
+                  (s) => s.idServicio == c.idServicio
+                ).firstOrNull;
 
-                        return _buildCitaCard(c, servicioNombre);
-                      },
-                    ),
+                final String servicioNombre = servicioEncontrado?.nombre ?? "Servicio Peluquería";
+                return _buildCitaCard(c, servicioNombre);
+                                      },
+                                    ),
     );
   }
 
