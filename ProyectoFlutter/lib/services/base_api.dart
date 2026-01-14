@@ -1,100 +1,87 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-/// Clase base para gestionar la comunicación con la API.
 class BaseApi {
-  /// URL base del backend
-  /// 👉 configurable por entorno (no hardcodear IP)
-  static const String baseUrl = String.fromEnvironment(
-    'BASE_URL',
-    defaultValue: 'http://172.20.10.9:8090/api',
-  );
-
-  /// Token JWT en memoria
+  // REEMPLAZA ESTA IP por la IPv4 de tu PC (ej: 192.168.1.35)
+  // El puerto 8090 debe estar abierto en tu Firewall de Windows.
+  static const String baseUrl = 'http://192.168.1.XX:8090/api';
   static String? token;
 
-  /// Headers comunes
+  // Generador de cabeceras dinámico
   static Map<String, String> _headers({bool auth = true}) {
-    final headers = <String, String>{
-      "Content-Type": "application/json",
-    };
-
-    if (auth && token != null && token!.isNotEmpty) {
-      headers["Authorization"] = "Bearer $token";
+    final h = {"Content-Type": "application/json"};
+    if (auth && token != null) {
+      h["Authorization"] = "Bearer $token";
     }
-
-    return headers;
+    return h;
   }
 
-  /// Procesa respuestas HTTP
-  static dynamic _processResponse(http.Response res) {
+  // Procesador de respuestas centralizado
+  static dynamic _process(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      if (res.body.isEmpty) return null;
-      return jsonDecode(res.body);
+      return res.body.isEmpty ? null : jsonDecode(res.body);
     }
-
-    throw Exception(
-      "API error ${res.statusCode}: ${res.body}",
-    );
+    // Si el error es 401 o 403, es probable que el token haya caducado
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      throw Exception("Sesión caducada o sin permisos");
+    }
+    throw Exception("Error ${res.statusCode}: ${res.body}");
   }
 
-  /// GET
-  static Future<dynamic> get(String endpoint, {bool auth = true}) async {
-    final res = await http
-        .get(
-          Uri.parse("$baseUrl$endpoint"),
-          headers: _headers(auth: auth),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    return _processResponse(res);
+  // MÉTODO GET
+  static Future<dynamic> get(String path) async {
+    try {
+      final res =
+          await http.get(Uri.parse("$baseUrl$path"), headers: _headers());
+      return _process(res);
+    } catch (e) {
+      debugPrint("Error GET en $path: $e");
+      rethrow;
+    }
   }
 
-  /// POST
-  static Future<dynamic> post(
-    String endpoint,
-    Map<String, dynamic> data, {
-    bool auth = true,
-  }) async {
-    final res = await http
-        .post(
-          Uri.parse("$baseUrl$endpoint"),
-          headers: _headers(auth: auth),
-          body: jsonEncode(data),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    return _processResponse(res);
+  // MÉTODO POST
+  static Future<dynamic> post(String path, Map<String, dynamic> data) async {
+    try {
+      final res = await http.post(
+        Uri.parse("$baseUrl$path"),
+        headers: _headers(),
+        body: jsonEncode(data),
+      );
+      return _process(res);
+    } catch (e) {
+      debugPrint("Error POST en $path: $e");
+      rethrow;
+    }
   }
 
-  /// PUT
-  static Future<dynamic> put(
-    String endpoint,
-    Map<String, dynamic> data, {
-    bool auth = true,
-  }) async {
-    final res = await http
-        .put(
-          Uri.parse("$baseUrl$endpoint"),
-          headers: _headers(auth: auth),
-          body: jsonEncode(data),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    return _processResponse(res);
+  // MÉTODO PUT
+  static Future<dynamic> put(String path, Map<String, dynamic> data) async {
+    try {
+      final res = await http.put(
+        Uri.parse("$baseUrl$path"),
+        headers: _headers(),
+        body: jsonEncode(data),
+      );
+      return _process(res);
+    } catch (e) {
+      debugPrint("Error PUT en $path: $e");
+      rethrow;
+    }
   }
 
-  /// DELETE
-  static Future<void> delete(String endpoint, {bool auth = true}) async {
-    final res = await http
-        .delete(
-          Uri.parse("$baseUrl$endpoint"),
-          headers: _headers(auth: auth),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception("DELETE error ${res.statusCode}: ${res.body}");
+  // MÉTODO DELETE
+  static Future<void> delete(String path) async {
+    try {
+      final res =
+          await http.delete(Uri.parse("$baseUrl$path"), headers: _headers());
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw Exception("No se pudo eliminar el recurso");
+      }
+    } catch (e) {
+      debugPrint("Error DELETE en $path: $e");
+      rethrow;
     }
   }
 }

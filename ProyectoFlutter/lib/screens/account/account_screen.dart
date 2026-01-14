@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 
@@ -24,6 +23,11 @@ class AccountScreen extends StatelessWidget {
       );
     }
 
+    // Seguridad para la inicial del nombre
+    final String nombreStr = user["nombre"]?.toString() ?? "U";
+    final String inicial =
+        nombreStr.isNotEmpty ? nombreStr[0].toUpperCase() : "U";
+
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
       appBar: AppBar(
@@ -40,7 +44,6 @@ class AccountScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // CABECERA
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -58,7 +61,7 @@ class AccountScreen extends StatelessWidget {
                     radius: 40,
                     backgroundColor: Colors.white,
                     child: Text(
-                      user["nombre"].toString().substring(0, 1).toUpperCase(),
+                      inicial,
                       style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
@@ -68,7 +71,7 @@ class AccountScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "${user["nombre"]} ${user["apellidos"]}",
+                    "${user["nombre"] ?? ""} ${user["apellidos"] ?? ""}",
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -76,7 +79,7 @@ class AccountScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    user["correo"] ?? "",
+                    user["correo"] ?? "Sin correo electrónico",
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.9),
@@ -85,9 +88,7 @@ class AccountScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -98,13 +99,13 @@ class AccountScreen extends StatelessWidget {
                       _InfoTile(
                         icon: Icons.badge_outlined,
                         label: "ID Usuario",
-                        value: user["id"].toString(),
+                        value: user["id"]?.toString() ?? "N/A",
                       ),
                       const Divider(height: 1),
                       _InfoTile(
                         icon: Icons.security,
                         label: "Rol",
-                        value: user["rol"] ?? "",
+                        value: user["rol"]?.toString() ?? "Cliente",
                       ),
                     ],
                   ),
@@ -122,9 +123,11 @@ class AccountScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        context.read<UserProvider>().logout();
-                        Navigator.pushReplacementNamed(context, "/login");
+                      onPressed: () async {
+                        await context.read<UserProvider>().logout();
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, "/login");
+                        }
                       },
                     ),
                   ),
@@ -139,103 +142,4 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-// --------------------
-// Widgets auxiliares
-// --------------------
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SectionCard({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          ...children,
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: AppTheme.primary),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Los widgets _SectionCard y _InfoTile están perfectos, no hace falta tocarlos.

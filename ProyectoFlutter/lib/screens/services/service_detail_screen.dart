@@ -7,24 +7,25 @@ class ServiceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Recuperamos el argumento
-    final Servicio servicio =
-        ModalRoute.of(context)!.settings.arguments as Servicio;
+    // Recuperamos el objeto Servicio pasado por argumentos
+    final args = ModalRoute.of(context)!.settings.arguments;
+    if (args == null || args is! Servicio) {
+      return const Scaffold(
+          body: Center(child: Text("Error: No se encontró el servicio")));
+    }
+    final Servicio servicio = args;
 
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
-      // Hacemos que el cuerpo extienda detrás de la AppBar para un efecto inmersivo
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Transparente para ver el header
+        backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
         leading: Container(
           margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black26,
-            borderRadius: BorderRadius.circular(50),
-          ),
+          decoration: const BoxDecoration(
+              color: Colors.black26, shape: BoxShape.circle),
           child: IconButton(
             icon: const Icon(Icons.arrow_back, size: 20),
             onPressed: () => Navigator.pop(context),
@@ -33,136 +34,113 @@ class ServiceDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // ---------------------------------------------
-          // 1. CABECERA CON IMAGEN/ICONO
-          // ---------------------------------------------
+          // 1. CABECERA DINÁMICA
           Expanded(
-            flex: 3, // Ocupa un 30-40% de la pantalla
-            child: Stack(
-              children: [
-                // Fondo curvo
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(40),
-                      bottomRight: Radius.circular(40),
-                    ),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Círculo decorativo detrás del icono
-                        Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.spa_rounded, // Icono genérico de belleza
-                            size: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Nombre del servicio (Título grande)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            servicio.nombre,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            flex: 3,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
                 ),
-              ],
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 90,
+                      width: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.spa_rounded,
+                          size: 45, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: Text(
+                        servicio.nombre,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
-          // ---------------------------------------------
-          // 2. DETALLES DEL SERVICIO
-          // ---------------------------------------------
+          // 2. CONTENIDO BASADO EN LA BASE DE DATOS
           Expanded(
-            flex: 4,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+            flex: 5,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Fila de Precio y Duración (simulada)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Precio Total",
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
+                          Text("Precio del Servicio",
+                              style: TextStyle(color: Colors.grey[600])),
                           Text(
                             "${servicio.precio.toStringAsFixed(2)} €",
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppTheme.primary,
-                              fontSize: 32,
+                              fontSize: 30,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                       ),
-                      // Etiqueta decorativa (puedes quitarla si no aplica)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          "Mejor valorado",
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                      // Mostramos la DURACIÓN real que viene de Java
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("Duración",
+                              style: TextStyle(color: Colors.grey[600])),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time,
+                                  size: 18, color: AppTheme.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${servicio.duracion} min",
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
-                        ),
-                      )
+                        ],
+                      ),
                     ],
                   ),
-
                   const SizedBox(height: 30),
-
                   const Text(
-                    "Descripción",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    "Sobre este servicio",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
-
-                  // Texto de descripción mejorado visualmente
+                  const SizedBox(height: 12),
+                  // Mostramos la DESCRIPCIÓN real (columna 'modulo' o 'descripcion' en MySQL)
                   Text(
-                    "Disfruta de nuestros servicios profesionales con los mejores productos del mercado. Selecciona tu horario a continuación.",
+                    servicio.descripcion.isNotEmpty
+                        ? servicio.descripcion
+                        : "Disfruta de una experiencia profesional con los mejores productos en nuestro salón.",
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[600],
+                      color: Colors.grey[700],
                       height: 1.5,
                     ),
                   ),
@@ -171,57 +149,37 @@ class ServiceDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------------------------
-          // 3. BARRA INFERIOR DE ACCIÓN (BOTÓN RESERVAR)
-          // ---------------------------------------------
+          // 3. ACCIÓN DE RESERVA
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
+                  topLeft: Radius.circular(30), topRight: Radius.circular(30)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
-                ),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5))
               ],
             ),
             child: SafeArea(
+              top: false,
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    "/booking",
-                    arguments: servicio,
-                  ),
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, "/booking",
+                      arguments: servicio),
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  label: const Text("Reservar Ahora",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
-                    elevation: 5,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    shadowColor: AppTheme.primary.withOpacity(0.5),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Reservar Ahora",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Icon(Icons.calendar_month_outlined)
-                    ],
+                        borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
               ),

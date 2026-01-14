@@ -2,9 +2,9 @@ class Servicio {
   final int? idServicio;
   final String nombre;
   final String descripcion;
-  final int duracion; // En minutos
-  final double precio; // En Java es BigDecimal, aquí double
-  final String? imagen; // El Base64
+  final int duracion;
+  final double precio;
+  final String? imagen;
 
   Servicio({
     this.idServicio,
@@ -15,25 +15,25 @@ class Servicio {
     this.imagen,
   });
 
+  factory Servicio.fromJson(Map<String, dynamic> json) {
+    return Servicio(
+      idServicio: json['idServicio'] ?? json['id_servicio'],
+      nombre: json['nombre'] ?? "",
+      descripcion: (json['descripcion'] ?? "").toString(),
+      duracion: int.tryParse(json['duracion']?.toString() ?? "0") ?? 0,
+      precio: (json['precio'] as num?)?.toDouble() ?? 0.0,
+      imagen: json['imagen'],
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      // "idServicio": idServicio, // Spring lo autogenera
+      "idServicio": idServicio,
       "nombre": nombre,
       "descripcion": descripcion,
       "duracion": duracion,
       "precio": precio,
-      "imagen": imagen, // Enviamos la foto aquí
+      "imagen": imagen,
     };
-  }
-
-  factory Servicio.fromJson(Map<String, dynamic> json) {
-    return Servicio(
-      idServicio: json['idServicio'],
-      nombre: json['nombre'],
-      descripcion: json['descripcion'],
-      duracion: json['duracion'],
-      precio: (json['precio'] as num).toDouble(), // Conversión segura
-      imagen: json['imagen'],
-    );
   }
 }

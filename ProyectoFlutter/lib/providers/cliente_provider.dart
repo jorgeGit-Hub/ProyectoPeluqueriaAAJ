@@ -11,14 +11,16 @@ class ClienteProvider with ChangeNotifier {
   // ======================================================
   // Cargar cliente por ID
   // ======================================================
-  Future<void> loadCliente(int idCliente) async {
+  Future<void> loadCliente(int idUsuario) async {
     loading = true;
     notifyListeners();
 
     try {
-      final data = await _service.getCliente(idCliente);
+      final data = await _service.getCliente(idUsuario);
+      // El modelo Cliente.fromJson ya gestiona los nombres de columnas de tu BD
       cliente = Cliente.fromJson(data);
     } catch (e) {
+      debugPrint("Error al cargar cliente: $e");
       cliente = null;
     }
 
@@ -30,21 +32,32 @@ class ClienteProvider with ChangeNotifier {
   // Actualizar cliente
   // ======================================================
   Future<bool> updateCliente(
-      int idCliente, Map<String, dynamic> changes) async {
+      int idUsuario, Map<String, dynamic> changes) async {
     loading = true;
     notifyListeners();
 
     try {
-      final data = await _service.updateCliente(idCliente, changes);
+      // Enviamos los cambios al servicio
+      final data = await _service.updateCliente(idUsuario, changes);
       cliente = Cliente.fromJson(data);
 
       loading = false;
       notifyListeners();
       return true;
     } catch (e) {
+      debugPrint("Error al actualizar cliente: $e");
       loading = false;
       notifyListeners();
       return false;
     }
+  }
+
+  // ======================================================
+  // Limpiar datos (útil para el Logout)
+  // ======================================================
+  void clear() {
+    cliente = null;
+    loading = false;
+    notifyListeners();
   }
 }

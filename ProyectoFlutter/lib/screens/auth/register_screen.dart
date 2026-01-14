@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart'; // Cambiado para usar el Provider
 import '../../utils/theme.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -37,7 +38,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => loading = true);
 
     try {
-      await AuthService().register(
+      // Usamos el provider para mantener la arquitectura limpia
+      final userProvider = context.read<UserProvider>();
+
+      final success = await userProvider.register(
         nombre: nombreCtrl.text.trim(),
         apellidos: apellidosCtrl.text.trim(),
         correo: correoCtrl.text.trim(),
@@ -46,27 +50,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("¡Cuenta creada con éxito! Inicia sesión."),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
-      Navigator.pushReplacementNamed(context, "/login");
+      if (success) {
+        _showSnackBar("¡Cuenta creada con éxito! Inicia sesión.", Colors.green);
+        Navigator.pushReplacementNamed(context, "/login");
+      } else {
+        _showSnackBar(
+            "No se pudo crear la cuenta. El correo podría estar en uso.",
+            Colors.orange);
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error al registrar: $e"),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showSnackBar("Error de conexión. Verifica que el servidor esté activo.",
+          Colors.redAccent);
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   @override
@@ -92,10 +101,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Text(
                   "Crear Cuenta",
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 32,
-                        color: AppTheme.primary,
-                      ),
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -103,6 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 30),
+
+                // TARJETA DE REGISTRO
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -160,11 +172,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           labelText: "Contraseña",
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureText
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
+                            icon: Icon(_obscureText
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined),
                             onPressed: () =>
                                 setState(() => _obscureText = !_obscureText),
                           ),
@@ -178,19 +188,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         height: 54,
                         child: ElevatedButton(
                           onPressed: loading ? null : _signup,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                          ),
                           child: loading
                               ? const SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
+                                      color: Colors.white, strokeWidth: 2.5),
                                 )
-                              : const Text(
-                                  "Crear Cuenta",
-                                  style: TextStyle(fontSize: 18),
-                                ),
+                              : const Text("Crear Cuenta",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],

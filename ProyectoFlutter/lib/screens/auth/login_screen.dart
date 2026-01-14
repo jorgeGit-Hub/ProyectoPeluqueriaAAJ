@@ -25,19 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    // 1. Cerrar teclado
     FocusScope.of(context).unfocus();
 
     final correo = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
+    // 2. Validación básica
     if (correo.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, rellena todos los campos"),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _showSnackBar("Por favor, rellena todos los campos", Colors.orange);
       return;
     }
 
@@ -45,33 +41,39 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final userProvider = context.read<UserProvider>();
+
+      // Intentamos el login a través del Provider corregido
       final success = await userProvider.login(correo, pass);
 
       if (!mounted) return;
 
       if (success) {
+        // Redirigimos al home si el login fue exitoso
         Navigator.pushReplacementNamed(context, "/home");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Correo o contraseña incorrectos"),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        _showSnackBar("Correo o contraseña incorrectos", Colors.redAccent);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error de conexión: $e"),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      // Error detallado por si falla la IP en el móvil físico
+      _showSnackBar(
+          "Error de conexión: Verifica que tu móvil y PC estén en la misma red Wi-Fi",
+          Colors.redAccent);
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  // Widget auxiliar para mostrar mensajes
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: color,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -87,6 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // LOGO CIRCULAR
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -100,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.content_cut_rounded,
                     size: 60,
                     color: AppTheme.primary,
@@ -109,19 +112,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
                 Text(
                   "¡Hola de nuevo!",
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 28,
-                        color: AppTheme.primary,
-                      ),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Inicia sesión para gestionar tus citas",
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
                 ),
                 const SizedBox(height: 40),
+
+                // CONTENEDOR DEL FORMULARIO
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -140,9 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "Correo electrónico",
-                          prefixIcon: Icon(Icons.email_outlined),
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -152,6 +158,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: "Contraseña",
                           prefixIcon: const Icon(Icons.lock_outline),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscureText
@@ -159,11 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : Icons.visibility_off_outlined,
                               color: Colors.grey,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureText = !_obscureText;
-                              });
-                            },
+                            onPressed: () =>
+                                setState(() => _obscureText = !_obscureText),
                           ),
                         ),
                       ),
@@ -174,23 +179,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: loading ? null : _login,
                           style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                                borderRadius: BorderRadius.circular(16)),
                           ),
                           child: loading
                               ? const SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
+                                      color: Colors.white, strokeWidth: 2.5),
                                 )
-                              : const Text(
-                                  "Iniciar Sesión",
-                                  style: TextStyle(fontSize: 18),
-                                ),
+                              : const Text("Iniciar Sesión",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -200,17 +204,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "¿No tienes cuenta?",
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
+                    Text("¿No tienes cuenta?",
+                        style: TextStyle(color: Colors.grey[700])),
                     TextButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, "/register"),
-                      child: const Text(
-                        "Regístrate aquí",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      child: const Text("Regístrate aquí",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),

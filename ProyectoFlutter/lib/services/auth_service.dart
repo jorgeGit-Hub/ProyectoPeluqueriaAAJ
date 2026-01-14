@@ -1,107 +1,93 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'base_api.dart';
 
 class AuthService {
   final String _authBase = "${BaseApi.baseUrl}/auth";
 
-  /// LOGIN
+  // ======================================================
+  // Inicio de Sesión
+  // ======================================================
   Future<bool> login(String correo, String password) async {
-    final res = await http
-        .post(
-          Uri.parse("$_authBase/signin"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
-            "correo": correo,
-            "password": password,
-          }),
-        )
-        .timeout(const Duration(seconds: 10));
+    final res = await http.post(
+      Uri.parse("$_authBase/signin"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"correo": correo, "password": password}),
+    );
 
-    if (res.statusCode != 200) {
-      throw Exception("Login inválido (${res.statusCode}): ${res.body}");
-    }
+    if (res.statusCode != 200) return false;
 
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    final token = data["accessToken"]?.toString();
-
-    if (token == null || token.isEmpty) {
-      throw Exception("No se recibió accessToken");
-    }
+    final data = jsonDecode(res.body);
+    final String token = data["accessToken"];
 
     BaseApi.token = token;
-
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString("token", token);
 
-    if (data["rol"] != null) {
-      await prefs.setString("rol", data["rol"].toString());
-    }
-    if (data["id"] is int) {
-      await prefs.setInt("userId", data["id"] as int);
-    }
+    // Guardamos los datos para el inicio automático (SplashScreen)
+    await prefs.setString("token", token);
+    await prefs.setString("userId", data["id"].toString());
+    await prefs.setString("nombre", data["nombre"]?.toString() ?? "");
+    await prefs.setString("rol", data["rol"]?.toString() ?? "cliente");
 
     return true;
   }
 
-  /// REGISTER
-  Future<bool> register({
-    required String nombre,
-    required String apellidos,
-    required String correo,
-    required String password,
-  }) async {
-    final res = await http
-        .post(
-          Uri.parse("$_authBase/signup"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
-            "nombre": nombre,
-            "apellidos": apellidos,
-            "correo": correo,
-            "password": password,
-          }),
-        )
-        .timeout(const Duration(seconds: 10));
+  // ======================================================
+  // Registro de Nuevo Usuario (¡Añadido!)
+  // ======================================================
+  Future<bool> register(
+      {required String nombre,
+      required String apellidos,
+      required String correo,
+      required String password}) async {
+    final res = await http.post(
+      Uri.parse("$_authBase/signup"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "nombre": nombre,
+        "apellidos": apellidos,
+        "correo": correo,
+        "password": password,
+        "rol": "cliente" // Rol por defecto
+      }),
+    );
 
-    if (res.statusCode == 200) return true;
-
-    throw Exception("Registro fallido (${res.statusCode}): ${res.body}");
+    // El backend de Spring Boot suele devolver 200 o 201 en caso de éxito
+    return res.statusCode == 200 || res.statusCode == 201;
   }
 
-  /// TOKEN GUARDADO
+  // ======================================================
+  // Validación de Token y Recuperación de Usuario
+  // ======================================================
+  Future<Map<String, dynamic>> validateAndGetUser() async {
+    final res = await http.get(
+      Uri.parse("$_authBase/validate"),
+      // Usamos el token que está en memoria
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${BaseApi.token}"
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception("Token no válido");
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  // ======================================================
+  // Utilidades de Persistencia
+  // ======================================================
   Future<String?> getSavedToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("token");
   }
 
-  /// LOGOUT
   Future<void> logout() async {
     BaseApi.token = null;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove("token");
-    await prefs.remove("rol");
-    await prefs.remove("userId");
-  }
-
-  /// VALIDAR TOKEN + DATOS USUARIO
-  Future<Map<String, dynamic>> validateAndGetUser() async {
-    final token = BaseApi.token;
-    if (token == null || token.isEmpty) {
-      throw Exception("No hay token");
-    }
-
-    final res = await http.get(
-      Uri.parse("$_authBase/validate"),
-      headers: {"Authorization": "Bearer $token"},
-    ).timeout(const Duration(seconds: 10));
-
-    if (res.statusCode != 200) {
-      throw Exception("Token inválido (${res.statusCode}): ${res.body}");
-    }
-
-    return jsonDecode(res.body) as Map<String, dynamic>;
+    await prefs.clear();
   }
 }

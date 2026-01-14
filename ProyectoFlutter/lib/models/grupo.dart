@@ -1,30 +1,30 @@
 class Grupo {
   final int idGrupo;
-  final String nombre;
-  final String descripcion;
+  final String curso;
+  final String email;
   final String turno;
 
   Grupo({
     required this.idGrupo,
-    required this.nombre,
-    required this.descripcion,
+    required this.curso,
+    required this.email,
     required this.turno,
   });
 
   factory Grupo.fromJson(Map<String, dynamic> json) {
     return Grupo(
-      idGrupo: json["idGrupo"] ?? 0,
-      nombre: json["nombre"] ?? "",
-      descripcion: json["descripcion"] ?? "",
-      turno: json["turno"]?.toString() ?? "",
+      idGrupo: json["idGrupo"] ?? json["id_grupo"] ?? 0,
+      curso: (json["curso"] ?? "").toString(),
+      email: (json["email"] ?? "").toString(),
+      turno: (json["turno"] ?? "").toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       "idGrupo": idGrupo,
-      "nombre": nombre,
-      "descripcion": descripcion,
+      "curso": curso,
+      "email": email,
       "turno": turno,
     };
   }

@@ -1,11 +1,10 @@
 class Cita {
   final int? idCita;
-  final String fecha; // "YYYY-MM-DD"
-  final String horaInicio; // "HH:mm:ss"
-  final String horaFin; // "HH:mm:ss"
-  final String estado; // pendiente | realizada | cancelada
-
-  final int idCliente; // Cliente.idUsuario
+  final String fecha;
+  final String horaInicio;
+  final String horaFin;
+  final String estado;
+  final int idCliente;
   final int idGrupo;
   final int idServicio;
 
@@ -24,17 +23,25 @@ class Cita {
     return Cita(
       idCita: json["idCita"] ?? json["id_cita"],
       fecha: (json["fecha"] ?? "").toString(),
-      horaInicio: (json["horaInicio"] ?? json["hora_inicio"] ?? "").toString(),
-      horaFin: (json["horaFin"] ?? json["hora_fin"] ?? "").toString(),
+      horaInicio:
+          (json["horaInicio"] ?? json["hora_inicio"] ?? "00:00").toString(),
+      horaFin: (json["horaFin"] ?? json["hora_fin"] ?? "00:00").toString(),
       estado: (json["estado"] ?? "pendiente").toString(),
-
-      // vienen como objetos (ManyToOne)
-      idCliente:
-          json["cliente"]?["idUsuario"] ?? json["cliente"]?["id_usuario"],
-      idGrupo: json["grupo"]?["idGrupo"] ?? json["grupo"]?["id_grupo"],
-      idServicio:
-          json["servicio"]?["idServicio"] ?? json["servicio"]?["id_servicio"],
+      idCliente: _parseId(json["cliente"]),
+      idGrupo: _parseId(json["grupo"]),
+      idServicio: _parseId(json["servicio"]),
     );
+  }
+
+  static int _parseId(dynamic data) {
+    if (data == null) return 0;
+    if (data is int) return data;
+    return data["idUsuario"] ??
+        data["id_usuario"] ??
+        data["idServicio"] ??
+        data["id_servicio"] ??
+        data["idGrupo"] ??
+        0;
   }
 
   Map<String, dynamic> toCreateJson() {

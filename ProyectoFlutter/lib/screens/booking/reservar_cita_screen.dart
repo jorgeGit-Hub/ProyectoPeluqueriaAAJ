@@ -16,6 +16,7 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
   DateTime? fecha;
   TimeOfDay? hora;
 
+  // Controladores con valores por defecto para pruebas rápidas
   final servicioCtrl = TextEditingController(text: "1");
   final grupoCtrl = TextEditingController(text: "1");
 
@@ -35,6 +36,14 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
       initialDate: now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: AppTheme.primary),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) setState(() => fecha = picked);
   }
@@ -49,12 +58,13 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
 
   Future<void> _crear() async {
     final user = context.read<UserProvider>().usuario;
-    if (user == null) return;
+    if (user == null) {
+      _showMsg("Debes iniciar sesión", Colors.red);
+      return;
+    }
 
     if (fecha == null || hora == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Selecciona fecha y hora")),
-      );
+      _showMsg("Selecciona fecha y hora", Colors.orange);
       return;
     }
 
@@ -62,64 +72,64 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
     final idGrupo = int.tryParse(grupoCtrl.text.trim());
 
     if (idServicio == null || idGrupo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Servicio y Grupo deben ser números")),
-      );
+      _showMsg("Los IDs deben ser números válidos", Colors.red);
       return;
     }
 
     setState(() => loading = true);
 
-    final fechaStr = "${fecha!.year.toString().padLeft(4, '0')}-"
-        "${fecha!.month.toString().padLeft(2, '0')}-"
-        "${fecha!.day.toString().padLeft(2, '0')}";
+    // Formateo para MySQL: YYYY-MM-DD
+    final fechaStr =
+        "${fecha!.year}-${fecha!.month.toString().padLeft(2, '0')}-${fecha!.day.toString().padLeft(2, '0')}";
 
+    // Formateo Hora Inicio: HH:mm:ss
     final h = hora!.hour.toString().padLeft(2, '0');
     final m = hora!.minute.toString().padLeft(2, '0');
     final horaInicioStr = "$h:$m:00";
 
-    // duración fija 30 min
+    // Cálculo automático de Hora Fin (fijo a 30 min por ahora)
     final start = DateTime(
-      fecha!.year,
-      fecha!.month,
-      fecha!.day,
-      hora!.hour,
-      hora!.minute,
-    );
+        fecha!.year, fecha!.month, fecha!.day, hora!.hour, hora!.minute);
     final end = start.add(const Duration(minutes: 30));
     final horaFinStr =
         "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00";
 
-    // Payload compatible con backend (mínimo con ids)
-    final payload = <String, dynamic>{
+    // JSON alineado con entidades JPA de tu Spring Boot
+    final payload = {
       "fecha": fechaStr,
       "horaInicio": horaInicioStr,
       "horaFin": horaFinStr,
       "estado": "PENDIENTE",
       "cliente": {"idUsuario": user["id"]},
       "servicio": {"idServicio": idServicio},
-      // si tu backend usa grupo como objeto, lo mandamos así:
       "grupo": {"idGrupo": idGrupo},
     };
 
     try {
-      await CitaService().createCita(payload);
+      final success = await CitaService().createCita(payload);
 
       if (!mounted) return;
       setState(() => loading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cita creada")),
-      );
-
-      Navigator.pop(context, true); // devuelve true para refrescar MisCitas
+      if (success) {
+        _showMsg("Cita reservada con éxito", Colors.green);
+        Navigator.pop(
+            context, true); // Retornar true para refrescar la lista anterior
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      _showMsg("Error de conexión: Verifica tu servidor", Colors.red);
     }
+  }
+
+  void _showMsg(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(text),
+          backgroundColor: color,
+          behavior: SnackBarBehavior.floating),
+    );
   }
 
   @override
@@ -127,65 +137,82 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
       appBar: AppBar(
-        title: const Text("Reservar cita"),
+        title: const Text("Reservar cita",
+            style: TextStyle(fontWeight: FontWeight.w600)),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
-                title: Text(
-                  fecha == null
-                      ? "Seleccionar fecha"
-                      : "${fecha!.toLocal()}".split(" ")[0],
-                ),
-                trailing: const Icon(Icons.calendar_month),
+                title: Text(fecha == null
+                    ? "Seleccionar fecha"
+                    : "${fecha!.day}/${fecha!.month}/${fecha!.year}"),
+                trailing:
+                    const Icon(Icons.calendar_month, color: AppTheme.primary),
                 onTap: _pickFecha,
               ),
             ),
+            const SizedBox(height: 10),
             Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 title: Text(
-                  hora == null
-                      ? "Seleccionar hora"
-                      : "${hora!.hour.toString().padLeft(2, '0')}:${hora!.minute.toString().padLeft(2, '0')}",
-                ),
-                trailing: const Icon(Icons.access_time),
+                    hora == null ? "Seleccionar hora" : hora!.format(context)),
+                trailing:
+                    const Icon(Icons.access_time, color: AppTheme.primary),
                 onTap: _pickHora,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             TextField(
               controller: servicioCtrl,
               keyboardType: TextInputType.number,
-              decoration:
-                  const InputDecoration(labelText: "ID Servicio (por ahora)"),
+              decoration: InputDecoration(
+                labelText: "ID Servicio",
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
             TextField(
               controller: grupoCtrl,
               keyboardType: TextInputType.number,
-              decoration:
-                  const InputDecoration(labelText: "ID Grupo (por ahora)"),
+              decoration: InputDecoration(
+                labelText: "ID Grupo",
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+              ),
             ),
-            const Spacer(),
+            const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
+              height: 54,
               child: ElevatedButton(
                 onPressed: loading ? null : _crear,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
                 child: loading
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : const Text("Confirmar cita"),
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Confirmar cita",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             )
           ],

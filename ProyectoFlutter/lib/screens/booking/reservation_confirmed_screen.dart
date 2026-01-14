@@ -6,13 +6,13 @@ class ReservationConfirmedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos PopScope (o WillPopScope en versiones antiguas) para controlar
-    // que el botón "Atrás" de Android no devuelva al usuario al formulario.
+    // PopScope asegura que el usuario no pueda volver "atrás" al formulario de reserva
+    // una vez que la cita ya ha sido creada en el backend de Spring Boot.
     return PopScope(
-      canPop: false, // Bloquea el botón atrás físico
-      onPopInvoked: (didPop) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        // Si intenta ir atrás, lo mandamos al home
+        // Si intenta ir atrás, limpiamos el historial y vamos al Home
         Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
       },
       child: Scaffold(
@@ -24,7 +24,7 @@ class ReservationConfirmedScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // -----------------------------
-                // TARJETA DE CONFIRMACIÓN
+                // TARJETA DE ÉXITO
                 // -----------------------------
                 Container(
                   padding:
@@ -81,7 +81,7 @@ class ReservationConfirmedScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "Tu cita ha sido agendada correctamente. Te esperamos en el salón.",
+                        "Tu cita ha sido agendada correctamente en nuestro sistema. Te esperamos en el salón.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
@@ -93,14 +93,14 @@ class ReservationConfirmedScreen extends StatelessWidget {
                       const SizedBox(height: 40),
 
                       // -----------------------------
-                      // BOTONES DE ACCIÓN
+                      // BOTÓN: VOLVER AL INICIO
                       // -----------------------------
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: 52,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Limpia toda la historia y va al home
+                            // pushNamedAndRemoveUntil es clave para reiniciar el flujo de la app
                             Navigator.pushNamedAndRemoveUntil(
                                 context, "/home", (route) => false);
                           },
@@ -122,18 +122,22 @@ class ReservationConfirmedScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
+                      // -----------------------------
+                      // BOTÓN: VER MIS CITAS
+                      // -----------------------------
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: 52,
                         child: OutlinedButton(
                           onPressed: () {
-                            // Ir a mis citas, eliminando el historial de reserva
+                            // Navegamos a la pantalla de Mis Citas que corregimos antes
                             Navigator.pushNamedAndRemoveUntil(context,
                                 "/mis-citas", ModalRoute.withName("/home"));
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.primary,
-                            side: BorderSide(color: AppTheme.primary),
+                            side: const BorderSide(
+                                color: AppTheme.primary, width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
