@@ -13,8 +13,6 @@ namespace PeluqueriaApp.Models
 
     public class LoginResponse
     {
-        // CORREGIDO: Jackson usa el nombre del getter en el backend
-        // El getter es getAccessToken() así que el JSON tiene "accessToken"
         [Newtonsoft.Json.JsonProperty("accessToken")]
         public string token { get; set; }
 
@@ -46,15 +44,19 @@ namespace PeluqueriaApp.Models
         public string message { get; set; }
     }
 
-    // ========== SERVICIO ==========
+    // ========== SERVICIO ACTUALIZADO ==========
 
     public class Servicio
     {
         public int idServicio { get; set; }
         public string nombre { get; set; }
-        public string descripcion { get; set; }
-        public int duracion { get; set; }
+        public string modulo { get; set; }
+        public string aula { get; set; }
+        public string tiempoCliente { get; set; }
         public decimal precio { get; set; }
+        public string diaSemana { get; set; }
+        public string horario { get; set; }
+        public GrupoSimple grupo { get; set; }
     }
 
     // ========== USUARIO ==========
@@ -91,7 +93,7 @@ namespace PeluqueriaApp.Models
         public string observaciones { get; set; }
     }
 
-    // ========== CITA ==========
+    // ========== CITA ACTUALIZADA (SIN GRUPO) ==========
 
     public class Cita
     {
@@ -101,18 +103,12 @@ namespace PeluqueriaApp.Models
         public string horaFin { get; set; }
         public string estado { get; set; }
         public ClienteSimple cliente { get; set; }
-        public GrupoSimple grupo { get; set; }
         public ServicioSimple servicio { get; set; }
     }
 
     public class ClienteSimple
     {
         public int idUsuario { get; set; }
-    }
-
-    public class GrupoSimple
-    {
-        public int idGrupo { get; set; }
     }
 
     public class ServicioSimple
@@ -128,6 +124,11 @@ namespace PeluqueriaApp.Models
         public string curso { get; set; }
         public string email { get; set; }
         public string turno { get; set; }
+    }
+
+    public class GrupoSimple
+    {
+        public int idGrupo { get; set; }
     }
 
     // ========== VALORACIÓN ==========

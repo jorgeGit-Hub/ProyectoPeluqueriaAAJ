@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -10,16 +11,15 @@ namespace PeluqueriaApp
         private int? idServicio = null;
         private bool esEdicion = false;
 
-        // Constructor para CREAR nuevo servicio
         public CrearEditarServicioForm()
         {
             InitializeComponent();
             this.Text = "Crear Nuevo Servicio";
             TituloLbl.Text = "Crear Nuevo Servicio";
             esEdicion = false;
+            CargarGrupos();
         }
 
-        // Constructor para EDITAR servicio existente
         public CrearEditarServicioForm(int id)
         {
             InitializeComponent();
@@ -27,8 +27,37 @@ namespace PeluqueriaApp
             TituloLbl.Text = "Editar Servicio";
             idServicio = id;
             esEdicion = true;
-
+            CargarGrupos();
             CargarDatosServicio(id);
+        }
+
+        private async void CargarGrupos()
+        {
+            try
+            {
+                var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
+
+                GrupoCombo.Items.Clear();
+                GrupoCombo.Items.Add("-- Seleccionar Grupo --");
+
+                if (grupos != null && grupos.Count > 0)
+                {
+                    foreach (var grupo in grupos)
+                    {
+                        GrupoCombo.Items.Add(new ComboItem
+                        {
+                            Text = $"{grupo.curso} - {grupo.turno}",
+                            Value = grupo.idGrupo
+                        });
+                    }
+                }
+
+                GrupoCombo.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar grupos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void GuardarBtn_Click(object sender, EventArgs e)
@@ -41,32 +70,44 @@ namespace PeluqueriaApp
                 return;
             }
 
-            if (!int.TryParse(DuracionTxt.Text, out int duracion) || duracion <= 0)
+            if (string.IsNullOrWhiteSpace(ModuloTxt.Text))
             {
-                MessageBox.Show("La duración debe ser un número positivo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DuracionTxt.Focus();
+                MessageBox.Show("El módulo es obligatorio", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ModuloTxt.Focus();
                 return;
             }
 
-            if (!decimal.TryParse(PrecioTxt.Text, out decimal precio) || precio <= 0)
+            if (!decimal.TryParse(PrecioTxt.Text, out decimal precio) || precio < 0)
             {
-                MessageBox.Show("El precio debe ser un número positivo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("El precio debe ser un número válido mayor o igual a 0", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 PrecioTxt.Focus();
                 return;
             }
 
-            // Deshabilitar botón mientras se procesa
+            if (GrupoCombo.SelectedIndex <= 0)
+            {
+                MessageBox.Show("Debes seleccionar un grupo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                GrupoCombo.Focus();
+                return;
+            }
+
             GuardarBtn.Enabled = false;
             GuardarBtn.Text = "Guardando...";
 
             try
             {
+                var grupoSeleccionado = (ComboItem)GrupoCombo.SelectedItem;
+
                 var servicio = new Servicio
                 {
                     nombre = NombreTxt.Text.Trim(),
-                    descripcion = DescripcionTxt.Text.Trim(),
-                    duracion = duracion,
-                    precio = precio
+                    modulo = ModuloTxt.Text.Trim(),
+                    aula = AulaTxt.Text.Trim(),
+                    tiempoCliente = TiempoClienteTxt.Text.Trim(),
+                    precio = precio,
+                    diaSemana = DiaSemanaCombo.SelectedItem?.ToString(),
+                    horario = HorarioTxt.Text.Trim(),
+                    grupo = new GrupoSimple { idGrupo = grupoSeleccionado.Value }
                 };
 
                 if (esEdicion)
@@ -102,9 +143,35 @@ namespace PeluqueriaApp
                 var servicio = await ApiService.GetAsync<Servicio>($"api/servicios/{id}");
 
                 NombreTxt.Text = servicio.nombre;
-                DescripcionTxt.Text = servicio.descripcion;
-                DuracionTxt.Text = servicio.duracion.ToString();
+                ModuloTxt.Text = servicio.modulo;
+                AulaTxt.Text = servicio.aula;
+                TiempoClienteTxt.Text = servicio.tiempoCliente;
                 PrecioTxt.Text = servicio.precio.ToString("F2");
+                HorarioTxt.Text = servicio.horario;
+
+                // Seleccionar día de la semana
+                if (!string.IsNullOrEmpty(servicio.diaSemana))
+                {
+                    int index = DiaSemanaCombo.Items.IndexOf(servicio.diaSemana);
+                    if (index >= 0)
+                    {
+                        DiaSemanaCombo.SelectedIndex = index;
+                    }
+                }
+
+                // Seleccionar grupo
+                if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
+                {
+                    for (int i = 1; i < GrupoCombo.Items.Count; i++)
+                    {
+                        var item = (ComboItem)GrupoCombo.Items[i];
+                        if (item.Value == servicio.grupo.idGrupo)
+                        {
+                            GrupoCombo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -125,6 +192,18 @@ namespace PeluqueriaApp
             {
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
+            }
+        }
+
+        // Clase auxiliar para ComboBox
+        private class ComboItem
+        {
+            public string Text { get; set; }
+            public int Value { get; set; }
+
+            public override string ToString()
+            {
+                return Text;
             }
         }
     }

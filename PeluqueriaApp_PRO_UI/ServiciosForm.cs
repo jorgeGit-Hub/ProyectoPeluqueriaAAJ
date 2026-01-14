@@ -23,21 +23,27 @@ namespace PeluqueriaApp
             ServiciosDataGrid.Columns.Clear();
             ServiciosDataGrid.Columns.Add("idServicio", "ID");
             ServiciosDataGrid.Columns.Add("nombre", "Nombre");
-            ServiciosDataGrid.Columns.Add("descripcion", "Descripción");
-            ServiciosDataGrid.Columns.Add("duracion", "Duración (min)");
+            ServiciosDataGrid.Columns.Add("modulo", "Módulo");
+            ServiciosDataGrid.Columns.Add("aula", "Aula");
+            ServiciosDataGrid.Columns.Add("tiempoCliente", "Tiempo");
             ServiciosDataGrid.Columns.Add("precio", "Precio (€)");
+            ServiciosDataGrid.Columns.Add("diaSemana", "Día");
+            ServiciosDataGrid.Columns.Add("horario", "Horario");
+            ServiciosDataGrid.Columns.Add("grupo", "Grupo");
 
             ServiciosDataGrid.Columns["idServicio"].Width = 50;
+            ServiciosDataGrid.Columns["aula"].Width = 80;
+            ServiciosDataGrid.Columns["tiempoCliente"].Width = 80;
+            ServiciosDataGrid.Columns["precio"].Width = 80;
+            ServiciosDataGrid.Columns["diaSemana"].Width = 100;
         }
 
         private async void CargarServicios()
         {
             try
             {
-                // Mostrar indicador de carga
                 ServiciosDataGrid.Rows.Clear();
 
-                // Llamar a la API
                 servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
 
                 if (servicios == null || servicios.Count == 0)
@@ -46,15 +52,24 @@ namespace PeluqueriaApp
                     return;
                 }
 
-                // Llenar el DataGrid
                 foreach (var servicio in servicios)
                 {
+                    string grupoInfo = "N/A";
+                    if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
+                    {
+                        grupoInfo = $"Grupo {servicio.grupo.idGrupo}";
+                    }
+
                     ServiciosDataGrid.Rows.Add(
                         servicio.idServicio,
                         servicio.nombre ?? "",
-                        servicio.descripcion ?? "Sin descripción",
-                        servicio.duracion,
-                        servicio.precio.ToString("F2")
+                        servicio.modulo ?? "N/A",
+                        servicio.aula ?? "N/A",
+                        servicio.tiempoCliente ?? "N/A",
+                        servicio.precio.ToString("F2"),
+                        servicio.diaSemana ?? "N/A",
+                        servicio.horario ?? "N/A",
+                        grupoInfo
                     );
                 }
             }
@@ -76,26 +91,34 @@ namespace PeluqueriaApp
 
             try
             {
-                // Buscar servicios por nombre que empiecen con el texto
-                servicios = await ApiService.GetAsync<List<Servicio>>($"api/servicios/buscar/empieza/{textoBusqueda}");
+                servicios = await ApiService.GetAsync<List<Servicio>>($"api/servicios/buscar/{textoBusqueda}");
 
-                // Actualizar vista
                 ServiciosDataGrid.Rows.Clear();
 
                 if (servicios == null || servicios.Count == 0)
                 {
-                    MessageBox.Show($"No se encontraron servicios que empiecen con '{textoBusqueda}'", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"No se encontraron servicios que contengan '{textoBusqueda}'", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 foreach (var servicio in servicios)
                 {
+                    string grupoInfo = "N/A";
+                    if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
+                    {
+                        grupoInfo = $"Grupo {servicio.grupo.idGrupo}";
+                    }
+
                     ServiciosDataGrid.Rows.Add(
                         servicio.idServicio,
                         servicio.nombre ?? "",
-                        servicio.descripcion ?? "Sin descripción",
-                        servicio.duracion,
-                        servicio.precio.ToString("F2")
+                        servicio.modulo ?? "N/A",
+                        servicio.aula ?? "N/A",
+                        servicio.tiempoCliente ?? "N/A",
+                        servicio.precio.ToString("F2"),
+                        servicio.diaSemana ?? "N/A",
+                        servicio.horario ?? "N/A",
+                        grupoInfo
                     );
                 }
             }

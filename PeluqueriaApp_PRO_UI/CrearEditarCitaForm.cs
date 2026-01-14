@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -10,7 +11,6 @@ namespace PeluqueriaApp
         private int? idCita = null;
         private bool esEdicion = false;
 
-        // Constructor para CREAR nueva cita
         public CrearEditarCitaForm()
         {
             InitializeComponent();
@@ -18,11 +18,11 @@ namespace PeluqueriaApp
             TituloLbl.Text = "Crear Nueva Cita";
             esEdicion = false;
 
-            // Inicializar fecha a hoy
             FechaCalendar.SetDate(DateTime.Now);
+            CargarClientes();
+            CargarServicios();
         }
 
-        // Constructor para EDITAR cita existente
         public CrearEditarCitaForm(int id)
         {
             InitializeComponent();
@@ -31,23 +31,87 @@ namespace PeluqueriaApp
             idCita = id;
             esEdicion = true;
 
+            CargarClientes();
+            CargarServicios();
             CargarDatosCita(id);
+        }
+
+        private async void CargarClientes()
+        {
+            try
+            {
+                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
+
+                ClienteCombo.Items.Clear();
+                ClienteCombo.Items.Add("-- Seleccionar Cliente --");
+
+                if (usuarios != null && usuarios.Count > 0)
+                {
+                    foreach (var usuario in usuarios)
+                    {
+                        if (usuario.rol?.ToLower() == "cliente")
+                        {
+                            ClienteCombo.Items.Add(new ComboItem
+                            {
+                                Text = $"{usuario.nombre} {usuario.apellidos} (ID: {usuario.idUsuario})",
+                                Value = usuario.idUsuario
+                            });
+                        }
+                    }
+                }
+
+                ClienteCombo.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar clientes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void CargarServicios()
+        {
+            try
+            {
+                var servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
+
+                ServicioCombo.Items.Clear();
+                ServicioCombo.Items.Add("-- Seleccionar Servicio --");
+
+                if (servicios != null && servicios.Count > 0)
+                {
+                    foreach (var servicio in servicios)
+                    {
+                        string grupoInfo = servicio.grupo != null ? $"Grupo {servicio.grupo.idGrupo}" : "";
+                        ServicioCombo.Items.Add(new ComboItem
+                        {
+                            Text = $"{servicio.nombre} - {servicio.diaSemana} ({grupoInfo}) - {servicio.precio}€",
+                            Value = servicio.idServicio
+                        });
+                    }
+                }
+
+                ServicioCombo.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar servicios: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void GuardarBtn_Click(object sender, EventArgs e)
         {
             // Validaciones
-            if (ClienteIdTxt.Text == "" || !int.TryParse(ClienteIdTxt.Text, out int idCliente))
+            if (ClienteCombo.SelectedIndex <= 0)
             {
-                MessageBox.Show("El ID del cliente es obligatorio y debe ser un número", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ClienteIdTxt.Focus();
+                MessageBox.Show("Debes seleccionar un cliente", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClienteCombo.Focus();
                 return;
             }
 
-            if (ServicioIdTxt.Text == "" || !int.TryParse(ServicioIdTxt.Text, out int idServicio))
+            if (ServicioCombo.SelectedIndex <= 0)
             {
-                MessageBox.Show("El ID del servicio es obligatorio y debe ser un número", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ServicioIdTxt.Focus();
+                MessageBox.Show("Debes seleccionar un servicio", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ServicioCombo.Focus();
                 return;
             }
 
@@ -69,21 +133,18 @@ namespace PeluqueriaApp
 
             try
             {
+                var clienteSeleccionado = (ComboItem)ClienteCombo.SelectedItem;
+                var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
+
                 var cita = new Cita
                 {
                     fecha = FechaCalendar.SelectionStart.ToString("yyyy-MM-dd"),
                     horaInicio = HoraInicioTxt.Text.Trim(),
                     horaFin = HoraFinTxt.Text.Trim(),
                     estado = EstadoCombo.SelectedItem.ToString().ToLower(),
-                    cliente = new ClienteSimple { idUsuario = idCliente },
-                    servicio = new ServicioSimple { idServicio = idServicio }
+                    cliente = new ClienteSimple { idUsuario = clienteSeleccionado.Value },
+                    servicio = new ServicioSimple { idServicio = servicioSeleccionado.Value }
                 };
-
-                // Si hay grupo, añadirlo
-                if (!string.IsNullOrWhiteSpace(GrupoIdTxt.Text) && int.TryParse(GrupoIdTxt.Text, out int idGrupo))
-                {
-                    cita.grupo = new GrupoSimple { idGrupo = idGrupo };
-                }
 
                 if (esEdicion)
                 {
@@ -117,16 +178,13 @@ namespace PeluqueriaApp
             {
                 var cita = await ApiService.GetAsync<Cita>($"api/citas/{id}");
 
-                // Cargar fecha en calendario
+                // Cargar fecha
                 if (!string.IsNullOrEmpty(cita.fecha))
                 {
                     FechaCalendar.SetDate(DateTime.Parse(cita.fecha));
                 }
 
-                // Cargar datos
-                ClienteIdTxt.Text = cita.cliente?.idUsuario.ToString() ?? "";
-                ServicioIdTxt.Text = cita.servicio?.idServicio.ToString() ?? "";
-                GrupoIdTxt.Text = cita.grupo?.idGrupo.ToString() ?? "";
+                // Cargar horas
                 HoraInicioTxt.Text = cita.horaInicio;
                 HoraFinTxt.Text = cita.horaFin;
 
@@ -135,6 +193,34 @@ namespace PeluqueriaApp
                 {
                     string estadoCapitalizado = char.ToUpper(cita.estado[0]) + cita.estado.Substring(1).ToLower();
                     EstadoCombo.SelectedItem = estadoCapitalizado;
+                }
+
+                // Seleccionar cliente
+                if (cita.cliente != null)
+                {
+                    for (int i = 1; i < ClienteCombo.Items.Count; i++)
+                    {
+                        var item = (ComboItem)ClienteCombo.Items[i];
+                        if (item.Value == cita.cliente.idUsuario)
+                        {
+                            ClienteCombo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Seleccionar servicio
+                if (cita.servicio != null)
+                {
+                    for (int i = 1; i < ServicioCombo.Items.Count; i++)
+                    {
+                        var item = (ComboItem)ServicioCombo.Items[i];
+                        if (item.Value == cita.servicio.idServicio)
+                        {
+                            ServicioCombo.SelectedIndex = i;
+                            break;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -156,6 +242,18 @@ namespace PeluqueriaApp
             {
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
+            }
+        }
+
+        // Clase auxiliar para ComboBox
+        private class ComboItem
+        {
+            public string Text { get; set; }
+            public int Value { get; set; }
+
+            public override string ToString()
+            {
+                return Text;
             }
         }
     }

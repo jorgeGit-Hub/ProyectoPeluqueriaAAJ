@@ -22,11 +22,13 @@ namespace PeluqueriaApp
             CitasDataGrid.Columns.Add("fecha", "Fecha");
             CitasDataGrid.Columns.Add("horaInicio", "Hora Inicio");
             CitasDataGrid.Columns.Add("horaFin", "Hora Fin");
-            CitasDataGrid.Columns.Add("cliente", "Cliente");
-            CitasDataGrid.Columns.Add("servicio", "Servicio");
+            CitasDataGrid.Columns.Add("cliente", "Cliente (ID)");
+            CitasDataGrid.Columns.Add("servicio", "Servicio (ID)");
             CitasDataGrid.Columns.Add("estado", "Estado");
 
             CitasDataGrid.Columns["idCita"].Width = 50;
+            CitasDataGrid.Columns["cliente"].Width = 100;
+            CitasDataGrid.Columns["servicio"].Width = 100;
         }
 
         private async void CargarCitas()
@@ -45,17 +47,17 @@ namespace PeluqueriaApp
 
                 foreach (var cita in citas)
                 {
-                    string clienteNombre = cita.cliente?.idUsuario.ToString() ?? "N/A";
-                    string servicioNombre = cita.servicio?.idServicio.ToString() ?? "N/A";
+                    string clienteInfo = cita.cliente != null ? $"ID: {cita.cliente.idUsuario}" : "N/A";
+                    string servicioInfo = cita.servicio != null ? $"ID: {cita.servicio.idServicio}" : "N/A";
 
                     CitasDataGrid.Rows.Add(
                         cita.idCita,
-                        cita.fecha,
-                        cita.horaInicio,
-                        cita.horaFin,
-                        clienteNombre,
-                        servicioNombre,
-                        cita.estado ?? "N/A"
+                        cita.fecha ?? "N/A",
+                        cita.horaInicio ?? "N/A",
+                        cita.horaFin ?? "N/A",
+                        clienteInfo,
+                        servicioInfo,
+                        cita.estado ?? "pendiente"
                     );
                 }
             }
@@ -194,6 +196,9 @@ namespace PeluqueriaApp
 
             if (result == DialogResult.Yes)
             {
+                ApiService.ClearAuthToken();
+                UserSession.CerrarSesion();
+
                 LoginForm loginForm = new LoginForm();
                 loginForm.Show();
                 this.Close();
