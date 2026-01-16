@@ -19,24 +19,35 @@ public class Grupo {
     @Column(name="email")
     private String email;
 
-    // CORREGIDO: nombre de columna sin caracteres especiales
     @Column(name="contrasena")
     private String contrasena;
 
     @Enumerated(EnumType.STRING)
     private Turno turno;
 
-    // CORREGIDO: valores del enum sin caracteres especiales
+    // NUEVO: Cantidad de alumnos que pueden atender simultáneamente
+    @Column(name="cant_alumnos")
+    private Integer cantAlumnos;
+
     public enum Turno { manana, tarde }
 
+    // Getters y Setters
     public Integer getIdGrupo(){return idGrupo;}
     public void setIdGrupo(Integer idGrupo){this.idGrupo=idGrupo;}
+
     public String getCurso(){return curso;}
     public void setCurso(String curso){this.curso=curso;}
+
     public String getEmail(){return email;}
     public void setEmail(String email){this.email=email;}
+
     public String getContrasena(){return contrasena;}
     public void setContrasena(String contrasena){this.contrasena=contrasena;}
+
     public Turno getTurno(){return turno;}
     public void setTurno(Turno turno){this.turno=turno;}
+
+    // NUEVO
+    public Integer getCantAlumnos(){return cantAlumnos;}
+    public void setCantAlumnos(Integer cantAlumnos){this.cantAlumnos=cantAlumnos;}
 }

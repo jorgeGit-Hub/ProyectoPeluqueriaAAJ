@@ -1,12 +1,12 @@
 package com.example.proyecto.controller;
 
-import com.example.proyecto.domain.BloqueoHorario;
 import com.example.proyecto.domain.Cita;
+import com.example.proyecto.domain.HorarioSemanal;
 import com.example.proyecto.domain.Servicio;
-import com.example.proyecto.repository.BloqueoHorarioRepository;
 import com.example.proyecto.repository.CitaRepository;
 import com.example.proyecto.repository.ClienteRepository;
 import com.example.proyecto.repository.ServicioRepository;
+import com.example.proyecto.repository.HorarioSemanalRepository;
 import com.example.proyecto.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.format.TextStyle; // Necesario para el nombre del día
+import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.HashMap;
-import java.util.List; // Necesario para las listas
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -35,7 +37,7 @@ public class CitaController {
     private ServicioRepository servicioRepository;
 
     @Autowired
-    private BloqueoHorarioRepository bloqueoRepository;
+    private HorarioSemanalRepository horarioRepository;
 
     // --- CONSULTAS ---
 
@@ -80,20 +82,66 @@ public class CitaController {
                 return ResponseEntity.badRequest().body(createError("El servicio no existe"));
             }
 
-            // 2. Validar Día
-            if (!validarDiaServicio(c.getFecha(), servicioCompleto.getDiaSemana())) {
-                return ResponseEntity.badRequest().body(createError("Este servicio solo es los: " + servicioCompleto.getDiaSemana()));
+            // 2. Validar que exista horario para ese día
+            String diaSemana = convertirDiaSemana(c.getFecha().getDayOfWeek());
+            List<HorarioSemanal> horariosDelDia = horarioRepository.findByServicioAndDia(
+                    servicioCompleto.getIdServicio(),
+                    diaSemana
+            );
+
+            if (horariosDelDia.isEmpty()) {
+                return ResponseEntity.badRequest().body(createError(
+                        "Este servicio no está disponible los " + diaSemana
+                ));
             }
 
-            // 3. Validar Bloqueo
-            if (existeBloqueo(c)) {
-                return ResponseEntity.badRequest().body(createError("Horario bloqueado por el centro."));
+            // 3. Validar que la cita esté dentro de algún horario disponible
+            boolean dentroDeHorario = false;
+            HorarioSemanal horarioValido = null;
+
+            for (HorarioSemanal horario : horariosDelDia) {
+                if (!c.getHoraInicio().isBefore(horario.getHoraInicio()) &&
+                        !c.getHoraFin().isAfter(horario.getHoraFin())) {
+                    dentroDeHorario = true;
+                    horarioValido = horario;
+                    break;
+                }
+            }
+
+            if (!dentroDeHorario) {
+                return ResponseEntity.badRequest().body(createError(
+                        "El horario de la cita debe estar dentro del horario del servicio"
+                ));
+            }
+
+            // 4. Validar capacidad del grupo (cantAlumnos)
+            if (servicioCompleto.getGrupo() != null &&
+                    servicioCompleto.getGrupo().getCantAlumnos() != null) {
+
+                int capacidadMaxima = servicioCompleto.getGrupo().getCantAlumnos();
+
+                // Contar citas que se solapan en ese horario para ese servicio
+                int citasSimultaneas = contarCitasSimultaneas(
+                        servicioCompleto.getIdServicio(),
+                        c.getFecha(),
+                        c.getHoraInicio(),
+                        c.getHoraFin()
+                );
+
+                if (citasSimultaneas >= capacidadMaxima) {
+                    return ResponseEntity.badRequest().body(createError(
+                            "No hay capacidad disponible. Máximo: " + capacidadMaxima +
+                                    " alumnos. Ya hay " + citasSimultaneas + " citas en ese horario."
+                    ));
+                }
             }
 
             c.setServicio(servicioCompleto);
 
-            // 4. Validar Cliente/Permisos
-            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+            // 5. Validar Cliente/Permisos
+            boolean isAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+
             if (!isAdmin) {
                 if (c.getCliente() == null || c.getCliente().getIdUsuario() == null) {
                     return ResponseEntity.badRequest().body(createError("Falta el cliente"));
@@ -115,18 +163,68 @@ public class CitaController {
         try {
             if (!repo.existsById(id)) return ResponseEntity.notFound().build();
 
-            if (c.getServicio() != null && c.getFecha() != null) {
+            // Si se actualiza servicio o fecha, validar horarios y capacidad
+            if (c.getServicio() != null && c.getFecha() != null &&
+                    c.getHoraInicio() != null && c.getHoraFin() != null) {
+
                 Servicio s = servicioRepository.findById(c.getServicio().getIdServicio()).orElse(null);
-                if (s != null && !validarDiaServicio(c.getFecha(), s.getDiaSemana())) {
-                    return ResponseEntity.badRequest().body(createError("Día incorrecto"));
+                if (s == null) {
+                    return ResponseEntity.badRequest().body(createError("Servicio no encontrado"));
                 }
-                if (existeBloqueo(c)) {
-                    return ResponseEntity.badRequest().body(createError("Conflicto con bloqueo horario"));
+
+                // Validar día
+                String diaSemana = convertirDiaSemana(c.getFecha().getDayOfWeek());
+                List<HorarioSemanal> horariosDelDia = horarioRepository.findByServicioAndDia(
+                        s.getIdServicio(),
+                        diaSemana
+                );
+
+                if (horariosDelDia.isEmpty()) {
+                    return ResponseEntity.badRequest().body(createError(
+                            "Este servicio no está disponible los " + diaSemana
+                    ));
+                }
+
+                // Validar horario
+                boolean dentroDeHorario = false;
+                for (HorarioSemanal horario : horariosDelDia) {
+                    if (!c.getHoraInicio().isBefore(horario.getHoraInicio()) &&
+                            !c.getHoraFin().isAfter(horario.getHoraFin())) {
+                        dentroDeHorario = true;
+                        break;
+                    }
+                }
+
+                if (!dentroDeHorario) {
+                    return ResponseEntity.badRequest().body(createError(
+                            "El horario de la cita debe estar dentro del horario del servicio"
+                    ));
+                }
+
+                // Validar capacidad (excluyendo la cita actual)
+                if (s.getGrupo() != null && s.getGrupo().getCantAlumnos() != null) {
+                    int capacidadMaxima = s.getGrupo().getCantAlumnos();
+
+                    int citasSimultaneas = contarCitasSimultaneasExcluyendo(
+                            s.getIdServicio(),
+                            c.getFecha(),
+                            c.getHoraInicio(),
+                            c.getHoraFin(),
+                            id // Excluir la cita actual del conteo
+                    );
+
+                    if (citasSimultaneas >= capacidadMaxima) {
+                        return ResponseEntity.badRequest().body(createError(
+                                "No hay capacidad disponible. Máximo: " + capacidadMaxima +
+                                        " alumnos. Ya hay " + citasSimultaneas + " citas en ese horario."
+                        ));
+                    }
                 }
             }
 
             c.setIdCita(id);
             return ResponseEntity.ok(repo.save(c));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(createError("Error: " + e.getMessage()));
         }
@@ -139,7 +237,7 @@ public class CitaController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- AUXILIARES ---
+    // --- MÉTODOS AUXILIARES ---
 
     private Map<String, String> createError(String mensaje) {
         Map<String, String> map = new HashMap<>();
@@ -147,19 +245,72 @@ public class CitaController {
         return map;
     }
 
-    private boolean validarDiaServicio(LocalDate fecha, String diasPermitidos) {
-        if (diasPermitidos == null) return true;
-        String dia = fecha.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase();
-        return diasPermitidos.toLowerCase().contains(dia);
+    /**
+     * Convierte DayOfWeek de Java a String en español minúsculas
+     * para comparar con el enum DiaSemana
+     */
+    private String convertirDiaSemana(DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY: return "lunes";
+            case TUESDAY: return "martes";
+            case WEDNESDAY: return "miercoles";
+            case THURSDAY: return "jueves";
+            case FRIDAY: return "viernes";
+            case SATURDAY: return "sabado";
+            case SUNDAY: return "domingo";
+            default: return "";
+        }
     }
 
-    private boolean existeBloqueo(Cita c) {
-        List<BloqueoHorario> bloqueos = bloqueoRepository.findByFecha(c.getFecha());
-        for (BloqueoHorario b : bloqueos) {
-            if (c.getHoraInicio().isBefore(b.getHoraFin()) && c.getHoraFin().isAfter(b.getHoraInicio())) {
-                return true;
+    /**
+     * Cuenta cuántas citas existen que se solapan con el horario especificado
+     * para un servicio en una fecha determinada
+     */
+    private int contarCitasSimultaneas(Integer idServicio, LocalDate fecha,
+                                       LocalTime horaInicio, LocalTime horaFin) {
+        List<Cita> citasDelDia = repo.findByServicioAndFromDate(idServicio, fecha);
+
+        int contador = 0;
+        for (Cita cita : citasDelDia) {
+            // Verificar si las fechas coinciden
+            if (!cita.getFecha().equals(fecha)) continue;
+
+            // Verificar solapamiento de horarios
+            // Dos citas se solapan si:
+            // (horaInicio1 < horaFin2) Y (horaFin1 > horaInicio2)
+            if (cita.getHoraInicio().isBefore(horaFin) &&
+                    cita.getHoraFin().isAfter(horaInicio)) {
+                contador++;
             }
         }
-        return false;
+
+        return contador;
+    }
+
+    /**
+     * Similar a contarCitasSimultaneas pero excluye una cita específica
+     * (útil para actualizaciones)
+     */
+    private int contarCitasSimultaneasExcluyendo(Integer idServicio, LocalDate fecha,
+                                                 LocalTime horaInicio, LocalTime horaFin,
+                                                 Integer idCitaExcluir) {
+        List<Cita> citasDelDia = repo.findByServicioAndFromDate(idServicio, fecha);
+
+        int contador = 0;
+        for (Cita cita : citasDelDia) {
+            // Excluir la cita actual
+            if (cita.getIdCita().equals(idCitaExcluir)) continue;
+
+            // Verificar si las fechas coinciden
+            if (!cita.getFecha().equals(fecha)) continue;
+
+            // Verificar solapamiento de horarios
+            if (cita.getHoraInicio().isBefore(horaFin) &&
+                    cita.getHoraFin().isAfter(horaInicio)) {
+                contador++;
+            }
+        }
+
+        return contador;
     }
 }

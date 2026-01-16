@@ -64,13 +64,20 @@ public class WebSecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/servicios/**").permitAll()
 
-                        // IMPORTANTE: Estos endpoints ESPECÍFICOS deben ir ANTES de la regla general /api/usuarios/**
+                        // NUEVO: Horarios - público para consulta
+                        .requestMatchers("/api/horarios", "/api/horarios/{id}",
+                                "/api/horarios/servicio/{idServicio}",
+                                "/api/horarios/dia/{dia}",
+                                "/api/horarios/servicio/{idServicio}/dia/{dia}").permitAll()
+
+                        // Endpoints específicos que deben ir ANTES de la regla general
                         .requestMatchers("/api/usuarios/with-cliente").permitAll()
                         .requestMatchers("/api/usuarios/with-administrador").permitAll()
 
-                        // Endpoints solo para ADMINISTRADOR (regla general, va DESPUÉS de las específicas)
+                        // Solo ADMINISTRADOR
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/horarios/**").hasRole("ADMINISTRADOR") // Crear/modificar/eliminar
 
                         // Bloqueos: ADMINISTRADOR puede crear/modificar, ALUMNO solo consultar
                         .requestMatchers("/api/bloqueos").hasAnyRole("ADMINISTRADOR", "ALUMNO")
@@ -81,7 +88,7 @@ public class WebSecurityConfig {
                         // Grupos: ADMINISTRADOR y ALUMNO
                         .requestMatchers("/api/grupos/**").hasAnyRole("ADMINISTRADOR", "ALUMNO")
 
-                        // Citas: ADMINISTRADOR puede todo, clientes autenticados también
+                        // Citas: requiere autenticación
                         .requestMatchers("/api/citas/**").authenticated()
 
                         // Valoraciones: requiere autenticación

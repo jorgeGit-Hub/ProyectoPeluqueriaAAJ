@@ -15,27 +15,22 @@ public class Servicio {
     private Integer idServicio;
 
     @Column(name="nombre")
-    private String nombre; // Ej: "Manicura exprés"
+    private String nombre;
 
     @Column(name="modulo")
-    private String modulo; // Ej: "Estética de Manos y Pies"
+    private String modulo;
 
     @Column(name="aula")
-    private String aula; // Ej: "C2.3"
+    private String aula;
 
     @Column(name="tiempo_cliente")
     private String tiempoCliente; // Ej: "45'", "1h", "1,5h"
 
     @Column(name="precio")
-    private BigDecimal precio; // Ej: 2.00
+    private BigDecimal precio;
 
-    @Column(name="dia_semana")
-    private String diaSemana; // Ej: "Lunes", "Martes"
+    // ELIMINADOS: diaSemana y horario (ahora están en HorarioSemanal)
 
-    @Column(name="horario")
-    private String horario; // Ej: "8:50 a 10:30"
-
-    // Relación con Grupo: Un servicio específico es impartido por un grupo específico
     @ManyToOne
     @JoinColumn(name="id_grupo")
     private Grupo grupo;
@@ -61,12 +56,6 @@ public class Servicio {
 
     public BigDecimal getPrecio(){ return precio; }
     public void setPrecio(BigDecimal precio){ this.precio = precio; }
-
-    public String getDiaSemana(){ return diaSemana; }
-    public void setDiaSemana(String diaSemana){ this.diaSemana = diaSemana; }
-
-    public String getHorario(){ return horario; }
-    public void setHorario(String horario){ this.horario = horario; }
 
     public Grupo getGrupo(){ return grupo; }
     public void setGrupo(Grupo grupo){ this.grupo = grupo; }
