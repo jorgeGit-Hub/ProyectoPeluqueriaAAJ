@@ -33,6 +33,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     final valoracionProv = context.watch<ValoracionProvider>();
     final todasValoraciones = valoracionProv.valoraciones;
 
+    // FILTRAR SOLO LAS VALORACIONES DE ESTE SERVICIO
+    // Como no tienes relación directa, mostramos todas (o ajusta según tu BD)
+
     double promedio = 0;
     if (todasValoraciones.isNotEmpty) {
       promedio =
@@ -56,6 +59,19 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
+        actions: [
+          // BOTÓN PARA VALORAR
+          Container(
+            margin: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+                color: Colors.black26, shape: BoxShape.circle),
+            child: IconButton(
+              icon: const Icon(Icons.rate_review, size: 20),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/crear-valoracion'),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -161,12 +177,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   const SizedBox(height: 30),
                   const Divider(),
                   const SizedBox(height: 20),
-                  const Text("Valoraciones",
+                  const Text("Valoraciones de Clientes",
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   if (todasValoraciones.isEmpty)
-                    const Text("No hay valoraciones aún",
+                    const Text("Sé el primero en valorar este servicio",
                         style: TextStyle(color: Colors.grey))
                   else ...[
                     Row(
@@ -202,8 +218,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     ),
                     const SizedBox(height: 16),
                     ...todasValoraciones
-                        .take(3)
-                        .map((v) => _buildValoracionCompact(v)),
+                        .take(5)
+                        .map((v) => _buildValoracionCard(v)),
                   ],
                 ],
               ),
@@ -249,27 +265,34 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
   }
 
-  Widget _buildValoracionCompact(Valoracion v) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: List.generate(v.puntuacion, (index) {
-              return const Icon(Icons.star, color: Colors.amber, size: 14);
-            }),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              v.comentario,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13),
+  Widget _buildValoracionCard(Valoracion v) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ...List.generate(
+                    v.puntuacion,
+                    (index) =>
+                        const Icon(Icons.star, color: Colors.amber, size: 16)),
+                ...List.generate(
+                    5 - v.puntuacion,
+                    (index) => const Icon(Icons.star_border,
+                        color: Colors.amber, size: 16)),
+                const Spacer(),
+                if (v.fechaValoracion != null)
+                  Text(v.fechaValoracion!,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(v.comentario, style: const TextStyle(fontSize: 14)),
+          ],
+        ),
       ),
     );
   }

@@ -35,6 +35,7 @@ class UserProvider with ChangeNotifier {
       await _api.loadToken();
 
       if (_api.token != null) {
+        debugPrint("Token encontrado: ${_api.token}"); // DEBUG
         final result = await _authService.validateToken();
 
         if (result["success"] == true) {
@@ -44,11 +45,13 @@ class UserProvider with ChangeNotifier {
           correo = result["correo"];
           rol = result["rol"];
           isLogged = true;
+          debugPrint("Usuario validado: $nombre"); // DEBUG
         } else {
           await _api.clearToken();
           isLogged = false;
         }
       } else {
+        debugPrint("No hay token guardado"); // DEBUG
         isLogged = false;
       }
     } catch (e) {
@@ -64,6 +67,7 @@ class UserProvider with ChangeNotifier {
     setLoading(true);
     try {
       final result = await _authService.login(email, password);
+      debugPrint("Login result: $result"); // DEBUG
 
       if (result["success"] == true) {
         id = result["id"];
@@ -72,6 +76,8 @@ class UserProvider with ChangeNotifier {
         correo = result["correo"];
         rol = result["rol"];
         isLogged = true;
+
+        debugPrint("Login exitoso. Token: ${_api.token}"); // DEBUG
         return true;
       }
       return false;

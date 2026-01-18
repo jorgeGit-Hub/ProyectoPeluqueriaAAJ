@@ -4,6 +4,7 @@ import '../../providers/user_provider.dart';
 import '../../providers/cita_provider.dart';
 import '../../providers/servicio_provider.dart';
 import '../../models/cita.dart';
+import '../../services/cita_service.dart';
 import '../../utils/theme.dart';
 
 class MisCitasScreen extends StatefulWidget {
@@ -23,6 +24,64 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
         await context.read<CitaProvider>().loadCitasByCliente(user["id"]);
       }
     });
+  }
+
+  Future<void> _cancelarCita(Cita cita) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancelar Cita"),
+        content: const Text("¿Estás seguro de que deseas cancelar esta cita?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Sí, cancelar"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true) return;
+
+    try {
+      // Actualizar estado a CANCELADA
+      await CitaService().updateCita(cita.idCita!, {
+        "fecha": cita.fecha,
+        "horaInicio": cita.horaInicio,
+        "horaFin": cita.horaFin,
+        "estado": "CANCELADA",
+        "cliente": {"idUsuario": cita.idCliente},
+        "servicio": {"idServicio": cita.idServicio},
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Cita cancelada correctamente"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        final user = context.read<UserProvider>().usuario;
+        if (user != null) {
+          await context.read<CitaProvider>().loadCitasByCliente(user["id"]);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al cancelar: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -76,47 +135,69 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
   }
 
   Widget _buildCitaCard(Cita c, String nombreServicio) {
+    final puedeCancelar = c.estado.toUpperCase() == "PENDIENTE";
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.event_available, color: AppTheme.primary),
-        ),
-        title: Text(
-          nombreServicio,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            "${c.fecha}  •  ${c.horaInicio.substring(0, 5)}",
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: _getEstadoColor(c.estado).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            c.estado.toUpperCase(),
-            style: TextStyle(
-              color: _getEstadoColor(c.estado),
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.event_available, color: AppTheme.primary),
+            ),
+            title: Text(
+              nombreServicio,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                "${c.fecha}  •  ${c.horaInicio.substring(0, 5)}",
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getEstadoColor(c.estado).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                c.estado.toUpperCase(),
+                style: TextStyle(
+                  color: _getEstadoColor(c.estado),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ),
-        ),
+          if (puedeCancelar)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text("Cancelar Cita"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                  ),
+                  onPressed: () => _cancelarCita(c),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -145,15 +226,56 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
           const SizedBox(height: 16),
           Text("No tienes citas programadas",
               style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Cambiar a la pestaña de servicios
+              DefaultTabController.of(context).animateTo(0);
+            },
+            icon: const Icon(Icons.add),
+            label: const Text("Reservar una cita"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildErrorState() {
-    return const Center(
-      child: Text("Error al conectar con el servidor",
-          style: TextStyle(color: Colors.red)),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          const SizedBox(height: 16),
+          const Text("Error al conectar con el servidor",
+              style: TextStyle(color: Colors.red, fontSize: 16)),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final user = context.read<UserProvider>().usuario;
+              if (user != null) {
+                await context
+                    .read<CitaProvider>()
+                    .loadCitasByCliente(user["id"]);
+              }
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text("Reintentar"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

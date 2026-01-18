@@ -1,17 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/cliente_provider.dart';
 import '../../utils/theme.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final user = context.read<UserProvider>().usuario;
+      if (user != null) {
+        await context.read<ClienteProvider>().loadCliente(user["id"]);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
+    final clienteProvider = context.watch<ClienteProvider>();
     final user = userProvider.usuario;
 
-    if (userProvider.loading) {
+    if (userProvider.loading || clienteProvider.loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -26,6 +44,7 @@ class AccountScreen extends StatelessWidget {
     final String nombreStr = user["nombre"]?.toString() ?? "U";
     final String inicial =
         nombreStr.isNotEmpty ? nombreStr[0].toUpperCase() : "U";
+    final cliente = clienteProvider.cliente;
 
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
@@ -92,23 +111,110 @@ class AccountScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _SectionCard(
-                    title: "Información Básica",
-                    children: [
-                      _InfoTile(
-                        icon: Icons.badge_outlined,
-                        label: "ID Usuario",
-                        value: user["id"]?.toString() ?? "N/A",
+                  // INFORMACIÓN DEL CLIENTE (NO ID NI ROL)
+                  if (cliente != null) ...[
+                    _SectionCard(
+                      title: "Información Personal",
+                      children: [
+                        _InfoTile(
+                          icon: Icons.person,
+                          label: "Nombre Completo",
+                          value: "${user["nombre"]} ${user["apellidos"]}",
+                        ),
+                        const Divider(height: 1),
+                        _InfoTile(
+                          icon: Icons.email,
+                          label: "Correo Electrónico",
+                          value: user["correo"] ?? "N/A",
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _SectionCard(
+                      title: "Información de Contacto",
+                      children: [
+                        _InfoTile(
+                          icon: Icons.phone,
+                          label: "Teléfono",
+                          value: cliente.telefono.isEmpty
+                              ? "No registrado"
+                              : cliente.telefono,
+                        ),
+                        const Divider(height: 1),
+                        _InfoTile(
+                          icon: Icons.location_on,
+                          label: "Dirección",
+                          value: cliente.direccion.isEmpty
+                              ? "No registrada"
+                              : cliente.direccion,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _SectionCard(
+                      title: "Información Importante",
+                      children: [
+                        _InfoTile(
+                          icon: Icons.warning_amber,
+                          label: "Alérgenos",
+                          value: cliente.alergenos?.isEmpty ?? true
+                              ? "Ninguno registrado"
+                              : cliente.alergenos!,
+                        ),
+                        const Divider(height: 1),
+                        _InfoTile(
+                          icon: Icons.note,
+                          label: "Observaciones",
+                          value: cliente.observaciones?.isEmpty ?? true
+                              ? "Ninguna"
+                              : cliente.observaciones!,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // BOTÓN EDITAR PERFIL
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: const Text("Editar Mi Información"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final result = await Navigator.pushNamed(
+                            context,
+                            "/edit-account",
+                            arguments: cliente,
+                          );
+
+                          if (result == true && mounted) {
+                            final user = context.read<UserProvider>().usuario;
+                            if (user != null) {
+                              await context
+                                  .read<ClienteProvider>()
+                                  .loadCliente(user["id"]);
+                            }
+                          }
+                        },
                       ),
-                      const Divider(height: 1),
-                      _InfoTile(
-                        icon: Icons.security,
-                        label: "Rol",
-                        value: user["rol"]?.toString() ?? "Cliente",
+                    ),
+                    const SizedBox(height: 10),
+                  ] else ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text("Cargando información del perfil..."),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
+                    ),
+                  ],
+
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -202,22 +308,25 @@ class _InfoTile extends StatelessWidget {
         children: [
           Icon(icon, color: AppTheme.primary, size: 24),
           const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
