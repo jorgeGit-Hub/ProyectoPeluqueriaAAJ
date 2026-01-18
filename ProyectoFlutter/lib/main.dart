@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:peluqueria_aja/screens/auth/forgot_password_screen.dart';
+import 'package:peluqueria_aja/screens/booking/cita_detalle_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/user_provider.dart';
@@ -52,6 +54,7 @@ class PeluqueriaApp extends StatelessWidget {
         '/splash': (_) => const SplashScreen(),
         '/login': (_) => const LoginScreen(),
         '/register': (_) => const RegisterScreen(),
+        '/forgot-password': (_) => const ForgotPasswordScreen(), // ✅ NUEVO
         '/home': (_) => const HomeShell(),
         '/service-detail': (_) => const ServiceDetailScreen(),
         '/booking': (_) => const BookingScreen(),
@@ -59,6 +62,7 @@ class PeluqueriaApp extends StatelessWidget {
         '/reservation-confirmed': (_) => const ReservationConfirmedScreen(),
         '/edit-account': (_) => const EditAccountScreen(),
         '/mis-citas': (_) => const MisCitasScreen(),
+        '/detalle-cita': (_) => const DetalleCitaScreen(), // ✅ NUEVO
         '/crear-valoracion': (_) => const CrearValoracionScreen(),
       },
     );

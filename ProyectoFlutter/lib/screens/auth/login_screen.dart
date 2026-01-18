@@ -51,8 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       _showSnackBar(
-          "Error de conexión: Verifica que tu móvil y PC estén en la misma red Wi-Fi",
-          Colors.redAccent);
+        "Error de conexión: Verifica que tu móvil y PC estén en la misma red Wi-Fi",
+        Colors.redAccent,
+      );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -116,6 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.grey[600], fontSize: 16),
                 ),
                 const SizedBox(height: 40),
+
+                // 🔹 TARJETA DE LOGIN
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -138,7 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: "Correo electrónico",
                           prefixIcon: const Icon(Icons.email_outlined),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -149,7 +153,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: "Contraseña",
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscureText
@@ -163,6 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
+
+                      // 🔹 BOTÓN LOGIN
                       SizedBox(
                         width: double.infinity,
                         height: 54,
@@ -172,35 +179,66 @@ class _LoginScreenState extends State<LoginScreen> {
                             backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           child: loading
                               ? const SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2.5),
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
                                 )
-                              : const Text("Iniciar Sesión",
+                              : const Text(
+                                  "Iniciar Sesión",
                                   style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // 🔹 RECUPERAR CONTRASEÑA
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          "/forgot-password",
+                        ),
+                        child: const Text(
+                          "¿Olvidaste tu contraseña?",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 30),
+
+                // 🔹 REGISTRO
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("¿No tienes cuenta?",
-                        style: TextStyle(color: Colors.grey[700])),
+                    Text(
+                      "¿No tienes cuenta?",
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
                     TextButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, "/register"),
-                      child: const Text("Regístrate aquí",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        "Regístrate aquí",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),

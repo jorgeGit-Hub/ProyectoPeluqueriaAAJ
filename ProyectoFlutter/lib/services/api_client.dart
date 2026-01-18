@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiClient {
@@ -11,7 +11,12 @@ class ApiClient {
 
   late Dio _dio;
   String? _token;
-  bool _tokenLoaded = false; // ✅ Flag para evitar cargas múltiples
+  bool _tokenLoaded = false;
+
+  // ✅ CAMBIO: Usar Flutter Secure Storage
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   Dio get dio => _dio;
   String? get token => _token;
@@ -29,67 +34,70 @@ class ApiClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // ✅ CRÍTICO: Cargar token automáticamente si no está cargado
         if (!_tokenLoaded) {
           await loadToken();
         }
 
         if (_token != null && _token!.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $_token';
-          debugPrint('✅ Token añadido: Bearer ${_token!.substring(0, 20)}...');
-        } else {
-          debugPrint('⚠️ No hay token disponible');
+          debugPrint('✅ Token añadido al request');
         }
 
         debugPrint('📤 REQUEST[${options.method}] => ${options.path}');
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        debugPrint('📥 RESPONSE[${response.statusCode}] => ${response.data}');
+        debugPrint('📥 RESPONSE[${response.statusCode}] => OK');
         return handler.next(response);
       },
       onError: (DioException e, handler) {
         debugPrint('❌ ERROR[${e.response?.statusCode}] => ${e.message}');
+
+        // ✅ IMPORTANTE: Si el token está caducado (401), limpiar storage
+        if (e.response?.statusCode == 401) {
+          clearToken();
+        }
+
         return handler.next(e);
       },
     ));
   }
 
+  // ✅ CAMBIO: Guardar token en Secure Storage
   Future<void> setToken(String? newToken) async {
     _token = newToken;
-    _tokenLoaded = true; // ✅ Marcar como cargado
+    _tokenLoaded = true;
+
     if (newToken != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', newToken);
-      debugPrint('💾 Token guardado');
+      await _secureStorage.write(key: 'auth_token', value: newToken);
+      debugPrint('🔒 Token guardado de forma segura');
     }
   }
 
+  // ✅ CAMBIO: Cargar token desde Secure Storage
   Future<void> loadToken() async {
     if (_tokenLoaded && _token != null) {
-      return; // Ya está cargado
+      return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token');
+    _token = await _secureStorage.read(key: 'auth_token');
     _tokenLoaded = true;
 
     if (_token != null) {
-      debugPrint('🔑 Token cargado desde almacenamiento');
+      debugPrint('🔓 Token cargado desde almacenamiento seguro');
     } else {
       debugPrint('⚠️ No hay token guardado');
     }
   }
 
+  // ✅ CAMBIO: Eliminar token de Secure Storage
   Future<void> clearToken() async {
     _token = null;
     _tokenLoaded = false;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    debugPrint('🗑️ Token eliminado');
+    await _secureStorage.delete(key: 'auth_token');
+    debugPrint('🗑️ Token eliminado del almacenamiento seguro');
   }
 
-  // ✅ Los métodos ya NO necesitan llamar a loadToken manualmente
   Future<Response> get(String path,
       {Map<String, dynamic>? queryParameters}) async {
     try {
