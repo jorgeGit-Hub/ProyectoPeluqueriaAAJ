@@ -49,15 +49,19 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
     if (confirmar != true) return;
 
     try {
-      // Actualizar estado a CANCELADA
-      await CitaService().updateCita(cita.idCita!, {
-        "fecha": cita.fecha,
-        "horaInicio": cita.horaInicio,
-        "horaFin": cita.horaFin,
-        "estado": "CANCELADA",
-        "cliente": {"idUsuario": cita.idCliente},
-        "servicio": {"idServicio": cita.idServicio},
-      });
+      // ✅ Usar el método toUpdateJson del modelo
+      final citaActualizada = Cita(
+        idCita: cita.idCita,
+        fecha: cita.fecha,
+        horaInicio: cita.horaInicio,
+        horaFin: cita.horaFin,
+        estado: "cancelada", // ✅ En minúsculas
+        idCliente: cita.idCliente,
+        idServicio: cita.idServicio,
+      );
+
+      await CitaService()
+          .updateCita(cita.idCita!, citaActualizada.toUpdateJson());
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +139,7 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
   }
 
   Widget _buildCitaCard(Cita c, String nombreServicio) {
-    final puedeCancelar = c.estado.toUpperCase() == "PENDIENTE";
+    final puedeCancelar = c.estado.toLowerCase() == "pendiente";
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -161,7 +165,7 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                "${c.fecha}  •  ${c.horaInicio.substring(0, 5)}",
+                "${c.fecha}  •  ${c.horaInicio.length >= 5 ? c.horaInicio.substring(0, 5) : c.horaInicio}",
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ),
@@ -203,13 +207,13 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
   }
 
   Color _getEstadoColor(String estado) {
-    switch (estado.toUpperCase()) {
-      case "PENDIENTE":
+    switch (estado.toLowerCase()) {
+      case "pendiente":
         return Colors.orange;
-      case "CONFIRMADA":
-      case "REALIZADA":
+      case "confirmada":
+      case "realizada":
         return Colors.green;
-      case "CANCELADA":
+      case "cancelada":
         return Colors.red;
       default:
         return AppTheme.primary;
@@ -229,7 +233,6 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () {
-              // Cambiar a la pestaña de servicios
               DefaultTabController.of(context).animateTo(0);
             },
             icon: const Icon(Icons.add),

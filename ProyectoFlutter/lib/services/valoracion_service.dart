@@ -40,10 +40,11 @@ class ValoracionService {
   Future<Map<String, dynamic>> createValoracion(
       Map<String, dynamic> data) async {
     try {
+      debugPrint("🔵 Creando valoración: $data");
       final response = await _api.post('/valoraciones', data: data);
       return response.data as Map<String, dynamic>;
     } catch (e) {
-      debugPrint("Error en createValoracion: $e");
+      debugPrint("❌ Error en createValoracion: $e");
       rethrow;
     }
   }

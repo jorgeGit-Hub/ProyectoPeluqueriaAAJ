@@ -7,11 +7,11 @@ class ApiClient {
   factory ApiClient() => _instance;
   ApiClient._internal();
 
-  // ⚠️ CAMBIA ESTA IP POR LA TUYA
   static const String baseUrl = 'http://192.168.18.74:8090/api';
 
   late Dio _dio;
   String? _token;
+  bool _tokenLoaded = false; // ✅ Flag para evitar cargas múltiples
 
   Dio get dio => _dio;
   String? get token => _token;
@@ -29,19 +29,27 @@ class ApiClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        // ✅ CRÍTICO: Cargar token automáticamente si no está cargado
+        if (!_tokenLoaded) {
+          await loadToken();
+        }
+
         if (_token != null && _token!.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $_token';
+          debugPrint('✅ Token añadido: Bearer ${_token!.substring(0, 20)}...');
+        } else {
+          debugPrint('⚠️ No hay token disponible');
         }
-        debugPrint('REQUEST[${options.method}] => PATH: ${options.path}');
+
+        debugPrint('📤 REQUEST[${options.method}] => ${options.path}');
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        debugPrint(
-            'RESPONSE[${response.statusCode}] => DATA: ${response.data}');
+        debugPrint('📥 RESPONSE[${response.statusCode}] => ${response.data}');
         return handler.next(response);
       },
       onError: (DioException e, handler) {
-        debugPrint('ERROR[${e.response?.statusCode}] => MESSAGE: ${e.message}');
+        debugPrint('❌ ERROR[${e.response?.statusCode}] => ${e.message}');
         return handler.next(e);
       },
     ));
@@ -49,23 +57,39 @@ class ApiClient {
 
   Future<void> setToken(String? newToken) async {
     _token = newToken;
+    _tokenLoaded = true; // ✅ Marcar como cargado
     if (newToken != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', newToken);
+      debugPrint('💾 Token guardado');
     }
   }
 
   Future<void> loadToken() async {
+    if (_tokenLoaded && _token != null) {
+      return; // Ya está cargado
+    }
+
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token');
+    _tokenLoaded = true;
+
+    if (_token != null) {
+      debugPrint('🔑 Token cargado desde almacenamiento');
+    } else {
+      debugPrint('⚠️ No hay token guardado');
+    }
   }
 
   Future<void> clearToken() async {
     _token = null;
+    _tokenLoaded = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    debugPrint('🗑️ Token eliminado');
   }
 
+  // ✅ Los métodos ya NO necesitan llamar a loadToken manualmente
   Future<Response> get(String path,
       {Map<String, dynamic>? queryParameters}) async {
     try {

@@ -49,7 +49,21 @@ class _BookingScreenState extends State<BookingScreen> {
             colorScheme: const ColorScheme.light(
               primary: AppTheme.primary,
               onPrimary: Colors.white,
-              onSurface: Colors.black,
+              surface: Colors.white,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: AppTheme.primary, width: 2),
+              ),
+              dayPeriodBorderSide: const BorderSide(color: AppTheme.primary),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
             ),
           ),
           child: child!,
@@ -87,17 +101,20 @@ class _BookingScreenState extends State<BookingScreen> {
     final m = hora!.minute.toString().padLeft(2, '0');
     final horaInicioStr = "$h:$m:00";
 
+    // Calcular hora fin basada en la duración del servicio
     final start = DateTime(
         fecha!.year, fecha!.month, fecha!.day, hora!.hour, hora!.minute);
-    final end = start.add(const Duration(minutes: 30));
+    final end = start.add(Duration(minutes: servicio.duracion));
     final horaFinStr =
         "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00";
 
+    // ✅ CORRECTO: Solo enviamos servicio y cliente
+    // El grupo se obtiene automáticamente del servicio en el backend
     final citaData = <String, dynamic>{
       "fecha": fechaStr,
       "horaInicio": horaInicioStr,
       "horaFin": horaFinStr,
-      "estado": "PENDIENTE",
+      "estado": "pendiente",
       "cliente": {"idUsuario": usuario["id"]},
       "servicio": {"idServicio": servicio.idServicio},
     };
@@ -155,9 +172,36 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               child: Column(
                 children: [
-                  const Text("Estás reservando:",
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 8),
+                  // ✅ IMAGEN DEL SERVICIO
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child:
+                        servicio.imagen != null && servicio.imagen!.isNotEmpty
+                            ? Image.network(
+                                servicio.imagen!,
+                                height: 120,
+                                width: 120,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  height: 120,
+                                  width: 120,
+                                  color: Colors.white.withOpacity(0.2),
+                                  child: const Icon(Icons.content_cut,
+                                      size: 50, color: Colors.white),
+                                ),
+                              )
+                            : Container(
+                                height: 120,
+                                width: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(Icons.content_cut,
+                                    size: 50, color: Colors.white),
+                              ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     servicio.nombre,
                     textAlign: TextAlign.center,
