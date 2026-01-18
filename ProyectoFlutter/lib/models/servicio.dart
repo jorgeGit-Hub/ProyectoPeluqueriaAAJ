@@ -5,6 +5,7 @@ class Servicio {
   final int duracion;
   final double precio;
   final String? imagen;
+  final Grupo? grupo; // ✅ AÑADIDO
 
   Servicio({
     this.idServicio,
@@ -13,6 +14,7 @@ class Servicio {
     required this.duracion,
     required this.precio,
     this.imagen,
+    this.grupo, // ✅ AÑADIDO
   });
 
   factory Servicio.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Servicio {
       duracion: _parseDuracion(json),
       precio: (json['precio'] as num?)?.toDouble() ?? 0.0,
       imagen: json['imagen'],
+      grupo: json['grupo'] != null ? Grupo.fromJson(json['grupo']) : null, // ✅ AÑADIDO
     );
   }
 
@@ -65,6 +68,44 @@ class Servicio {
       "duracion": duracion,
       "precio": precio,
       "imagen": imagen,
+      if (grupo != null) "grupo": grupo!.toJson(), // ✅ AÑADIDO
+    };
+  }
+}
+
+// ✅ CLASE GRUPO
+class Grupo {
+  final int idGrupo;
+  final String curso;
+  final String email;
+  final String turno;
+  final int? cantAlumnos; // ✅ AÑADIDO según tu backend
+
+  Grupo({
+    required this.idGrupo,
+    required this.curso,
+    required this.email,
+    required this.turno,
+    this.cantAlumnos,
+  });
+
+  factory Grupo.fromJson(Map<String, dynamic> json) {
+    return Grupo(
+      idGrupo: json["idGrupo"] ?? json["id_grupo"] ?? 0,
+      curso: (json["curso"] ?? "").toString(),
+      email: (json["email"] ?? "").toString(),
+      turno: (json["turno"] ?? "").toString(),
+      cantAlumnos: json["cantAlumnos"] ?? json["cant_alumnos"],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "idGrupo": idGrupo,
+      "curso": curso,
+      "email": email,
+      "turno": turno,
+      if (cantAlumnos != null) "cantAlumnos": cantAlumnos,
     };
   }
 }

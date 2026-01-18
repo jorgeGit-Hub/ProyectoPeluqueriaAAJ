@@ -36,20 +36,23 @@ class CitaService {
 
   Future<bool> createCita(Map<String, dynamic> data) async {
     try {
+      // ✅ El interceptor ya maneja el token automáticamente
+      debugPrint("🔵 Creando cita con datos: $data");
       await _api.post('/citas', data: data);
       return true;
     } catch (e) {
-      debugPrint("Error en createCita: $e");
+      debugPrint("❌ Error en createCita: $e");
       rethrow;
     }
   }
 
   Future<bool> updateCita(int id, Map<String, dynamic> data) async {
     try {
+      debugPrint("🔵 Actualizando cita $id");
       await _api.put('/citas/$id', data: data);
       return true;
     } catch (e) {
-      debugPrint("Error en updateCita: $e");
+      debugPrint("❌ Error en updateCita: $e");
       rethrow;
     }
   }

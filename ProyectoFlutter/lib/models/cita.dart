@@ -5,7 +5,6 @@ class Cita {
   final String horaFin;
   final String estado;
   final int idCliente;
-  final int idGrupo;
   final int idServicio;
 
   Cita({
@@ -15,7 +14,6 @@ class Cita {
     required this.horaFin,
     required this.estado,
     required this.idCliente,
-    required this.idGrupo,
     required this.idServicio,
   });
 
@@ -26,23 +24,26 @@ class Cita {
       horaInicio:
           (json["horaInicio"] ?? json["hora_inicio"] ?? "00:00").toString(),
       horaFin: (json["horaFin"] ?? json["hora_fin"] ?? "00:00").toString(),
-      estado: (json["estado"] ?? "pendiente").toString(),
-      idCliente: _parseId(json["cliente"]),
-      idGrupo: _parseId(json["grupo"]),
-      idServicio: _parseId(json["servicio"]),
+      // ✅ Normalizar estado a minúsculas al recibir
+      estado: (json["estado"] ?? "pendiente").toString().toLowerCase(),
+      idCliente: _parseId(json["cliente"], ["idUsuario", "id_usuario"]),
+      idServicio: _parseId(json["servicio"], ["idServicio", "id_servicio"]),
     );
   }
 
-  static int _parseId(dynamic data) {
+  static int _parseId(dynamic data, List<String> possibleKeys) {
     if (data == null) return 0;
     if (data is int) return data;
-    return data["idUsuario"] ??
-        data["id_usuario"] ??
-        data["idServicio"] ??
-        data["id_servicio"] ??
-        data["idGrupo"] ??
-        data["id_grupo"] ??
-        0;
+    if (data is Map<String, dynamic>) {
+      for (String key in possibleKeys) {
+        if (data.containsKey(key) && data[key] != null) {
+          return data[key] is int
+              ? data[key]
+              : int.tryParse(data[key].toString()) ?? 0;
+        }
+      }
+    }
+    return 0;
   }
 
   Map<String, dynamic> toCreateJson() {
@@ -50,9 +51,21 @@ class Cita {
       "fecha": fecha,
       "horaInicio": horaInicio,
       "horaFin": horaFin,
-      "estado": estado,
+      // ✅ Asegurar que el estado se envíe en minúsculas
+      "estado": estado.toLowerCase(),
       "cliente": {"idUsuario": idCliente},
-      "grupo": {"idGrupo": idGrupo},
+      "servicio": {"idServicio": idServicio},
+    };
+  }
+
+  // ✅ Método adicional para actualización
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      "fecha": fecha,
+      "horaInicio": horaInicio,
+      "horaFin": horaFin,
+      "estado": estado.toLowerCase(), // ✅ Minúsculas
+      "cliente": {"idUsuario": idCliente},
       "servicio": {"idServicio": idServicio},
     };
   }

@@ -29,6 +29,11 @@ public class Servicio {
     @Column(name="precio")
     private BigDecimal precio;
 
+    @Column(name="imagen")
+    private String imagen; // URL de la imagen
+
+
+
     // ELIMINADOS: diaSemana y horario (ahora están en HorarioSemanal)
 
     @ManyToOne
@@ -59,4 +64,8 @@ public class Servicio {
 
     public Grupo getGrupo(){ return grupo; }
     public void setGrupo(Grupo grupo){ this.grupo = grupo; }
+
+
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 }
