@@ -1,93 +1,85 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'base_api.dart';
+import 'package:flutter/material.dart';
+import 'api_client.dart';
 
 class AuthService {
-  final String _authBase = "${BaseApi.baseUrl}/auth";
+  final ApiClient _api = ApiClient();
 
-  // ======================================================
-  // Inicio de Sesión
-  // ======================================================
-  Future<bool> login(String correo, String password) async {
-    final res = await http.post(
-      Uri.parse("$_authBase/signin"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"correo": correo, "password": password}),
-    );
+  Future<Map<String, dynamic>> login(String correo, String password) async {
+    try {
+      final response = await _api.post(
+        '/auth/signin',
+        data: {"correo": correo, "contrasena": password},
+      );
 
-    if (res.statusCode != 200) return false;
+      final data = response.data;
+      final String token = data["accessToken"];
 
-    final data = jsonDecode(res.body);
-    final String token = data["accessToken"];
+      await _api.setToken(token);
 
-    BaseApi.token = token;
-    final prefs = await SharedPreferences.getInstance();
-
-    // Guardamos los datos para el inicio automático (SplashScreen)
-    await prefs.setString("token", token);
-    await prefs.setString("userId", data["id"].toString());
-    await prefs.setString("nombre", data["nombre"]?.toString() ?? "");
-    await prefs.setString("rol", data["rol"]?.toString() ?? "cliente");
-
-    return true;
-  }
-
-  // ======================================================
-  // Registro de Nuevo Usuario (¡Añadido!)
-  // ======================================================
-  Future<bool> register(
-      {required String nombre,
-      required String apellidos,
-      required String correo,
-      required String password}) async {
-    final res = await http.post(
-      Uri.parse("$_authBase/signup"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "nombre": nombre,
-        "apellidos": apellidos,
-        "correo": correo,
-        "password": password,
-        "rol": "cliente" // Rol por defecto
-      }),
-    );
-
-    // El backend de Spring Boot suele devolver 200 o 201 en caso de éxito
-    return res.statusCode == 200 || res.statusCode == 201;
-  }
-
-  // ======================================================
-  // Validación de Token y Recuperación de Usuario
-  // ======================================================
-  Future<Map<String, dynamic>> validateAndGetUser() async {
-    final res = await http.get(
-      Uri.parse("$_authBase/validate"),
-      // Usamos el token que está en memoria
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer ${BaseApi.token}"
-      },
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception("Token no válido");
+      return {
+        "success": true,
+        "token": token,
+        "id": data["id"],
+        "nombre": data["nombre"],
+        "apellidos": data["apellidos"],
+        "correo": data["correo"],
+        "rol": data["rol"],
+      };
+    } catch (e) {
+      debugPrint("Error en login: $e");
+      return {"success": false, "error": e.toString()};
     }
-
-    return jsonDecode(res.body);
   }
 
-  // ======================================================
-  // Utilidades de Persistencia
-  // ======================================================
-  Future<String?> getSavedToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("token");
+  Future<Map<String, dynamic>> register({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String password,
+    String? telefono,
+    String? direccion,
+  }) async {
+    try {
+      final response = await _api.post(
+        '/auth/signup',
+        data: {
+          "nombre": nombre,
+          "apellidos": apellidos,
+          "correo": correo,
+          "contrasena": password,
+          "rol": "cliente",
+          if (telefono != null) "telefono": telefono,
+          if (direccion != null) "direccion": direccion,
+        },
+      );
+
+      return {"success": true, "data": response.data};
+    } catch (e) {
+      debugPrint("Error en register: $e");
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> validateToken() async {
+    try {
+      final response = await _api.get('/auth/validate');
+      final data = response.data;
+
+      return {
+        "success": true,
+        "id": data["id"],
+        "nombre": data["nombre"],
+        "apellidos": data["apellidos"],
+        "correo": data["correo"],
+        "rol": data["rol"],
+      };
+    } catch (e) {
+      debugPrint("Error en validateToken: $e");
+      return {"success": false, "error": e.toString()};
+    }
   }
 
   Future<void> logout() async {
-    BaseApi.token = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await _api.clearToken();
   }
 }

@@ -23,7 +23,6 @@ class AccountScreen extends StatelessWidget {
       );
     }
 
-    // Seguridad para la inicial del nombre
     final String nombreStr = user["nombre"]?.toString() ?? "U";
     final String inicial =
         nombreStr.isNotEmpty ? nombreStr[0].toUpperCase() : "U";
@@ -82,8 +81,7 @@ class AccountScreen extends StatelessWidget {
                     user["correo"] ?? "Sin correo electrónico",
                     style: TextStyle(
                       fontSize: 14,
-                      // Corregido: withValues es la forma moderna de withOpacity
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ],
@@ -143,8 +141,6 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-// --- DEFINICIÓN DE LOS WIDGETS QUE FALTABAN ---
-
 class _SectionCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -160,7 +156,7 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),

@@ -14,7 +14,6 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
 
-  // Lista de páginas fijas
   final List<Widget> pages = const [
     ServicesScreen(),
     MisCitasScreen(),
@@ -25,8 +24,6 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
-      // IndexedStack mantiene el estado de las páginas (scroll, datos cargados)
-      // para que no se recarguen cada vez que tocas el menú inferior.
       body: IndexedStack(
         index: index,
         children: pages,
@@ -49,7 +46,7 @@ class _HomeShellState extends State<HomeShell> {
           unselectedItemColor: Colors.grey.shade500,
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          type: BottomNavigationBarType.fixed, // Evita animaciones extrañas
+          type: BottomNavigationBarType.fixed,
           onTap: (i) => setState(() => index = i),
           items: const [
             BottomNavigationBarItem(

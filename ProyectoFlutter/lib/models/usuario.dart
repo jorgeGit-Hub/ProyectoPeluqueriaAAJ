@@ -15,7 +15,6 @@ class Usuario {
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
     return Usuario(
-      // Mantenemos tu lógica de variantes para el ID, es la más segura
       idUsuario: json["idUsuario"] ?? json["id"] ?? json["id_usuario"] ?? 0,
       nombre: (json["nombre"] ?? "").toString(),
       apellidos: (json["apellidos"] ?? "").toString(),
@@ -26,7 +25,7 @@ class Usuario {
 
   Map<String, dynamic> toJson() {
     return {
-      "idUsuario": idUsuario, // Nombre exacto de tu variable en Java
+      "idUsuario": idUsuario,
       "nombre": nombre,
       "apellidos": apellidos,
       "correo": correo,

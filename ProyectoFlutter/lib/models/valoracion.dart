@@ -1,12 +1,12 @@
 class Valoracion {
-  final int idValoracion;
+  final int? idValoracion;
   final int puntuacion;
   final String comentario;
-  final int idCita; // Enlace real en tu BD
-  final String? fechaValoracion; // Campo existente en tu BD
+  final int idCita;
+  final String? fechaValoracion;
 
   Valoracion({
-    required this.idValoracion,
+    this.idValoracion,
     required this.puntuacion,
     required this.comentario,
     required this.idCita,
@@ -15,17 +15,14 @@ class Valoracion {
 
   factory Valoracion.fromJson(Map<String, dynamic> json) {
     return Valoracion(
-      // Soporta idValoracion (Java) e id_valoracion (MySQL)
-      idValoracion: json["idValoracion"] ?? json["id_valoracion"] ?? 0,
+      idValoracion: json["idValoracion"] ?? json["id_valoracion"],
       puntuacion: json["puntuacion"] ?? 0,
       comentario: (json["comentario"] ?? "").toString(),
-      // Maneja si viene el objeto Cita completo o solo el ID
       idCita: _parseCitaId(json["cita"]) ?? json["id_cita"] ?? 0,
       fechaValoracion: json["fechaValoracion"] ?? json["fecha_valoracion"],
     );
   }
 
-  // Función de seguridad para procesar el ID de la cita
   static int? _parseCitaId(dynamic data) {
     if (data == null) return null;
     if (data is int) return data;
@@ -34,11 +31,11 @@ class Valoracion {
 
   Map<String, dynamic> toJson() {
     return {
-      "idValoracion": idValoracion,
+      if (idValoracion != null) "idValoracion": idValoracion,
       "puntuacion": puntuacion,
       "comentario": comentario,
-      "cita": {"idCita": idCita}, // Formato correcto para Spring Boot
-      "fechaValoracion": fechaValoracion,
+      "cita": {"idCita": idCita},
+      if (fechaValoracion != null) "fechaValoracion": fechaValoracion,
     };
   }
 }

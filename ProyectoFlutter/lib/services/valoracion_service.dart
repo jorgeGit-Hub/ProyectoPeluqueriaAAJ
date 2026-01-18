@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'base_api.dart';
+import 'api_client.dart';
 
 class ValoracionService {
-  final String _endpoint = "/valoraciones";
+  final ApiClient _api = ApiClient();
 
-  // ======================================================
-  // Obtener todas las valoraciones del salón
-  // ======================================================
   Future<List<dynamic>> getValoraciones() async {
     try {
-      final res = await BaseApi.get(_endpoint);
-      if (res is List) return res;
+      final response = await _api.get('/valoraciones');
+      if (response.data is List) return response.data;
       return [];
     } catch (e) {
       debugPrint("Error en getValoraciones: $e");
@@ -18,53 +15,53 @@ class ValoracionService {
     }
   }
 
-  // ======================================================
-  // Obtener una valoración específica por ID
-  // ======================================================
   Future<Map<String, dynamic>> getValoracion(int id) async {
     try {
-      final res = await BaseApi.get("$_endpoint/$id");
-      return res as Map<String, dynamic>;
+      final response = await _api.get('/valoraciones/$id');
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en getValoracion ($id): $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Enviar una nueva reseña (Estrellas + Comentario)
-  // ======================================================
+  Future<List<dynamic>> getValoracionesByMinPuntuacion(
+      int minPuntuacion) async {
+    try {
+      final response = await _api.get('/valoraciones/min/$minPuntuacion');
+      if (response.data is List) return response.data;
+      return [];
+    } catch (e) {
+      debugPrint("Error en getValoracionesByMinPuntuacion: $e");
+      return [];
+    }
+  }
+
   Future<Map<String, dynamic>> createValoracion(
       Map<String, dynamic> data) async {
     try {
-      final res = await BaseApi.post(_endpoint, data);
-      return res as Map<String, dynamic>;
+      final response = await _api.post('/valoraciones', data: data);
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en createValoracion: $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Editar una valoración existente
-  // ======================================================
   Future<Map<String, dynamic>> updateValoracion(
       int id, Map<String, dynamic> data) async {
     try {
-      final res = await BaseApi.put("$_endpoint/$id", data);
-      return res as Map<String, dynamic>;
+      final response = await _api.put('/valoraciones/$id', data: data);
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en updateValoracion ($id): $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Eliminar una valoración
-  // ======================================================
   Future<void> deleteValoracion(int id) async {
     try {
-      await BaseApi.delete("$_endpoint/$id");
+      await _api.delete('/valoraciones/$id');
     } catch (e) {
       debugPrint("Error en deleteValoracion ($id): $e");
       rethrow;

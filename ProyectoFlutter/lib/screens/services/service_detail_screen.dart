@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:peluqueria_aja/models/servicio.dart';
+import '../../providers/valoracion_provider.dart';
+import '../../models/valoracion.dart';
 import '../../utils/theme.dart';
 
-class ServiceDetailScreen extends StatelessWidget {
+class ServiceDetailScreen extends StatefulWidget {
   const ServiceDetailScreen({super.key});
 
   @override
+  State<ServiceDetailScreen> createState() => _ServiceDetailScreenState();
+}
+
+class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ValoracionProvider>().loadValoraciones();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Recuperamos el objeto Servicio pasado por argumentos
     final args = ModalRoute.of(context)!.settings.arguments;
     if (args == null || args is! Servicio) {
       return const Scaffold(
           body: Center(child: Text("Error: No se encontró el servicio")));
     }
     final Servicio servicio = args;
+
+    final valoracionProv = context.watch<ValoracionProvider>();
+    final todasValoraciones = valoracionProv.valoraciones;
+
+    double promedio = 0;
+    if (todasValoraciones.isNotEmpty) {
+      promedio =
+          todasValoraciones.map((v) => v.puntuacion).reduce((a, b) => a + b) /
+              todasValoraciones.length;
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
@@ -34,7 +59,6 @@ class ServiceDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 1. CABECERA DINÁMICA
           Expanded(
             flex: 3,
             child: Container(
@@ -67,10 +91,9 @@ class ServiceDetailScreen extends StatelessWidget {
                         servicio.nombre,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -78,8 +101,6 @@ class ServiceDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // 2. CONTENIDO BASADO EN LA BASE DE DATOS
           Expanded(
             flex: 5,
             child: SingleChildScrollView(
@@ -98,14 +119,12 @@ class ServiceDetailScreen extends StatelessWidget {
                           Text(
                             "${servicio.precio.toStringAsFixed(2)} €",
                             style: const TextStyle(
-                              color: AppTheme.primary,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                            ),
+                                color: AppTheme.primary,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800),
                           ),
                         ],
                       ),
-                      // Mostramos la DURACIÓN real que viene de Java
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -128,28 +147,68 @@ class ServiceDetailScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  const Text(
-                    "Sobre este servicio",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Sobre este servicio",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  // Mostramos la DESCRIPCIÓN real (columna 'modulo' o 'descripcion' en MySQL)
                   Text(
                     servicio.descripcion.isNotEmpty
                         ? servicio.descripcion
                         : "Disfruta de una experiencia profesional con los mejores productos en nuestro salón.",
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                      height: 1.5,
-                    ),
+                        fontSize: 16, color: Colors.grey[700], height: 1.5),
                   ),
+                  const SizedBox(height: 30),
+                  const Divider(),
+                  const SizedBox(height: 20),
+                  const Text("Valoraciones",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  if (todasValoraciones.isEmpty)
+                    const Text("No hay valoraciones aún",
+                        style: TextStyle(color: Colors.grey))
+                  else ...[
+                    Row(
+                      children: [
+                        Text(
+                          promedio.toStringAsFixed(1),
+                          style: const TextStyle(
+                              fontSize: 32, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Icon(
+                                  index < promedio.round()
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 16,
+                                );
+                              }),
+                            ),
+                            Text(
+                              "${todasValoraciones.length} valoraciones",
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...todasValoraciones
+                        .take(3)
+                        .map((v) => _buildValoracionCompact(v)),
+                  ],
                 ],
               ),
             ),
           ),
-
-          // 3. ACCIÓN DE RESERVA
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -183,6 +242,31 @@ class ServiceDetailScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValoracionCompact(Valoracion v) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(v.puntuacion, (index) {
+              return const Icon(Icons.star, color: Colors.amber, size: 14);
+            }),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              v.comentario,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13),
             ),
           ),
         ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../providers/user_provider.dart';
 import '../../services/cita_service.dart';
 import '../../utils/theme.dart';
@@ -16,7 +15,6 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
   DateTime? fecha;
   TimeOfDay? hora;
 
-  // Controladores con valores por defecto para pruebas rápidas
   final servicioCtrl = TextEditingController(text: "1");
   final grupoCtrl = TextEditingController(text: "1");
 
@@ -78,23 +76,19 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
 
     setState(() => loading = true);
 
-    // Formateo para MySQL: YYYY-MM-DD
     final fechaStr =
         "${fecha!.year}-${fecha!.month.toString().padLeft(2, '0')}-${fecha!.day.toString().padLeft(2, '0')}";
 
-    // Formateo Hora Inicio: HH:mm:ss
     final h = hora!.hour.toString().padLeft(2, '0');
     final m = hora!.minute.toString().padLeft(2, '0');
     final horaInicioStr = "$h:$m:00";
 
-    // Cálculo automático de Hora Fin (fijo a 30 min por ahora)
     final start = DateTime(
         fecha!.year, fecha!.month, fecha!.day, hora!.hour, hora!.minute);
     final end = start.add(const Duration(minutes: 30));
     final horaFinStr =
         "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00";
 
-    // JSON alineado con entidades JPA de tu Spring Boot
     final payload = {
       "fecha": fechaStr,
       "horaInicio": horaInicioStr,
@@ -113,8 +107,7 @@ class _ReservarCitaScreenState extends State<ReservarCitaScreen> {
 
       if (success) {
         _showMsg("Cita reservada con éxito", Colors.green);
-        Navigator.pop(
-            context, true); // Retornar true para refrescar la lista anterior
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (!mounted) return;

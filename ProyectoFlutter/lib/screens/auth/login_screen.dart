@@ -25,13 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    // 1. Cerrar teclado
     FocusScope.of(context).unfocus();
 
     final correo = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
-    // 2. Validación básica
     if (correo.isEmpty || pass.isEmpty) {
       _showSnackBar("Por favor, rellena todos los campos", Colors.orange);
       return;
@@ -41,21 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final userProvider = context.read<UserProvider>();
-
-      // Intentamos el login a través del Provider corregido
       final success = await userProvider.login(correo, pass);
 
       if (!mounted) return;
 
       if (success) {
-        // Redirigimos al home si el login fue exitoso
         Navigator.pushReplacementNamed(context, "/home");
       } else {
         _showSnackBar("Correo o contraseña incorrectos", Colors.redAccent);
       }
     } catch (e) {
       if (!mounted) return;
-      // Error detallado por si falla la IP en el móvil físico
       _showSnackBar(
           "Error de conexión: Verifica que tu móvil y PC estén en la misma red Wi-Fi",
           Colors.redAccent);
@@ -64,7 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Widget auxiliar para mostrar mensajes
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -89,7 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // LOGO CIRCULAR
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -110,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
+                const Text(
                   "¡Hola de nuevo!",
                   style: TextStyle(
                     fontSize: 28,
@@ -124,8 +116,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.grey[600], fontSize: 16),
                 ),
                 const SizedBox(height: 40),
-
-                // CONTENEDOR DEL FORMULARIO
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(

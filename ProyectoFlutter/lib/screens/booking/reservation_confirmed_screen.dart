@@ -6,13 +6,10 @@ class ReservationConfirmedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // PopScope asegura que el usuario no pueda volver "atrás" al formulario de reserva
-    // una vez que la cita ya ha sido creada en el backend de Spring Boot.
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        // Si intenta ir atrás, limpiamos el historial y vamos al Home
         Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
       },
       child: Scaffold(
@@ -23,9 +20,6 @@ class ReservationConfirmedScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // -----------------------------
-                // TARJETA DE ÉXITO
-                // -----------------------------
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
@@ -42,16 +36,12 @@ class ReservationConfirmedScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // ANIMACIÓN DE ICONO (Efecto Rebote)
                       TweenAnimationBuilder(
                         duration: const Duration(milliseconds: 800),
                         curve: Curves.elasticOut,
                         tween: Tween<double>(begin: 0.0, end: 1.0),
                         builder: (context, double value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: child,
-                          );
+                          return Transform.scale(scale: value, child: child);
                         },
                         child: Container(
                           height: 100,
@@ -67,9 +57,7 @@ class ReservationConfirmedScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 30),
-
                       const Text(
                         "¡Reserva Exitosa!",
                         textAlign: TextAlign.center,
@@ -89,18 +77,12 @@ class ReservationConfirmedScreen extends StatelessWidget {
                           height: 1.5,
                         ),
                       ),
-
                       const SizedBox(height: 40),
-
-                      // -----------------------------
-                      // BOTÓN: VOLVER AL INICIO
-                      // -----------------------------
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () {
-                            // pushNamedAndRemoveUntil es clave para reiniciar el flujo de la app
                             Navigator.pushNamedAndRemoveUntil(
                                 context, "/home", (route) => false);
                           },
@@ -108,8 +90,7 @@ class ReservationConfirmedScreen extends StatelessWidget {
                             backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                                borderRadius: BorderRadius.circular(14)),
                             elevation: 0,
                           ),
                           child: const Text(
@@ -119,18 +100,12 @@ class ReservationConfirmedScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // -----------------------------
-                      // BOTÓN: VER MIS CITAS
-                      // -----------------------------
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: OutlinedButton(
                           onPressed: () {
-                            // Navegamos a la pantalla de Mis Citas que corregimos antes
                             Navigator.pushNamedAndRemoveUntil(context,
                                 "/mis-citas", ModalRoute.withName("/home"));
                           },
@@ -139,8 +114,7 @@ class ReservationConfirmedScreen extends StatelessWidget {
                             side: const BorderSide(
                                 color: AppTheme.primary, width: 1.5),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                                borderRadius: BorderRadius.circular(14)),
                           ),
                           child: const Text(
                             "Ver Mis Citas",

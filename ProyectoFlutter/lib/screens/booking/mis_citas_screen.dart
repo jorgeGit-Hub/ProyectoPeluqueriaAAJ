@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/cita_provider.dart';
-import '../../providers/servicio_provider.dart'; // Importante para obtener el nombre del servicio
+import '../../providers/servicio_provider.dart';
 import '../../models/cita.dart';
 import '../../utils/theme.dart';
 
@@ -17,11 +17,9 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargamos las citas al entrar en la pantalla
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final user = context.read<UserProvider>().usuario;
       if (user != null) {
-        // Usamos el método corregido del Provider
         await context.read<CitaProvider>().loadCitasByCliente(user["id"]);
       }
     });
@@ -48,26 +46,35 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
               ? _buildErrorState()
               : citaProv.citas.isEmpty
                   ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: citaProv.citas.length,
-                      itemBuilder: (context, index) {
-                        final Cita c = citaProv.citas[index];
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        final user = context.read<UserProvider>().usuario;
+                        if (user != null) {
+                          await context
+                              .read<CitaProvider>()
+                              .loadCitasByCliente(user["id"]);
+                        }
+                      },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: citaProv.citas.length,
+                        itemBuilder: (context, index) {
+                          final Cita c = citaProv.citas[index];
 
-                        // Buscamos el nombre del servicio usando el ID que tiene la cita
-                        // Buscamos el servicio de forma segura
-               final servicioEncontrado = servicioProv.servicios.where(
-                  (s) => s.idServicio == c.idServicio
-                ).firstOrNull;
+                          final servicioEncontrado = servicioProv.servicios
+                              .where((s) => s.idServicio == c.idServicio)
+                              .firstOrNull;
 
-                final String servicioNombre = servicioEncontrado?.nombre ?? "Servicio Peluquería";
-                return _buildCitaCard(c, servicioNombre);
-                                      },
-                                    ),
+                          final String servicioNombre =
+                              servicioEncontrado?.nombre ??
+                                  "Servicio Peluquería";
+                          return _buildCitaCard(c, servicioNombre);
+                        },
+                      ),
+                    ),
     );
   }
 
-  // Widget para cada tarjeta de cita
   Widget _buildCitaCard(Cita c, String nombreServicio) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -91,7 +98,7 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-            "${c.fecha}  •  ${c.horaInicio.substring(0, 5)}", // Mostramos HH:mm
+            "${c.fecha}  •  ${c.horaInicio.substring(0, 5)}",
             style: TextStyle(color: Colors.grey[600]),
           ),
         ),
@@ -119,6 +126,7 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
       case "PENDIENTE":
         return Colors.orange;
       case "CONFIRMADA":
+      case "REALIZADA":
         return Colors.green;
       case "CANCELADA":
         return Colors.red;
@@ -144,7 +152,7 @@ class _MisCitasScreenState extends State<MisCitasScreen> {
 
   Widget _buildErrorState() {
     return const Center(
-      child: Text("Error al conectar con el servidor físico",
+      child: Text("Error al conectar con el servidor",
           style: TextStyle(color: Colors.red)),
     );
   }

@@ -1,35 +1,40 @@
 name: peluqueria_aja
-description: Aplicación Flutter para la Peluquería AJA
-publish_to: "none"
-
+description: "Aplicación de reservas para peluquería"
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
-  # --- Dependencias existentes ---
-  provider: ^6.0.5
-  http: ^1.1.0
-  intl: ^0.18.1
-  flutter_svg: ^2.0.7
+  
+  # Estado
+  provider: ^6.1.1
+  
+  # HTTP y Red
+  dio: ^5.4.0
+  http: ^1.1.2
+  
+  # Persistencia
   shared_preferences: ^2.2.2
-
-  # --- NUEVAS DEPENDENCIAS (Para arreglar los errores) ---
-  image_picker: ^1.0.7        # Para usar la cámara y galería
-  cached_network_image: ^3.3.0 # Para mostrar imágenes eficientemente
+  
+  # Imágenes
+  cached_network_image: ^3.3.1
+  image_picker: ^1.0.7
+  
+  # UI
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/images/logo.jpg
-    # Asegúrate de tener la carpeta 'assets' creada y el logo dentro.
+  
+  # Si tienes imágenes en assets/, descomenta la siguiente línea
+  # assets:
+  #   - assets/

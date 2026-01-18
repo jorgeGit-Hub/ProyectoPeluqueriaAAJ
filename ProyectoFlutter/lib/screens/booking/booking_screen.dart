@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:peluqueria_aja/models/servicio.dart';
 import 'package:peluqueria_aja/providers/user_provider.dart';
 import 'package:peluqueria_aja/services/cita_service.dart';
@@ -64,24 +63,17 @@ class _BookingScreenState extends State<BookingScreen> {
     final usuario = context.read<UserProvider>().usuario;
 
     if (usuario == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Usuario no disponible"),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError("Usuario no disponible");
       return;
     }
 
     if (fecha == null || hora == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, selecciona fecha y hora"),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError("Por favor, selecciona fecha y hora");
+      return;
+    }
+
+    if (servicio.idServicio == null) {
+      _showError("Servicio inválido");
       return;
     }
 
@@ -95,19 +87,12 @@ class _BookingScreenState extends State<BookingScreen> {
     final m = hora!.minute.toString().padLeft(2, '0');
     final horaInicioStr = "$h:$m:00";
 
-    // Duración fija 30 min (igual que reservar_cita_screen)
     final start = DateTime(
-      fecha!.year,
-      fecha!.month,
-      fecha!.day,
-      hora!.hour,
-      hora!.minute,
-    );
+        fecha!.year, fecha!.month, fecha!.day, hora!.hour, hora!.minute);
     final end = start.add(const Duration(minutes: 30));
     final horaFinStr =
         "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00";
 
-    // Payload alineado con lo que venimos usando:
     final citaData = <String, dynamic>{
       "fecha": fechaStr,
       "horaInicio": horaInicioStr,
@@ -115,28 +100,29 @@ class _BookingScreenState extends State<BookingScreen> {
       "estado": "PENDIENTE",
       "cliente": {"idUsuario": usuario["id"]},
       "servicio": {"idServicio": servicio.idServicio},
-      // Si tu backend NO usa grupo aquí, no lo mandamos.
     };
 
     try {
       await CitaService().createCita(citaData);
 
       if (!mounted) return;
-
-      // Si tienes ruta de confirmación, úsala; si no, vuelve atrás.
       Navigator.pushReplacementNamed(context, "/reservation-confirmed");
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Error al crear la cita. Inténtalo de nuevo."),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError("Error al crear la cita: ${e.toString()}");
     } finally {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -147,10 +133,8 @@ class _BookingScreenState extends State<BookingScreen> {
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
       appBar: AppBar(
-        title: const Text(
-          "Confirmar Reserva",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: const Text("Confirmar Reserva",
+            style: TextStyle(fontWeight: FontWeight.w600)),
         centerTitle: true,
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
@@ -159,7 +143,6 @@ class _BookingScreenState extends State<BookingScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. RESUMEN DEL SERVICIO
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -172,26 +155,21 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    "Estás reservando:",
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
+                  const Text("Estás reservando:",
+                      style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 8),
                   Text(
                     servicio.nombre,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -199,19 +177,14 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: Text(
                       "${servicio.precio.toStringAsFixed(2)} €",
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
-
             const SizedBox(height: 30),
-
-            // 2. FORMULARIO DE SELECCIÓN
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -230,14 +203,11 @@ class _BookingScreenState extends State<BookingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Elige tu horario",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    Text("Elige tu horario",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800])),
                     const SizedBox(height: 24),
                     _SelectionTile(
                       label: "Fecha",
@@ -264,10 +234,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
-
-            // 3. BOTÓN CONFIRMAR
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: SizedBox(
@@ -281,25 +248,18 @@ class _BookingScreenState extends State<BookingScreen> {
                     elevation: 8,
                     shadowColor: AppTheme.primary.withOpacity(0.4),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                        borderRadius: BorderRadius.circular(16)),
                   ),
                   child: loading
                       ? const SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
+                              color: Colors.white, strokeWidth: 2.5),
                         )
-                      : const Text(
-                          "Confirmar Cita",
+                      : const Text("Confirmar Cita",
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -351,24 +311,19 @@ class _SelectionTile extends StatelessWidget {
                     : Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: isSelected ? AppTheme.primary : Colors.grey[400],
-                size: 22,
-              ),
+              child: Icon(icon,
+                  color: isSelected ? AppTheme.primary : Colors.grey[400],
+                  size: 22),
             ),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
                 Text(
                   value,
@@ -382,11 +337,8 @@ class _SelectionTile extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: Colors.grey[400],
-            )
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Colors.grey[400])
           ],
         ),
       ),

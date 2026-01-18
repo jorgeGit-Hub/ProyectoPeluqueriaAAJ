@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-// Asegúrate de que esta ruta sea la correcta para tu archivo de servicio
 import '../services/auth_service.dart';
+import '../services/api_client.dart';
 
 class UserProvider with ChangeNotifier {
-  // 1. Propiedades del estado
+  final AuthService _authService = AuthService();
+  final ApiClient _api = ApiClient();
+
   int? id;
   String? nombre;
   String? apellidos;
@@ -12,9 +14,6 @@ class UserProvider with ChangeNotifier {
   bool isLogged = false;
   bool loading = false;
 
-  final AuthService _authService = AuthService();
-
-  // 2. Getter para obtener los datos como un Map (usado en AccountScreen)
   Map<String, dynamic>? get usuario => id == null
       ? null
       : {
@@ -25,73 +24,95 @@ class UserProvider with ChangeNotifier {
           "rol": rol,
         };
 
-  // 3. Control de carga
   void setLoading(bool value) {
     loading = value;
     notifyListeners();
   }
 
-  // 4. Método para cargar usuario desde el token (Requerido por Splash)
   Future<void> loadUserFromToken() async {
     setLoading(true);
     try {
-      // Aquí iría tu lógica real de verificar token guardado
-      await Future.delayed(const Duration(seconds: 2));
-      // isLogged = true; (Si el token es válido)
+      await _api.loadToken();
+
+      if (_api.token != null) {
+        final result = await _authService.validateToken();
+
+        if (result["success"] == true) {
+          id = result["id"];
+          nombre = result["nombre"];
+          apellidos = result["apellidos"];
+          correo = result["correo"];
+          rol = result["rol"];
+          isLogged = true;
+        } else {
+          await _api.clearToken();
+          isLogged = false;
+        }
+      } else {
+        isLogged = false;
+      }
     } catch (e) {
+      debugPrint("Error en loadUserFromToken: $e");
+      await _api.clearToken();
       isLogged = false;
     } finally {
       setLoading(false);
-      notifyListeners();
     }
   }
 
-  // 5. Método Login (Requerido por LoginScreen)
   Future<bool> login(String email, String password) async {
     setLoading(true);
     try {
-      // Simulación de éxito (conecta con _authService.login aquí)
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await _authService.login(email, password);
 
-      // Datos de prueba para que veas algo en tu perfil
-      id = 1;
-      nombre = "Usuario";
-      apellidos = "Prueba";
-      correo = email;
-      rol = "Cliente";
-      isLogged = true;
-
-      return true;
+      if (result["success"] == true) {
+        id = result["id"];
+        nombre = result["nombre"];
+        apellidos = result["apellidos"];
+        correo = result["correo"];
+        rol = result["rol"];
+        isLogged = true;
+        return true;
+      }
+      return false;
     } catch (e) {
+      debugPrint("Error en login: $e");
       return false;
     } finally {
       setLoading(false);
-      notifyListeners();
     }
   }
 
-  // 6. Método Register (Requerido por RegisterScreen)
   Future<bool> register({
     required String nombre,
     required String apellidos,
     required String correo,
     required String password,
+    String? telefono,
+    String? direccion,
   }) async {
     setLoading(true);
     try {
-      // Lógica de registro aquí
-      await Future.delayed(const Duration(seconds: 1));
-      return true;
+      final result = await _authService.register(
+        nombre: nombre,
+        apellidos: apellidos,
+        correo: correo,
+        password: password,
+        telefono: telefono,
+        direccion: direccion,
+      );
+
+      return result["success"] == true;
     } catch (e) {
+      debugPrint("Error en register: $e");
       return false;
     } finally {
       setLoading(false);
-      notifyListeners();
     }
   }
 
-  // 7. Método Logout (Requerido por AccountScreen)
   Future<void> logout() async {
+    await _authService.logout();
     id = null;
     nombre = null;
     apellidos = null;

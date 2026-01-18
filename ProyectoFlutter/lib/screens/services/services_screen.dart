@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Usamos Provider ahora
+import 'package:provider/provider.dart';
 import 'package:peluqueria_aja/providers/servicio_provider.dart';
 import 'package:peluqueria_aja/models/servicio.dart';
 import '../../utils/theme.dart';
@@ -15,7 +15,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargamos los servicios a través del Provider al iniciar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ServicioProvider>().loadServicios();
     });
@@ -23,7 +22,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos los cambios en el ServicioProvider
     final servicioProv = context.watch<ServicioProvider>();
 
     return Scaffold(
@@ -38,7 +36,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      // RefreshIndicator permite al usuario actualizar tirando hacia abajo
       body: RefreshIndicator(
         onRefresh: () => servicioProv.loadServicios(),
         color: AppTheme.primary,
@@ -49,8 +46,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(20),
                     itemCount: servicioProv.servicios.length,
-                    physics:
-                        const AlwaysScrollableScrollPhysics(), // Necesario para el RefreshIndicator
+                    physics: const AlwaysScrollableScrollPhysics(),
                     separatorBuilder: (ctx, index) =>
                         const SizedBox(height: 16),
                     itemBuilder: (_, i) {
@@ -127,7 +123,6 @@ class _ServiceCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icono decorativo
                 Container(
                   height: 55,
                   width: 55,
@@ -139,7 +134,6 @@ class _ServiceCard extends StatelessWidget {
                       color: AppTheme.primary, size: 28),
                 ),
                 const SizedBox(width: 16),
-                // Info del Servicio
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +158,6 @@ class _ServiceCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Duración rápida
                 Column(
                   children: [
                     Icon(Icons.access_time, size: 16, color: Colors.grey[400]),

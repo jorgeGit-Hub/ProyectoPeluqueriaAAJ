@@ -15,11 +15,9 @@ class Cliente {
 
   factory Cliente.fromJson(Map<String, dynamic> json) {
     return Cliente(
-      // Detecta el ID en ambos formatos posibles del backend
       idUsuario: json["idUsuario"] ?? json["id_usuario"] ?? 0,
       telefono: (json["telefono"] ?? "").toString(),
       direccion: (json["direccion"] ?? "").toString(),
-      // Estos pueden ser nulos en tu base de datos, así que los dejamos opcionales
       alergenos: json["alergenos"]?.toString(),
       observaciones: json["observaciones"]?.toString(),
     );

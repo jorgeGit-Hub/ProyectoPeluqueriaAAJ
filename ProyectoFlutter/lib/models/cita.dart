@@ -41,6 +41,7 @@ class Cita {
         data["idServicio"] ??
         data["id_servicio"] ??
         data["idGrupo"] ??
+        data["id_grupo"] ??
         0;
   }
 

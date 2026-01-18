@@ -40,7 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final userProvider = context.read<UserProvider>();
 
-      // Este método ahora sí existirá en el Provider
       final success = await userProvider.register(
         nombre: nombreCtrl.text.trim(),
         apellidos: apellidosCtrl.text.trim(),
@@ -120,8 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        // Corregido: withValues para evitar advertencias
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),

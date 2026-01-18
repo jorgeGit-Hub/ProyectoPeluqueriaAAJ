@@ -59,17 +59,14 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
 
     final provider = Provider.of<ClienteProvider>(context, listen: false);
 
-    // Ajustamos las claves para que coincidan al 100% con la Entidad Cliente.java
     final dataToUpdate = {
-      "idUsuario":
-          _clienteOriginal!.idUsuario, // Incluimos el ID para mayor seguridad
+      "idUsuario": _clienteOriginal!.idUsuario,
       "telefono": _telefonoCtrl.text.trim(),
       "direccion": _direccionCtrl.text.trim(),
       "alergenos": _alergenosCtrl.text.trim(),
       "observaciones": _observacionesCtrl.text.trim(),
     };
 
-    // Usamos el idUsuario que extrajimos del modelo Cliente corregido
     final success = await provider.updateCliente(
       _clienteOriginal!.idUsuario,
       dataToUpdate,
@@ -86,7 +83,6 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        // Retornamos true para indicar a la pantalla anterior que debe refrescar los datos
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -145,7 +141,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Información de Contacto",
                         style: TextStyle(
                             fontSize: 18,
@@ -178,7 +174,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                             : null,
                       ),
                       const SizedBox(height: 30),
-                      Text(
+                      const Text(
                         "Información Adicional",
                         style: TextStyle(
                             fontSize: 18,
@@ -254,7 +250,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppTheme.primary, width: 2),
+        borderSide: const BorderSide(color: AppTheme.primary, width: 2),
       ),
     );
   }

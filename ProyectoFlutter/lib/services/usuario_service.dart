@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'base_api.dart';
+import 'api_client.dart';
 
 class UsuarioService {
-  final String _endpoint = "/usuarios";
+  final ApiClient _api = ApiClient();
 
-  // ======================================================
-  // Obtener lista de todos los usuarios (Rol: Admin)
-  // ======================================================
   Future<List<dynamic>> getUsuarios() async {
     try {
-      final res = await BaseApi.get(_endpoint);
-      if (res is List) return res;
+      final response = await _api.get('/usuarios');
+      if (response.data is List) return response.data;
       return [];
     } catch (e) {
       debugPrint("Error en getUsuarios: $e");
@@ -18,52 +15,40 @@ class UsuarioService {
     }
   }
 
-  // ======================================================
-  // Obtener un usuario por ID
-  // ======================================================
   Future<Map<String, dynamic>> getUsuario(int id) async {
     try {
-      final res = await BaseApi.get("$_endpoint/$id");
-      return res as Map<String, dynamic>;
+      final response = await _api.get('/usuarios/$id');
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en getUsuario ($id): $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Crear un usuario manualmente (Rol: Admin)
-  // ======================================================
   Future<Map<String, dynamic>> createUsuario(Map<String, dynamic> data) async {
     try {
-      final res = await BaseApi.post(_endpoint, data);
-      return res as Map<String, dynamic>;
+      final response = await _api.post('/usuarios', data: data);
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en createUsuario: $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Actualizar datos de usuario (Rol: Admin / Usuario)
-  // ======================================================
   Future<Map<String, dynamic>> updateUsuario(
       int id, Map<String, dynamic> data) async {
     try {
-      final res = await BaseApi.put("$_endpoint/$id", data);
-      return res as Map<String, dynamic>;
+      final response = await _api.put('/usuarios/$id', data: data);
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       debugPrint("Error en updateUsuario ($id): $e");
       rethrow;
     }
   }
 
-  // ======================================================
-  // Eliminar un usuario (Rol: Admin)
-  // ======================================================
   Future<void> deleteUsuario(int id) async {
     try {
-      await BaseApi.delete("$_endpoint/$id");
+      await _api.delete('/usuarios/$id');
     } catch (e) {
       debugPrint("Error en deleteUsuario ($id): $e");
       rethrow;
