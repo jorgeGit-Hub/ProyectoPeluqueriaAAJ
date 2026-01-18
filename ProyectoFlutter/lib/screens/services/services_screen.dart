@@ -39,31 +39,86 @@ class _ServicesScreenState extends State<ServicesScreen> {
       body: RefreshIndicator(
         onRefresh: () => servicioProv.loadServicios(),
         color: AppTheme.primary,
-        child: servicioProv.loading && servicioProv.servicios.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : servicioProv.servicios.isEmpty
-                ? _buildEmptyView()
-                : ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: servicioProv.servicios.length,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    separatorBuilder: (ctx, index) =>
-                        const SizedBox(height: 16),
-                    itemBuilder: (_, i) {
-                      final s = servicioProv.servicios[i];
-                      return _ServiceCard(
-                        servicio: s,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            "/service-detail",
-                            arguments: s,
-                          );
-                        },
-                      );
-                    },
-                  ),
+        child: _buildBody(servicioProv),
       ),
+    );
+  }
+
+  Widget _buildBody(ServicioProvider provider) {
+    // ✅ CASO 1: Cargando
+    if (provider.loading && provider.servicios.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text("Cargando servicios..."),
+          ],
+        ),
+      );
+    }
+
+    // ✅ CASO 2: Error del servidor
+    if (provider.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                "Error al cargar servicios",
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                provider.errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => provider.loadServicios(),
+                icon: const Icon(Icons.refresh),
+                label: const Text("Reintentar"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ✅ CASO 3: Sin servicios
+    if (provider.servicios.isEmpty) {
+      return _buildEmptyView();
+    }
+
+    // ✅ CASO 4: Mostrar servicios
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: provider.servicios.length,
+      physics: const AlwaysScrollableScrollPhysics(),
+      separatorBuilder: (ctx, index) => const SizedBox(height: 16),
+      itemBuilder: (_, i) {
+        final s = provider.servicios[i];
+        return _ServiceCard(
+          servicio: s,
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              "/service-detail",
+              arguments: s,
+            );
+          },
+        );
+      },
     );
   }
 

@@ -5,7 +5,7 @@ class Servicio {
   final int duracion;
   final double precio;
   final String? imagen;
-  final Grupo? grupo; // ✅ AÑADIDO
+  final Grupo? grupo;
 
   Servicio({
     this.idServicio,
@@ -14,19 +14,28 @@ class Servicio {
     required this.duracion,
     required this.precio,
     this.imagen,
-    this.grupo, // ✅ AÑADIDO
+    this.grupo,
   });
 
   factory Servicio.fromJson(Map<String, dynamic> json) {
-    return Servicio(
-      idServicio: json['idServicio'] ?? json['id_servicio'],
-      nombre: json['nombre'] ?? "",
-      descripcion: (json['descripcion'] ?? json['modulo'] ?? "").toString(),
-      duracion: _parseDuracion(json),
-      precio: (json['precio'] as num?)?.toDouble() ?? 0.0,
-      imagen: json['imagen'],
-      grupo: json['grupo'] != null ? Grupo.fromJson(json['grupo']) : null, // ✅ AÑADIDO
-    );
+    try {
+      // ✅ Log para debug
+      print("🔍 Parseando servicio: ${json['nombre']}");
+
+      return Servicio(
+        idServicio: json['idServicio'] ?? json['id_servicio'],
+        nombre: (json['nombre'] ?? "").toString(),
+        descripcion: (json['descripcion'] ?? json['modulo'] ?? "").toString(),
+        duracion: _parseDuracion(json),
+        precio: _parsePrecio(json['precio']),
+        imagen: json['imagen'],
+        grupo: json['grupo'] != null ? Grupo.fromJson(json['grupo']) : null,
+      );
+    } catch (e) {
+      print("❌ ERROR parseando servicio: $e");
+      print("📄 JSON problemático: $json");
+      rethrow; // ✅ Relanzar para ver el error en el provider
+    }
   }
 
   static int _parseDuracion(Map<String, dynamic> json) {
@@ -46,9 +55,10 @@ class Servicio {
 
       // Formato: "1h" o "1,5h" → convertir a minutos
       if (tiempo.contains("h")) {
-        double horas =
-            double.tryParse(tiempo.replaceAll("h", "").replaceAll(",", ".")) ??
-                0;
+        double horas = double.tryParse(
+              tiempo.replaceAll("h", "").replaceAll(",", "."),
+            ) ??
+            0;
         return (horas * 60).toInt();
       }
 
@@ -56,8 +66,23 @@ class Servicio {
       return int.tryParse(tiempo) ?? 0;
     }
 
-    // Por defecto
+    // Por defecto: 30 minutos
     return 30;
+  }
+
+  // ✅ NUEVO: Método más robusto para parsear precio
+  static double _parsePrecio(dynamic precio) {
+    if (precio == null) return 0.0;
+
+    if (precio is num) {
+      return precio.toDouble();
+    }
+
+    if (precio is String) {
+      return double.tryParse(precio.replaceAll(',', '.')) ?? 0.0;
+    }
+
+    return 0.0;
   }
 
   Map<String, dynamic> toJson() {
@@ -68,7 +93,7 @@ class Servicio {
       "duracion": duracion,
       "precio": precio,
       "imagen": imagen,
-      if (grupo != null) "grupo": grupo!.toJson(), // ✅ AÑADIDO
+      if (grupo != null) "grupo": grupo!.toJson(),
     };
   }
 }
@@ -79,7 +104,7 @@ class Grupo {
   final String curso;
   final String email;
   final String turno;
-  final int? cantAlumnos; // ✅ AÑADIDO según tu backend
+  final int? cantAlumnos;
 
   Grupo({
     required this.idGrupo,
@@ -90,13 +115,19 @@ class Grupo {
   });
 
   factory Grupo.fromJson(Map<String, dynamic> json) {
-    return Grupo(
-      idGrupo: json["idGrupo"] ?? json["id_grupo"] ?? 0,
-      curso: (json["curso"] ?? "").toString(),
-      email: (json["email"] ?? "").toString(),
-      turno: (json["turno"] ?? "").toString(),
-      cantAlumnos: json["cantAlumnos"] ?? json["cant_alumnos"],
-    );
+    try {
+      return Grupo(
+        idGrupo: json["idGrupo"] ?? json["id_grupo"] ?? 0,
+        curso: (json["curso"] ?? "").toString(),
+        email: (json["email"] ?? "").toString(),
+        turno: (json["turno"] ?? "").toString(),
+        cantAlumnos: json["cantAlumnos"] ?? json["cant_alumnos"],
+      );
+    } catch (e) {
+      print("❌ ERROR parseando grupo: $e");
+      print("📄 JSON problemático: $json");
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
