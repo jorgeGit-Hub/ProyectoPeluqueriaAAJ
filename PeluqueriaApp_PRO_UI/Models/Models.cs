@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace PeluqueriaApp.Models
 {
@@ -13,10 +14,10 @@ namespace PeluqueriaApp.Models
 
     public class LoginResponse
     {
-        [Newtonsoft.Json.JsonProperty("accessToken")]
+        [JsonProperty("accessToken")]
         public string token { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("tokenType")]
+        [JsonProperty("tokenType")]
         public string type { get; set; }
 
         public int id { get; set; }
@@ -44,7 +45,7 @@ namespace PeluqueriaApp.Models
         public string message { get; set; }
     }
 
-    // ========== SERVICIO ACTUALIZADO ==========
+    // ========== SERVICIO (SIN diaSemana ni horario) ==========
 
     public class Servicio
     {
@@ -54,9 +55,136 @@ namespace PeluqueriaApp.Models
         public string aula { get; set; }
         public string tiempoCliente { get; set; }
         public decimal precio { get; set; }
-        public string diaSemana { get; set; }
-        public string horario { get; set; }
+        public string imagen { get; set; }
+
+        // CORRECCIÓN: Usar un convertidor personalizado para manejar tanto int como objeto
+        [JsonConverter(typeof(GrupoConverter))]
         public GrupoSimple grupo { get; set; }
+    }
+
+    // ========== CONVERTIDOR PERSONALIZADO PARA SERVICIO ==========
+    public class ServicioConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Servicio);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null)
+            {
+                return null;
+            }
+
+            // CASO 1: Si la API devuelve un número (ID), creamos un objeto Servicio solo con el ID
+            if (reader.TokenType == JsonToken.Integer)
+            {
+                int idServicio = Convert.ToInt32(reader.Value);
+                return new Servicio { idServicio = idServicio, nombre = "Desconocido" }; // Ponemos nombre por defecto para que no falle la UI
+            }
+
+            // CASO 2: Si la API devuelve un objeto completo, deserializamos normalmente
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                var servicio = new Servicio();
+                serializer.Populate(reader, servicio); // Usamos Populate para llenar el objeto
+                return servicio;
+            }
+
+            return null;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            // Esto maneja cómo se envía de vuelta a la API
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
+            var servicio = (Servicio)value;
+            // Generalmente al enviar, queremos enviar el objeto completo o según requiera tu API
+            // Si tu API al guardar prefiere solo el ID, podrías cambiar esto, 
+            // pero por defecto serializamos el objeto completo:
+            serializer.Serialize(writer, value);
+        }
+    }
+
+    // ========== CONVERTIDOR PERSONALIZADO PARA GRUPO ==========
+    public class GrupoConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(GrupoSimple);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null)
+            {
+                return null;
+            }
+
+            // Si es un número (int), crear un GrupoSimple solo con el ID
+            if (reader.TokenType == JsonToken.Integer)
+            {
+                int idGrupo = Convert.ToInt32(reader.Value);
+                return new GrupoSimple { idGrupo = idGrupo };
+            }
+
+            // Si es un objeto, deserializarlo normalmente
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                var grupo = new GrupoSimple();
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonToken.EndObject)
+                        break;
+
+                    if (reader.TokenType == JsonToken.PropertyName)
+                    {
+                        string propertyName = reader.Value.ToString();
+                        reader.Read();
+
+                        if (propertyName == "idGrupo" && reader.TokenType == JsonToken.Integer)
+                        {
+                            grupo.idGrupo = Convert.ToInt32(reader.Value);
+                        }
+                    }
+                }
+                return grupo;
+            }
+
+            return null;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
+            var grupo = (GrupoSimple)value;
+            writer.WriteStartObject();
+            writer.WritePropertyName("idGrupo");
+            writer.WriteValue(grupo.idGrupo);
+            writer.WriteEndObject();
+        }
+    }
+
+    // ========== HORARIO SEMANAL (NUEVO) ==========
+
+    public class HorarioSemanal
+    {
+        public int idHorario { get; set; }
+        public ServicioSimple servicio { get; set; }
+        public string diaSemana { get; set; }
+        public string horaInicio { get; set; }
+        public string horaFin { get; set; }
     }
 
     // ========== USUARIO ==========
@@ -93,7 +221,7 @@ namespace PeluqueriaApp.Models
         public string observaciones { get; set; }
     }
 
-    // ========== CITA ACTUALIZADA (SIN GRUPO) ==========
+    // ========== CITA (SIN GRUPO) ==========
 
     public class Cita
     {
@@ -103,7 +231,12 @@ namespace PeluqueriaApp.Models
         public string horaFin { get; set; }
         public string estado { get; set; }
         public ClienteSimple cliente { get; set; }
-        public ServicioSimple servicio { get; set; }
+
+        [JsonConverter(typeof(ServicioConverter))]
+        public Servicio servicio { get; set; }
+
+        //  CAMBIO: Ahora acepta Servicio completo en lugar de ServicioSimple
+        
     }
 
     public class ClienteSimple
@@ -116,7 +249,7 @@ namespace PeluqueriaApp.Models
         public int idServicio { get; set; }
     }
 
-    // ========== GRUPO ==========
+    // ========== GRUPO (CON cantAlumnos) ==========
 
     public class Grupo
     {
@@ -124,6 +257,7 @@ namespace PeluqueriaApp.Models
         public string curso { get; set; }
         public string email { get; set; }
         public string turno { get; set; }
+        public int? cantAlumnos { get; set; }
     }
 
     public class GrupoSimple

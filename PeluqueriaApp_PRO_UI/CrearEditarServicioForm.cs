@@ -105,8 +105,6 @@ namespace PeluqueriaApp
                     aula = AulaTxt.Text.Trim(),
                     tiempoCliente = TiempoClienteTxt.Text.Trim(),
                     precio = precio,
-                    diaSemana = DiaSemanaCombo.SelectedItem?.ToString(),
-                    horario = HorarioTxt.Text.Trim(),
                     grupo = new GrupoSimple { idGrupo = grupoSeleccionado.Value }
                 };
 
@@ -147,17 +145,6 @@ namespace PeluqueriaApp
                 AulaTxt.Text = servicio.aula;
                 TiempoClienteTxt.Text = servicio.tiempoCliente;
                 PrecioTxt.Text = servicio.precio.ToString("F2");
-                HorarioTxt.Text = servicio.horario;
-
-                // Seleccionar día de la semana
-                if (!string.IsNullOrEmpty(servicio.diaSemana))
-                {
-                    int index = DiaSemanaCombo.Items.IndexOf(servicio.diaSemana);
-                    if (index >= 0)
-                    {
-                        DiaSemanaCombo.SelectedIndex = index;
-                    }
-                }
 
                 // Seleccionar grupo
                 if (servicio.grupo != null && servicio.grupo.idGrupo > 0)

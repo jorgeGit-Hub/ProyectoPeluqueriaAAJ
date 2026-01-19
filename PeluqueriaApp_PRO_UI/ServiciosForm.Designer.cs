@@ -25,6 +25,7 @@ namespace PeluqueriaApp
         private DataGridView ServiciosDataGrid;
         private Button EditarBtn;
         private Button EliminarBtn;
+        private Button VerHorariosBtn;
         private Label BienvenidaLbl;
 
         private void InitializeComponent()
@@ -50,6 +51,7 @@ namespace PeluqueriaApp
             this.ServiciosDataGrid = new DataGridView();
             this.EditarBtn = new Button();
             this.EliminarBtn = new Button();
+            this.VerHorariosBtn = new Button();
 
             ((System.ComponentModel.ISupportInitialize)(this.ServiciosDataGrid)).BeginInit();
 
@@ -361,6 +363,20 @@ namespace PeluqueriaApp
             this.EliminarBtn.Click += new System.EventHandler(this.EliminarBtn_Click);
 
             // 
+            // VerHorariosBtn (NUEVO)
+            // 
+            this.VerHorariosBtn.Text = "🕐 Ver Horarios";
+            this.VerHorariosBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.VerHorariosBtn.Size = new Size(170, 45);
+            this.VerHorariosBtn.Location = new Point(630, 720);
+            this.VerHorariosBtn.BackColor = Color.FromArgb(70, 130, 180);
+            this.VerHorariosBtn.ForeColor = Color.White;
+            this.VerHorariosBtn.FlatStyle = FlatStyle.Flat;
+            this.VerHorariosBtn.FlatAppearance.BorderSize = 0;
+            this.VerHorariosBtn.Cursor = Cursors.Hand;
+            this.VerHorariosBtn.Click += new System.EventHandler(this.VerHorariosBtn_Click);
+
+            // 
             // Add controls to LateralPanel
             // 
             this.LateralPanel.Controls.Add(this.LogoLbl);
@@ -383,6 +399,7 @@ namespace PeluqueriaApp
             // 
             // Add controls to Form
             // 
+            this.Controls.Add(this.VerHorariosBtn);
             this.Controls.Add(this.EliminarBtn);
             this.Controls.Add(this.EditarBtn);
             this.Controls.Add(this.ServiciosDataGrid);

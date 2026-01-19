@@ -14,6 +14,8 @@ namespace PeluqueriaApp
         private TextBox ContrasenaTxt;
         private Label TurnoLbl;
         private ComboBox TurnoCombo;
+        private Label CantAlumnosLbl;
+        private TextBox CantAlumnosTxt;
         private Button GuardarBtn;
         private Button CancelarBtn;
         private Panel FormPanel;
@@ -30,13 +32,15 @@ namespace PeluqueriaApp
             this.ContrasenaTxt = new TextBox();
             this.TurnoLbl = new Label();
             this.TurnoCombo = new ComboBox();
+            this.CantAlumnosLbl = new Label();
+            this.CantAlumnosTxt = new TextBox();
             this.GuardarBtn = new Button();
             this.CancelarBtn = new Button();
 
             // 
             // CrearEditarGrupoForm
             // 
-            this.ClientSize = new Size(600, 500);
+            this.ClientSize = new Size(600, 550);
             this.Text = "Gestión de Grupo";
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = Color.FromArgb(250, 245, 240);
@@ -49,7 +53,7 @@ namespace PeluqueriaApp
             // 
             this.FormPanel.BackColor = Color.White;
             this.FormPanel.Location = new Point(50, 30);
-            this.FormPanel.Size = new Size(500, 440);
+            this.FormPanel.Size = new Size(500, 490);
 
             // 
             // TituloLbl
@@ -130,7 +134,7 @@ namespace PeluqueriaApp
             // TurnoCombo
             // 
             this.TurnoCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.TurnoCombo.Size = new Size(400, 32);
+            this.TurnoCombo.Size = new Size(180, 32);
             this.TurnoCombo.Location = new Point(50, 325);
             this.TurnoCombo.DropDownStyle = ComboBoxStyle.DropDownList;
             this.TurnoCombo.BackColor = Color.FromArgb(250, 245, 240);
@@ -138,12 +142,31 @@ namespace PeluqueriaApp
             this.TurnoCombo.SelectedIndex = 0;
 
             // 
+            // CantAlumnosLbl
+            // 
+            this.CantAlumnosLbl.Text = "Capacidad (alumnos)";
+            this.CantAlumnosLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CantAlumnosLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.CantAlumnosLbl.AutoSize = true;
+            this.CantAlumnosLbl.Location = new Point(270, 300);
+
+            // 
+            // CantAlumnosTxt
+            // 
+            this.CantAlumnosTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.CantAlumnosTxt.Size = new Size(180, 32);
+            this.CantAlumnosTxt.Location = new Point(270, 325);
+            this.CantAlumnosTxt.BorderStyle = BorderStyle.FixedSingle;
+            this.CantAlumnosTxt.BackColor = Color.FromArgb(250, 245, 240);
+            this.CantAlumnosTxt.PlaceholderText = "Ej: 10";
+
+            // 
             // GuardarBtn
             // 
             this.GuardarBtn.Text = "💾 Guardar";
             this.GuardarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             this.GuardarBtn.Size = new Size(180, 50);
-            this.GuardarBtn.Location = new Point(80, 380);
+            this.GuardarBtn.Location = new Point(80, 420);
             this.GuardarBtn.BackColor = Color.FromArgb(255, 140, 0);
             this.GuardarBtn.ForeColor = Color.White;
             this.GuardarBtn.FlatStyle = FlatStyle.Flat;
@@ -157,7 +180,7 @@ namespace PeluqueriaApp
             this.CancelarBtn.Text = "❌ Cancelar";
             this.CancelarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             this.CancelarBtn.Size = new Size(180, 50);
-            this.CancelarBtn.Location = new Point(280, 380);
+            this.CancelarBtn.Location = new Point(280, 420);
             this.CancelarBtn.BackColor = Color.FromArgb(139, 90, 60);
             this.CancelarBtn.ForeColor = Color.White;
             this.CancelarBtn.FlatStyle = FlatStyle.Flat;
@@ -177,6 +200,8 @@ namespace PeluqueriaApp
             this.FormPanel.Controls.Add(this.ContrasenaTxt);
             this.FormPanel.Controls.Add(this.TurnoLbl);
             this.FormPanel.Controls.Add(this.TurnoCombo);
+            this.FormPanel.Controls.Add(this.CantAlumnosLbl);
+            this.FormPanel.Controls.Add(this.CantAlumnosTxt);
             this.FormPanel.Controls.Add(this.GuardarBtn);
             this.FormPanel.Controls.Add(this.CancelarBtn);
 

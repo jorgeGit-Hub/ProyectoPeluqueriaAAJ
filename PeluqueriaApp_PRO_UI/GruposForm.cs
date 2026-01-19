@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq; // Necesario para la búsqueda local
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -8,6 +9,9 @@ namespace PeluqueriaApp
 {
     public partial class GruposForm : Form
     {
+        // Lista para mantener los grupos en memoria y poder filtrar localmente
+        private List<Grupo> listaGruposOriginal = new List<Grupo>();
+
         public GruposForm()
         {
             InitializeComponent();
@@ -22,8 +26,14 @@ namespace PeluqueriaApp
             GruposDataGrid.Columns.Add("curso", "Curso");
             GruposDataGrid.Columns.Add("email", "Email");
             GruposDataGrid.Columns.Add("turno", "Turno");
+            // Nuevo campo sincronizado con el Backend
+            GruposDataGrid.Columns.Add("cantAlumnos", "Nº Alumnos");
 
+            // Ajuste de anchos
             GruposDataGrid.Columns["idGrupo"].Width = 50;
+            GruposDataGrid.Columns["cantAlumnos"].Width = 100;
+            GruposDataGrid.Columns["turno"].Width = 100;
+            GruposDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
         private async void CargarGrupos()
@@ -32,82 +42,69 @@ namespace PeluqueriaApp
             {
                 var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
 
-                GruposDataGrid.Rows.Clear();
+                // Guardamos la lista original para las búsquedas
+                listaGruposOriginal = grupos ?? new List<Grupo>();
 
-                if (grupos == null || grupos.Count == 0)
-                {
-                    MessageBox.Show("No hay grupos registrados", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                foreach (var grupo in grupos)
-                {
-                    GruposDataGrid.Rows.Add(
-                        grupo.idGrupo,
-                        grupo.curso ?? "N/A",
-                        grupo.email ?? "N/A",
-                        grupo.turno ?? "N/A"
-                    );
-                }
+                MostrarGruposEnGrid(listaGruposOriginal);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar grupos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar grupos: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private async void BuscarBtn_Click(object sender, EventArgs e)
+        private void MostrarGruposEnGrid(List<Grupo> grupos)
         {
-            string textoBusqueda = BuscarGruposTxt.Text.Trim();
+            GruposDataGrid.Rows.Clear();
 
-            if (string.IsNullOrEmpty(textoBusqueda))
+            if (grupos == null || grupos.Count == 0)
             {
-                CargarGrupos();
                 return;
             }
 
-            try
+            foreach (var grupo in grupos)
             {
-                var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
+                // Capitalizar turno si existe
+                string turnoDisplay = !string.IsNullOrEmpty(grupo.turno)
+                    ? char.ToUpper(grupo.turno[0]) + grupo.turno.Substring(1).ToLower()
+                    : "N/A";
 
-                GruposDataGrid.Rows.Clear();
-
-                if (grupos == null || grupos.Count == 0)
-                {
-                    MessageBox.Show("No se encontraron grupos", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                foreach (var grupo in grupos)
-                {
-                    bool coincide = false;
-
-                    if (grupo.curso?.ToLower().Contains(textoBusqueda.ToLower()) == true ||
-                        grupo.email?.ToLower().Contains(textoBusqueda.ToLower()) == true ||
-                        grupo.turno?.ToLower().Contains(textoBusqueda.ToLower()) == true)
-                    {
-                        coincide = true;
-                    }
-
-                    if (coincide)
-                    {
-                        GruposDataGrid.Rows.Add(
-                            grupo.idGrupo,
-                            grupo.curso ?? "N/A",
-                            grupo.email ?? "N/A",
-                            grupo.turno ?? "N/A"
-                        );
-                    }
-                }
-
-                if (GruposDataGrid.Rows.Count == 0)
-                {
-                    MessageBox.Show($"No se encontraron grupos con '{textoBusqueda}'", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                GruposDataGrid.Rows.Add(
+                    grupo.idGrupo,
+                    grupo.curso ?? "",
+                    grupo.email ?? "",
+                    turnoDisplay,
+                    grupo.cantAlumnos?.ToString() ?? "0" // Mostrar 0 si es null
+                );
             }
-            catch (Exception ex)
+        }
+
+        // --- FUNCIONALIDADES CRUD (Que faltaban) ---
+
+        private void BuscarBtn_Click(object sender, EventArgs e)
+        {
+            string textoBusqueda = BuscarGruposTxt.Text.Trim().ToLower();
+
+            if (string.IsNullOrEmpty(textoBusqueda))
             {
-                MessageBox.Show($"Error al buscar grupos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MostrarGruposEnGrid(listaGruposOriginal);
+                return;
+            }
+
+            // Filtrado local (ya que el backend no tiene endpoint de búsqueda por texto general)
+            var gruposFiltrados = listaGruposOriginal.Where(g =>
+                (g.curso != null && g.curso.ToLower().Contains(textoBusqueda)) ||
+                (g.email != null && g.email.ToLower().Contains(textoBusqueda)) ||
+                (g.turno != null && g.turno.ToLower().Contains(textoBusqueda))
+            ).ToList();
+
+            MostrarGruposEnGrid(gruposFiltrados);
+
+            if (gruposFiltrados.Count == 0)
+            {
+                MessageBox.Show($"No se encontraron grupos con '{textoBusqueda}'",
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -126,7 +123,8 @@ namespace PeluqueriaApp
         {
             if (GruposDataGrid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Por favor, selecciona un grupo para editar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Por favor, selecciona un grupo para editar",
+                    "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -145,12 +143,14 @@ namespace PeluqueriaApp
         {
             if (GruposDataGrid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Por favor, selecciona un grupo para eliminar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Por favor, selecciona un grupo para eliminar",
+                    "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            // Confirmación de seguridad
             DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres eliminar este grupo?",
+                "¿Estás seguro de que quieres eliminar este grupo?\nEsto podría afectar a los servicios asociados.",
                 "Confirmar Eliminación",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning
@@ -166,16 +166,20 @@ namespace PeluqueriaApp
 
                     if (eliminado)
                     {
-                        MessageBox.Show("Grupo eliminado correctamente", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Grupo eliminado correctamente", "Éxito",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
                         CargarGrupos();
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al eliminar grupo: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar grupo: {ex.Message}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
+
+        // --- NAVEGACIÓN ---
 
         private void IniciBoto_Click(object sender, EventArgs e)
         {
@@ -212,8 +216,6 @@ namespace PeluqueriaApp
             this.Hide();
         }
 
-        
-
         private void HorarioSemanalBoto_Click(object sender, EventArgs e)
         {
             HorarioSemanalForm horarioForm = new HorarioSemanalForm();
@@ -223,7 +225,8 @@ namespace PeluqueriaApp
 
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)
@@ -237,6 +240,9 @@ namespace PeluqueriaApp
 
             if (result == DialogResult.Yes)
             {
+                ApiService.ClearAuthToken();
+                UserSession.CerrarSesion();
+
                 LoginForm loginForm = new LoginForm();
                 loginForm.Show();
                 this.Close();

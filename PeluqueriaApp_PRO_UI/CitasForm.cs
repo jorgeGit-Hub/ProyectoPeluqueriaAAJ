@@ -23,14 +23,15 @@ namespace PeluqueriaApp
             CitasDataGrid.Columns.Add("horaInicio", "Hora Inicio");
             CitasDataGrid.Columns.Add("horaFin", "Hora Fin");
             CitasDataGrid.Columns.Add("cliente", "Cliente (ID)");
-            CitasDataGrid.Columns.Add("servicio", "Servicio (ID)");
+            CitasDataGrid.Columns.Add("servicio", "Servicio");  // ✅ Ya no dice "ID"
             CitasDataGrid.Columns.Add("estado", "Estado");
 
             CitasDataGrid.Columns["idCita"].Width = 50;
             CitasDataGrid.Columns["cliente"].Width = 100;
-            CitasDataGrid.Columns["servicio"].Width = 100;
+            CitasDataGrid.Columns["servicio"].Width = 250;  // ✅ Más ancho para mostrar el nombre
         }
 
+        // En CitasForm.cs - Método CargarCitas()
         private async void CargarCitas()
         {
             try
@@ -48,7 +49,11 @@ namespace PeluqueriaApp
                 foreach (var cita in citas)
                 {
                     string clienteInfo = cita.cliente != null ? $"ID: {cita.cliente.idUsuario}" : "N/A";
-                    string servicioInfo = cita.servicio != null ? $"ID: {cita.servicio.idServicio}" : "N/A";
+
+                    // ✅ MEJORA: Mostrar nombre del servicio en lugar de solo ID
+                    string servicioInfo = cita.servicio != null
+                        ? $"{cita.servicio.nombre} (ID: {cita.servicio.idServicio})"
+                        : "N/A";
 
                     CitasDataGrid.Rows.Add(
                         cita.idCita,

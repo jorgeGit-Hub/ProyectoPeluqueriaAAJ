@@ -81,10 +81,10 @@ namespace PeluqueriaApp
                 {
                     foreach (var servicio in servicios)
                     {
-                        string grupoInfo = servicio.grupo != null ? $"Grupo {servicio.grupo.idGrupo}" : "";
+                        string grupoInfo = servicio.grupo != null ? $"Grupo {servicio.grupo.idGrupo}" : "Sin grupo";
                         ServicioCombo.Items.Add(new ComboItem
                         {
-                            Text = $"{servicio.nombre} - {servicio.diaSemana} ({grupoInfo}) - {servicio.precio}€",
+                            Text = $"{servicio.nombre} ({grupoInfo}) - {servicio.precio}€",
                             Value = servicio.idServicio
                         });
                     }
@@ -143,7 +143,7 @@ namespace PeluqueriaApp
                     horaFin = HoraFinTxt.Text.Trim(),
                     estado = EstadoCombo.SelectedItem.ToString().ToLower(),
                     cliente = new ClienteSimple { idUsuario = clienteSeleccionado.Value },
-                    servicio = new ServicioSimple { idServicio = servicioSeleccionado.Value }
+                    servicio = new Servicio { idServicio = servicioSeleccionado.Value }
                 };
 
                 if (esEdicion)

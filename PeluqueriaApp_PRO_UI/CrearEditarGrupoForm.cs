@@ -59,6 +59,20 @@ namespace PeluqueriaApp
                 return;
             }
 
+            // Validar cantidad de alumnos
+            int? cantAlumnos = null;
+            if (!string.IsNullOrWhiteSpace(CantAlumnosTxt.Text))
+            {
+                if (!int.TryParse(CantAlumnosTxt.Text, out int cant) || cant <= 0)
+                {
+                    MessageBox.Show("La cantidad de alumnos debe ser un número mayor a 0", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    CantAlumnosTxt.Focus();
+                    return;
+                }
+                cantAlumnos = cant;
+            }
+
             GuardarBtn.Enabled = false;
             GuardarBtn.Text = "Guardando...";
 
@@ -68,13 +82,9 @@ namespace PeluqueriaApp
                 {
                     curso = CursoTxt.Text.Trim(),
                     email = EmailTxt.Text.Trim(),
-                    turno = TurnoCombo.SelectedItem.ToString().ToLower()
+                    turno = TurnoCombo.SelectedItem.ToString().ToLower(),
+                    cantAlumnos = cantAlumnos
                 };
-
-                /*if (!esEdicion && !string.IsNullOrWhiteSpace(ContrasenaTxt.Text))
-                {
-                    grupo.contrasena = ContrasenaTxt.Text.Trim();
-                }*/
 
                 if (esEdicion)
                 {
@@ -115,6 +125,12 @@ namespace PeluqueriaApp
                 {
                     string turnoCapitalizado = char.ToUpper(grupo.turno[0]) + grupo.turno.Substring(1).ToLower();
                     TurnoCombo.SelectedItem = turnoCapitalizado;
+                }
+
+                // Cargar cantidad de alumnos
+                if (grupo.cantAlumnos.HasValue)
+                {
+                    CantAlumnosTxt.Text = grupo.cantAlumnos.Value.ToString();
                 }
             }
             catch (Exception ex)

@@ -27,15 +27,12 @@ namespace PeluqueriaApp
             ServiciosDataGrid.Columns.Add("aula", "Aula");
             ServiciosDataGrid.Columns.Add("tiempoCliente", "Tiempo");
             ServiciosDataGrid.Columns.Add("precio", "Precio (€)");
-            ServiciosDataGrid.Columns.Add("diaSemana", "Día");
-            ServiciosDataGrid.Columns.Add("horario", "Horario");
             ServiciosDataGrid.Columns.Add("grupo", "Grupo");
 
             ServiciosDataGrid.Columns["idServicio"].Width = 50;
             ServiciosDataGrid.Columns["aula"].Width = 80;
             ServiciosDataGrid.Columns["tiempoCliente"].Width = 80;
             ServiciosDataGrid.Columns["precio"].Width = 80;
-            ServiciosDataGrid.Columns["diaSemana"].Width = 100;
         }
 
         private async void CargarServicios()
@@ -67,8 +64,6 @@ namespace PeluqueriaApp
                         servicio.aula ?? "N/A",
                         servicio.tiempoCliente ?? "N/A",
                         servicio.precio.ToString("F2"),
-                        servicio.diaSemana ?? "N/A",
-                        servicio.horario ?? "N/A",
                         grupoInfo
                     );
                 }
@@ -116,8 +111,6 @@ namespace PeluqueriaApp
                         servicio.aula ?? "N/A",
                         servicio.tiempoCliente ?? "N/A",
                         servicio.precio.ToString("F2"),
-                        servicio.diaSemana ?? "N/A",
-                        servicio.horario ?? "N/A",
                         grupoInfo
                     );
                 }
@@ -192,6 +185,21 @@ namespace PeluqueriaApp
                     MessageBox.Show($"Error al eliminar servicio: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void VerHorariosBtn_Click(object sender, EventArgs e)
+        {
+            if (ServiciosDataGrid.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Por favor, selecciona un servicio para ver sus horarios", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int idServicio = Convert.ToInt32(ServiciosDataGrid.SelectedRows[0].Cells["idServicio"].Value);
+            string nombreServicio = ServiciosDataGrid.SelectedRows[0].Cells["nombre"].Value.ToString();
+
+            HorariosServicioForm horariosForm = new HorariosServicioForm(idServicio, nombreServicio);
+            horariosForm.ShowDialog();
         }
 
         private void IniciBoto_Click(object sender, EventArgs e)
