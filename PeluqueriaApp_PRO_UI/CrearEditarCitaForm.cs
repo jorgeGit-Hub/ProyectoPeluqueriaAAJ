@@ -352,7 +352,7 @@ namespace PeluqueriaApp
             {
                 MessageBox.Show($"Error al cargar datos de la cita: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
+        } //
 
         private void CancelarBtn_Click(object sender, EventArgs e)
         {
