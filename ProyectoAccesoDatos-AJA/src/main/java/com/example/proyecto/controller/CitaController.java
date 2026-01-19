@@ -17,10 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.TextStyle;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 @RestController
@@ -82,24 +80,48 @@ public class CitaController {
                 return ResponseEntity.badRequest().body(createError("El servicio no existe"));
             }
 
-            // 2. Validar que exista horario para ese día
+            // 2. Validar fecha
+            if (c.getFecha() == null) {
+                return ResponseEntity.badRequest().body(createError("Debe especificar una fecha"));
+            }
+
+            // 3. Validar horas
+            if (c.getHoraInicio() == null || c.getHoraFin() == null) {
+                return ResponseEntity.badRequest().body(createError("Debe especificar hora de inicio y fin"));
+            }
+
+            // 4. Convertir día de la semana
             String diaSemana = convertirDiaSemana(c.getFecha().getDayOfWeek());
+
+            System.out.println("=== DEBUG CREAR CITA ===");
+            System.out.println("Fecha: " + c.getFecha());
+            System.out.println("Día de la semana (DayOfWeek): " + c.getFecha().getDayOfWeek());
+            System.out.println("Día convertido: " + diaSemana);
+            System.out.println("ID Servicio: " + servicioCompleto.getIdServicio());
+
+            // 5. Buscar horarios del servicio para ese día
             List<HorarioSemanal> horariosDelDia = horarioRepository.findByServicioAndDia(
                     servicioCompleto.getIdServicio(),
                     diaSemana
             );
 
+            System.out.println("Horarios encontrados: " + horariosDelDia.size());
+            for (HorarioSemanal h : horariosDelDia) {
+                System.out.println("  - Día: " + h.getDiaSemana() + ", Inicio: " + h.getHoraInicio() + ", Fin: " + h.getHoraFin());
+            }
+
             if (horariosDelDia.isEmpty()) {
                 return ResponseEntity.badRequest().body(createError(
-                        "Este servicio no está disponible los " + diaSemana
+                        "Este servicio no está disponible los " + diaSemana + ". Por favor, verifica los horarios del servicio."
                 ));
             }
 
-            // 3. Validar que la cita esté dentro de algún horario disponible
+            // 6. Validar que la cita esté dentro de algún horario disponible
             boolean dentroDeHorario = false;
             HorarioSemanal horarioValido = null;
 
             for (HorarioSemanal horario : horariosDelDia) {
+                // Comparar si la hora de inicio y fin de la cita están dentro del horario
                 if (!c.getHoraInicio().isBefore(horario.getHoraInicio()) &&
                         !c.getHoraFin().isAfter(horario.getHoraFin())) {
                     dentroDeHorario = true;
@@ -110,11 +132,12 @@ public class CitaController {
 
             if (!dentroDeHorario) {
                 return ResponseEntity.badRequest().body(createError(
-                        "El horario de la cita debe estar dentro del horario del servicio"
+                        "El horario seleccionado no está disponible para este servicio. Horarios disponibles los " +
+                                diaSemana + ": " + formatearHorarios(horariosDelDia)
                 ));
             }
 
-            // 4. Validar capacidad del grupo (cantAlumnos)
+            // 7. Validar capacidad del grupo (cantAlumnos)
             if (servicioCompleto.getGrupo() != null &&
                     servicioCompleto.getGrupo().getCantAlumnos() != null) {
 
@@ -138,7 +161,7 @@ public class CitaController {
 
             c.setServicio(servicioCompleto);
 
-            // 5. Validar Cliente/Permisos
+            // 8. Validar Cliente/Permisos
             boolean isAdmin = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
 
@@ -151,10 +174,16 @@ public class CitaController {
                 }
             }
 
+            // 9. Establecer estado por defecto si no viene
+            if (c.getEstado() == null) {
+                c.setEstado(Cita.Estado.pendiente);
+            }
+
             return ResponseEntity.ok(repo.save(c));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(createError("Error: " + e.getMessage()));
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(createError("Error al crear la cita: " + e.getMessage()));
         }
     }
 
@@ -210,7 +239,7 @@ public class CitaController {
                             c.getFecha(),
                             c.getHoraInicio(),
                             c.getHoraFin(),
-                            id // Excluir la cita actual del conteo
+                            id
                     );
 
                     if (citasSimultaneas >= capacidadMaxima) {
@@ -253,13 +282,28 @@ public class CitaController {
         switch (dayOfWeek) {
             case MONDAY: return "lunes";
             case TUESDAY: return "martes";
-            case WEDNESDAY: return "miercoles";
+            case WEDNESDAY: return "miercoles"; // SIN TILDE para coincidir con el enum
             case THURSDAY: return "jueves";
             case FRIDAY: return "viernes";
-            case SATURDAY: return "sabado";
+            case SATURDAY: return "sabado"; // SIN TILDE para coincidir con el enum
             case SUNDAY: return "domingo";
             default: return "";
         }
+    }
+
+    /**
+     * Formatea los horarios disponibles para mostrarlos en el mensaje de error
+     */
+    private String formatearHorarios(List<HorarioSemanal> horarios) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < horarios.size(); i++) {
+            HorarioSemanal h = horarios.get(i);
+            sb.append(h.getHoraInicio()).append(" - ").append(h.getHoraFin());
+            if (i < horarios.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -275,9 +319,10 @@ public class CitaController {
             // Verificar si las fechas coinciden
             if (!cita.getFecha().equals(fecha)) continue;
 
+            // Solo contar citas pendientes o realizadas (no canceladas)
+            if (cita.getEstado() == Cita.Estado.cancelada) continue;
+
             // Verificar solapamiento de horarios
-            // Dos citas se solapan si:
-            // (horaInicio1 < horaFin2) Y (horaFin1 > horaInicio2)
             if (cita.getHoraInicio().isBefore(horaFin) &&
                     cita.getHoraFin().isAfter(horaInicio)) {
                 contador++;
@@ -289,7 +334,7 @@ public class CitaController {
 
     /**
      * Similar a contarCitasSimultaneas pero excluye una cita específica
-     * (útil para actualizaciones)
+     * (Útil para actualizaciones)
      */
     private int contarCitasSimultaneasExcluyendo(Integer idServicio, LocalDate fecha,
                                                  LocalTime horaInicio, LocalTime horaFin,
@@ -303,6 +348,9 @@ public class CitaController {
 
             // Verificar si las fechas coinciden
             if (!cita.getFecha().equals(fecha)) continue;
+
+            // Solo contar citas pendientes o realizadas (no canceladas)
+            if (cita.getEstado() == Cita.Estado.cancelada) continue;
 
             // Verificar solapamiento de horarios
             if (cita.getHoraInicio().isBefore(horaFin) &&

@@ -121,6 +121,13 @@ namespace PeluqueriaApp
                 return;
             }
 
+            // Validar formato de horas
+            if (!ValidarFormatoHora(HoraInicioTxt.Text) || !ValidarFormatoHora(HoraFinTxt.Text))
+            {
+                MessageBox.Show("El formato de hora debe ser HH:mm:ss (ejemplo: 09:00:00)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             if (EstadoCombo.SelectedItem == null)
             {
                 MessageBox.Show("Debes seleccionar un estado", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -136,9 +143,57 @@ namespace PeluqueriaApp
                 var clienteSeleccionado = (ComboItem)ClienteCombo.SelectedItem;
                 var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
 
+                // Obtener fecha seleccionada
+                DateTime fechaSeleccionada = FechaCalendar.SelectionStart;
+
+                // Verificar horarios disponibles ANTES de crear la cita
+                var horarios = await ApiService.GetAsync<List<HorarioSemanal>>(
+                    $"api/horarios/servicio/{servicioSeleccionado.Value}/dia/{ObtenerDiaSemana(fechaSeleccionada)}"
+                );
+
+                if (horarios == null || horarios.Count == 0)
+                {
+                    string diaNombre = ObtenerNombreDia(fechaSeleccionada);
+                    MessageBox.Show(
+                        $"El servicio seleccionado no tiene horarios disponibles para {diaNombre}.\n\n" +
+                        "Por favor, selecciona otro día o verifica los horarios del servicio.",
+                        "Horario no disponible",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                // Validar que el horario esté dentro de los disponibles
+                bool horarioValido = false;
+                foreach (var horario in horarios)
+                {
+                    if (HoraInicioTxt.Text.CompareTo(horario.horaInicio) >= 0 &&
+                        HoraFinTxt.Text.CompareTo(horario.horaFin) <= 0)
+                    {
+                        horarioValido = true;
+                        break;
+                    }
+                }
+
+                if (!horarioValido)
+                {
+                    string horariosDisponibles = string.Join(", ",
+                        horarios.ConvertAll(h => $"{h.horaInicio} - {h.horaFin}"));
+
+                    MessageBox.Show(
+                        $"El horario seleccionado no está disponible.\n\n" +
+                        $"Horarios disponibles: {horariosDisponibles}",
+                        "Horario inválido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
                 var cita = new Cita
                 {
-                    fecha = FechaCalendar.SelectionStart.ToString("yyyy-MM-dd"),
+                    fecha = fechaSeleccionada.ToString("yyyy-MM-dd"),
                     horaInicio = HoraInicioTxt.Text.Trim(),
                     horaFin = HoraFinTxt.Text.Trim(),
                     estado = EstadoCombo.SelectedItem.ToString().ToLower(),
@@ -163,12 +218,82 @@ namespace PeluqueriaApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string mensaje = ex.Message;
+
+                // Extraer el mensaje de error del JSON si existe
+                if (mensaje.Contains("error"))
+                {
+                    try
+                    {
+                        // Intentar parsear el JSON de error
+                        int startIndex = mensaje.IndexOf("{\"error\":");
+                        if (startIndex >= 0)
+                        {
+                            string jsonPart = mensaje.Substring(startIndex);
+                            var errorObj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonPart);
+                            if (errorObj != null && errorObj.ContainsKey("error"))
+                            {
+                                mensaje = errorObj["error"];
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                MessageBox.Show($"Error al guardar:\n\n{mensaje}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 GuardarBtn.Enabled = true;
                 GuardarBtn.Text = "💾 Guardar";
+            }
+        }
+
+        private bool ValidarFormatoHora(string hora)
+        {
+            // Validar formato HH:mm:ss
+            if (string.IsNullOrWhiteSpace(hora)) return false;
+
+            string[] partes = hora.Split(':');
+            if (partes.Length != 3) return false;
+
+            int hh, mm, ss;
+            if (!int.TryParse(partes[0], out hh) || hh < 0 || hh > 23) return false;
+            if (!int.TryParse(partes[1], out mm) || mm < 0 || mm > 59) return false;
+            if (!int.TryParse(partes[2], out ss) || ss < 0 || ss > 59) return false;
+
+            return true;
+        }
+
+        private string ObtenerDiaSemana(DateTime fecha)
+        {
+            // Convertir a español en minúsculas SIN TILDES para coincidir con el backend
+            switch (fecha.DayOfWeek)
+            {
+                case DayOfWeek.Monday: return "lunes";
+                case DayOfWeek.Tuesday: return "martes";
+                case DayOfWeek.Wednesday: return "miercoles"; // SIN TILDE
+                case DayOfWeek.Thursday: return "jueves";
+                case DayOfWeek.Friday: return "viernes";
+                case DayOfWeek.Saturday: return "sabado"; // SIN TILDE
+                case DayOfWeek.Sunday: return "domingo";
+                default: return "";
+            }
+        }
+
+        private string ObtenerNombreDia(DateTime fecha)
+        {
+            // Versión con tildes para mostrar al usuario
+            switch (fecha.DayOfWeek)
+            {
+                case DayOfWeek.Monday: return "lunes";
+                case DayOfWeek.Tuesday: return "martes";
+                case DayOfWeek.Wednesday: return "miércoles";
+                case DayOfWeek.Thursday: return "jueves";
+                case DayOfWeek.Friday: return "viernes";
+                case DayOfWeek.Saturday: return "sábado";
+                case DayOfWeek.Sunday: return "domingo";
+                default: return "";
             }
         }
 
