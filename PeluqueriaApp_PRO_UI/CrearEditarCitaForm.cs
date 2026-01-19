@@ -10,6 +10,7 @@ namespace PeluqueriaApp
     {
         private int? idCita = null;
         private bool esEdicion = false;
+        private List<HorarioDisponible> horariosDisponibles = new List<HorarioDisponible>();
 
         public CrearEditarCitaForm()
         {
@@ -21,6 +22,10 @@ namespace PeluqueriaApp
             FechaCalendar.SetDate(DateTime.Now);
             CargarClientes();
             CargarServicios();
+
+            // Eventos para actualizar horarios
+            FechaCalendar.DateChanged += FechaCalendar_DateChanged;
+            ServicioCombo.SelectedIndexChanged += ServicioCombo_SelectedIndexChanged;
         }
 
         public CrearEditarCitaForm(int id)
@@ -34,6 +39,10 @@ namespace PeluqueriaApp
             CargarClientes();
             CargarServicios();
             CargarDatosCita(id);
+
+            // Eventos para actualizar horarios
+            FechaCalendar.DateChanged += FechaCalendar_DateChanged;
+            ServicioCombo.SelectedIndexChanged += ServicioCombo_SelectedIndexChanged;
         }
 
         private async void CargarClientes()
@@ -98,6 +107,153 @@ namespace PeluqueriaApp
             }
         }
 
+        private void ServicioCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CargarHorariosDisponibles();
+        }
+
+        private void FechaCalendar_DateChanged(object sender, DateRangeEventArgs e)
+        {
+            CargarHorariosDisponibles();
+        }
+
+        private async void CargarHorariosDisponibles()
+        {
+            // Limpiar lista de horarios
+            HorariosListBox.Items.Clear();
+            horariosDisponibles.Clear();
+
+            // Validar que haya un servicio seleccionado
+            if (ServicioCombo.SelectedIndex <= 0)
+            {
+                HorariosListBox.Items.Add("Selecciona un servicio para ver horarios disponibles");
+                return;
+            }
+
+            try
+            {
+                var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
+                DateTime fechaSeleccionada = FechaCalendar.SelectionStart;
+                string diaSemana = ObtenerDiaSemana(fechaSeleccionada);
+                string diaNombre = ObtenerNombreDia(fechaSeleccionada);
+
+                // Obtener horarios del servicio para ese día
+                var horarios = await ApiService.GetAsync<List<HorarioSemanal>>(
+                    $"api/horarios/servicio/{servicioSeleccionado.Value}/dia/{diaSemana}"
+                );
+
+                if (horarios == null || horarios.Count == 0)
+                {
+                    HorariosListBox.Items.Add($"⚠️  No hay horarios disponibles para {diaNombre}");
+                    return;
+                }
+
+                // Obtener el servicio completo para saber la duración
+                var servicio = await ApiService.GetAsync<Servicio>($"api/servicios/{servicioSeleccionado.Value}");
+                int duracionMinutos = ParsearDuracion(servicio.tiempoCliente);
+
+                // Generar slots de tiempo para cada horario
+                foreach (var horario in horarios)
+                {
+                    GenerarSlotsDeHorario(horario, duracionMinutos, fechaSeleccionada);
+                }
+
+                // Mostrar en el ListBox
+                if (horariosDisponibles.Count == 0)
+                {
+                    HorariosListBox.Items.Add("⚠️  No hay slots disponibles para este día");
+                }
+                else
+                {
+                    HorariosListBox.Items.Add($"✓ {horariosDisponibles.Count} horarios disponibles para {diaNombre}:");
+                    HorariosListBox.Items.Add(""); // Línea en blanco
+
+                    foreach (var slot in horariosDisponibles)
+                    {
+                        HorariosListBox.Items.Add(slot);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HorariosListBox.Items.Add($"Error al cargar horarios: {ex.Message}");
+            }
+        }
+
+        private void GenerarSlotsDeHorario(HorarioSemanal horario, int duracionMinutos, DateTime fecha)
+        {
+            try
+            {
+                TimeSpan horaInicio = TimeSpan.Parse(horario.horaInicio);
+                TimeSpan horaFin = TimeSpan.Parse(horario.horaFin);
+                TimeSpan duracion = TimeSpan.FromMinutes(duracionMinutos);
+
+                TimeSpan horaActual = horaInicio;
+
+                while (horaActual.Add(duracion) <= horaFin)
+                {
+                    TimeSpan horaFinSlot = horaActual.Add(duracion);
+
+                    horariosDisponibles.Add(new HorarioDisponible
+                    {
+                        HoraInicio = horaActual.ToString(@"hh\:mm\:ss"),
+                        HoraFin = horaFinSlot.ToString(@"hh\:mm\:ss"),
+                        Fecha = fecha,
+                        DisplayText = $"🕐 {horaActual:hh\\:mm} - {horaFinSlot:hh\\:mm}"
+                    });
+
+                    // Avanzar al siguiente slot (puede ser cada 30 min, 1 hora, etc.)
+                    horaActual = horaActual.Add(duracion);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error generando slots: {ex.Message}");
+            }
+        }
+
+        private int ParsearDuracion(string tiempoCliente)
+        {
+            if (string.IsNullOrEmpty(tiempoCliente))
+                return 60; // 1 hora por defecto
+
+            try
+            {
+                // Quitar espacios y convertir a minúsculas
+                tiempoCliente = tiempoCliente.Trim().ToLower();
+
+                // Casos comunes: "45'", "1h", "1,5h", "90min", etc.
+                if (tiempoCliente.Contains("h"))
+                {
+                    // Formato: "1h", "1.5h", "1,5h"
+                    string numero = tiempoCliente.Replace("h", "").Replace(",", ".").Trim();
+                    double horas = double.Parse(numero, System.Globalization.CultureInfo.InvariantCulture);
+                    return (int)(horas * 60);
+                }
+                else if (tiempoCliente.Contains("min"))
+                {
+                    // Formato: "45min", "90min"
+                    string numero = tiempoCliente.Replace("min", "").Trim();
+                    return int.Parse(numero);
+                }
+                else if (tiempoCliente.Contains("'"))
+                {
+                    // Formato: "45'", "60'"
+                    string numero = tiempoCliente.Replace("'", "").Trim();
+                    return int.Parse(numero);
+                }
+                else
+                {
+                    // Intentar parsear como número directo (asumiendo minutos)
+                    return int.Parse(tiempoCliente);
+                }
+            }
+            catch
+            {
+                return 60; // 1 hora por defecto en caso de error
+            }
+        }
+
         private async void GuardarBtn_Click(object sender, EventArgs e)
         {
             // Validaciones
@@ -115,16 +271,18 @@ namespace PeluqueriaApp
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(HoraInicioTxt.Text) || string.IsNullOrWhiteSpace(HoraFinTxt.Text))
+            if (HorariosListBox.SelectedIndex < 0)
             {
-                MessageBox.Show("La hora de inicio y fin son obligatorias", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Debes seleccionar un horario de la lista", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                HorariosListBox.Focus();
                 return;
             }
 
-            // Validar formato de horas
-            if (!ValidarFormatoHora(HoraInicioTxt.Text) || !ValidarFormatoHora(HoraFinTxt.Text))
+            // Obtener el horario seleccionado
+            var horarioSeleccionado = HorariosListBox.SelectedItem as HorarioDisponible;
+            if (horarioSeleccionado == null)
             {
-                MessageBox.Show("El formato de hora debe ser HH:mm:ss (ejemplo: 09:00:00)", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Por favor selecciona un horario válido", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -143,59 +301,11 @@ namespace PeluqueriaApp
                 var clienteSeleccionado = (ComboItem)ClienteCombo.SelectedItem;
                 var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
 
-                // Obtener fecha seleccionada
-                DateTime fechaSeleccionada = FechaCalendar.SelectionStart;
-
-                // Verificar horarios disponibles ANTES de crear la cita
-                var horarios = await ApiService.GetAsync<List<HorarioSemanal>>(
-                    $"api/horarios/servicio/{servicioSeleccionado.Value}/dia/{ObtenerDiaSemana(fechaSeleccionada)}"
-                );
-
-                if (horarios == null || horarios.Count == 0)
-                {
-                    string diaNombre = ObtenerNombreDia(fechaSeleccionada);
-                    MessageBox.Show(
-                        $"El servicio seleccionado no tiene horarios disponibles para {diaNombre}.\n\n" +
-                        "Por favor, selecciona otro día o verifica los horarios del servicio.",
-                        "Horario no disponible",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-                    return;
-                }
-
-                // Validar que el horario esté dentro de los disponibles
-                bool horarioValido = false;
-                foreach (var horario in horarios)
-                {
-                    if (HoraInicioTxt.Text.CompareTo(horario.horaInicio) >= 0 &&
-                        HoraFinTxt.Text.CompareTo(horario.horaFin) <= 0)
-                    {
-                        horarioValido = true;
-                        break;
-                    }
-                }
-
-                if (!horarioValido)
-                {
-                    string horariosDisponibles = string.Join(", ",
-                        horarios.ConvertAll(h => $"{h.horaInicio} - {h.horaFin}"));
-
-                    MessageBox.Show(
-                        $"El horario seleccionado no está disponible.\n\n" +
-                        $"Horarios disponibles: {horariosDisponibles}",
-                        "Horario inválido",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-                    return;
-                }
-
                 var cita = new Cita
                 {
-                    fecha = fechaSeleccionada.ToString("yyyy-MM-dd"),
-                    horaInicio = HoraInicioTxt.Text.Trim(),
-                    horaFin = HoraFinTxt.Text.Trim(),
+                    fecha = horarioSeleccionado.Fecha.ToString("yyyy-MM-dd"),
+                    horaInicio = horarioSeleccionado.HoraInicio,
+                    horaFin = horarioSeleccionado.HoraFin,
                     estado = EstadoCombo.SelectedItem.ToString().ToLower(),
                     cliente = new ClienteSimple { idUsuario = clienteSeleccionado.Value },
                     servicio = new Servicio { idServicio = servicioSeleccionado.Value }
@@ -225,7 +335,6 @@ namespace PeluqueriaApp
                 {
                     try
                     {
-                        // Intentar parsear el JSON de error
                         int startIndex = mensaje.IndexOf("{\"error\":");
                         if (startIndex >= 0)
                         {
@@ -249,33 +358,16 @@ namespace PeluqueriaApp
             }
         }
 
-        private bool ValidarFormatoHora(string hora)
-        {
-            // Validar formato HH:mm:ss
-            if (string.IsNullOrWhiteSpace(hora)) return false;
-
-            string[] partes = hora.Split(':');
-            if (partes.Length != 3) return false;
-
-            int hh, mm, ss;
-            if (!int.TryParse(partes[0], out hh) || hh < 0 || hh > 23) return false;
-            if (!int.TryParse(partes[1], out mm) || mm < 0 || mm > 59) return false;
-            if (!int.TryParse(partes[2], out ss) || ss < 0 || ss > 59) return false;
-
-            return true;
-        }
-
         private string ObtenerDiaSemana(DateTime fecha)
         {
-            // Convertir a español en minúsculas SIN TILDES para coincidir con el backend
             switch (fecha.DayOfWeek)
             {
                 case DayOfWeek.Monday: return "lunes";
                 case DayOfWeek.Tuesday: return "martes";
-                case DayOfWeek.Wednesday: return "miercoles"; // SIN TILDE
+                case DayOfWeek.Wednesday: return "miercoles";
                 case DayOfWeek.Thursday: return "jueves";
                 case DayOfWeek.Friday: return "viernes";
-                case DayOfWeek.Saturday: return "sabado"; // SIN TILDE
+                case DayOfWeek.Saturday: return "sabado";
                 case DayOfWeek.Sunday: return "domingo";
                 default: return "";
             }
@@ -283,7 +375,6 @@ namespace PeluqueriaApp
 
         private string ObtenerNombreDia(DateTime fecha)
         {
-            // Versión con tildes para mostrar al usuario
             switch (fecha.DayOfWeek)
             {
                 case DayOfWeek.Monday: return "lunes";
@@ -308,10 +399,6 @@ namespace PeluqueriaApp
                 {
                     FechaCalendar.SetDate(DateTime.Parse(cita.fecha));
                 }
-
-                // Cargar horas
-                HoraInicioTxt.Text = cita.horaInicio;
-                HoraFinTxt.Text = cita.horaFin;
 
                 // Seleccionar estado
                 if (!string.IsNullOrEmpty(cita.estado))
@@ -347,12 +434,26 @@ namespace PeluqueriaApp
                         }
                     }
                 }
+
+                // Esperar a que se carguen los horarios y seleccionar el correcto
+                await System.Threading.Tasks.Task.Delay(500);
+
+                // Buscar y seleccionar el horario correspondiente
+                for (int i = 0; i < HorariosListBox.Items.Count; i++)
+                {
+                    var item = HorariosListBox.Items[i] as HorarioDisponible;
+                    if (item != null && item.HoraInicio == cita.horaInicio && item.HoraFin == cita.horaFin)
+                    {
+                        HorariosListBox.SelectedIndex = i;
+                        break;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar datos de la cita: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        } //
+        }
 
         private void CancelarBtn_Click(object sender, EventArgs e)
         {
@@ -379,6 +480,20 @@ namespace PeluqueriaApp
             public override string ToString()
             {
                 return Text;
+            }
+        }
+
+        // Clase para los horarios disponibles
+        private class HorarioDisponible
+        {
+            public string HoraInicio { get; set; }
+            public string HoraFin { get; set; }
+            public DateTime Fecha { get; set; }
+            public string DisplayText { get; set; }
+
+            public override string ToString()
+            {
+                return DisplayText;
             }
         }
     }
