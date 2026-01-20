@@ -39,7 +39,7 @@ namespace PeluqueriaApp
             // LoginForm
             // 
             this.ClientSize = new Size(1100, 700);
-            this.Text = "Peluquería Escola - Iniciar Sesión";
+            this.Text = "Peluquería IES Bernat Sarriá - Iniciar Sesión";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(250, 245, 240);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -55,11 +55,11 @@ namespace PeluqueriaApp
             // 
             // BienvenidaLbl
             // 
-            this.BienvenidaLbl.Text = "✂️\nPeluquería Escola";
+            this.BienvenidaLbl.Text = "✂️\nPeluquería IES Bernat Sarriá";
             this.BienvenidaLbl.Font = new Font("Segoe UI", 28F, FontStyle.Bold, GraphicsUnit.Point);
             this.BienvenidaLbl.ForeColor = Color.White;
             this.BienvenidaLbl.AutoSize = false;
-            this.BienvenidaLbl.Size = new Size(400, 150);
+            this.BienvenidaLbl.Size = new Size(400, 200);
             this.BienvenidaLbl.Location = new Point(25, 200);
             this.BienvenidaLbl.TextAlign = ContentAlignment.MiddleCenter;
 
@@ -71,7 +71,7 @@ namespace PeluqueriaApp
             this.InfoLbl.ForeColor = Color.FromArgb(255, 250, 245);
             this.InfoLbl.AutoSize = false;
             this.InfoLbl.Size = new Size(400, 60);
-            this.InfoLbl.Location = new Point(25, 360);
+            this.InfoLbl.Location = new Point(25, 400);
             this.InfoLbl.TextAlign = ContentAlignment.MiddleCenter;
 
             // 
