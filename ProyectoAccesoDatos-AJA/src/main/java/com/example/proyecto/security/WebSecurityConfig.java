@@ -58,26 +58,25 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (sin autenticación)
+                        // ✅ CRÍTICO: Endpoints de autenticación públicos (PRIMERO Y ESPECÍFICOS)
                         .requestMatchers("/api/auth/**").permitAll()
+
+
+                        // Otros endpoints públicos
                         .requestMatchers("/api/dev/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/servicios/**").permitAll()
 
-                        // NUEVO: Horarios - público para consulta
-                        .requestMatchers("/api/horarios", "/api/horarios/{id}",
-                                "/api/horarios/servicio/{idServicio}",
-                                "/api/horarios/dia/{dia}",
-                                "/api/horarios/servicio/{idServicio}/dia/{dia}").permitAll()
+                        // Horarios públicos para consulta
+                        .requestMatchers("/api/horarios", "/api/horarios/**").permitAll()
 
-                        // Endpoints específicos que deben ir ANTES de la regla general
+                        // Endpoints especiales de creación de usuarios
                         .requestMatchers("/api/usuarios/with-cliente").permitAll()
                         .requestMatchers("/api/usuarios/with-administrador").permitAll()
 
                         // Solo ADMINISTRADOR
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers("/api/horarios/**").hasRole("ADMINISTRADOR") // Crear/modificar/eliminar
 
                         // Bloqueos: ADMINISTRADOR puede crear/modificar, ALUMNO solo consultar
                         .requestMatchers("/api/bloqueos").hasAnyRole("ADMINISTRADOR", "ALUMNO")

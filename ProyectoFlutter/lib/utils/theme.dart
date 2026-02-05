@@ -8,7 +8,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primary,
+        seedColor: const Color.fromARGB(255, 164, 147, 80),
         primary: primary,
         surface: pastelLavender,
         onSurface: Colors.black,

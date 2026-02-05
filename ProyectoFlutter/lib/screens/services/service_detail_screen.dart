@@ -26,15 +26,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     final args = ModalRoute.of(context)!.settings.arguments;
     if (args == null || args is! Servicio) {
       return const Scaffold(
-          body: Center(child: Text("Error: No se encontró el servicio")));
+        body: Center(child: Text("Error: No se encontró el servicio")),
+      );
     }
     final Servicio servicio = args;
 
     final valoracionProv = context.watch<ValoracionProvider>();
     final todasValoraciones = valoracionProv.valoraciones;
-
-    // FILTRAR SOLO LAS VALORACIONES DE ESTE SERVICIO
-    // Como no tienes relación directa, mostramos todas (o ajusta según tu BD)
 
     double promedio = 0;
     if (todasValoraciones.isNotEmpty) {
@@ -45,218 +43,340 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-              color: Colors.black26, shape: BoxShape.circle),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, size: 20),
-            onPressed: () => Navigator.pop(context),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Header con imagen
+              _buildHeader(servicio),
+
+              // Contenido
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    // Información principal
+                    _buildMainInfo(
+                        servicio, promedio, todasValoraciones.length),
+
+                    // Qué incluye
+                    _buildWhatIncludes(),
+
+                    // Descripción
+                    _buildDescription(servicio),
+
+                    // Valoraciones
+                    _buildReviews(todasValoraciones, promedio),
+
+                    const SizedBox(
+                        height: 100), // Espacio para el botón flotante
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          // BOTÓN PARA VALORAR
-          Container(
-            margin: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-                color: Colors.black26, shape: BoxShape.circle),
-            child: IconButton(
-              icon: const Icon(Icons.rate_review, size: 20),
-              onPressed: () =>
-                  Navigator.pushNamed(context, '/crear-valoracion'),
+
+          // Botón flotante de reserva
+          _buildFloatingBookButton(context, servicio),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(Servicio servicio) {
+    return SliverAppBar(
+      expandedHeight: 300,
+      pinned: true,
+      backgroundColor: AppTheme.primary,
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
             ),
+          ],
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primary),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Imagen de fondo
+            if (servicio.imagen != null && servicio.imagen!.isNotEmpty)
+              Image.network(
+                servicio.imagen!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _buildDefaultBackground(),
+              )
+            else
+              _buildDefaultBackground(),
+
+            // Gradiente oscuro en la parte inferior
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Etiqueta de categoría
+            Positioned(
+              top: 60,
+              left: 20,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Cabello',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultBackground() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primary,
+            AppTheme.primary.withOpacity(0.7),
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.content_cut_rounded,
+          size: 100,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainInfo(
+      Servicio servicio, double promedio, int numValoraciones) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      body: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 3,
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppTheme.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
+          // Título
+          Text(
+            servicio.nombre,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Rating y duración
+          Row(
+            children: [
+              // Rating
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
                   children: [
-                    Container(
-                      height: 90,
-                      width: 90,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      promedio > 0 ? promedio.toStringAsFixed(1) : '5.0',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      child: const Icon(Icons.spa_rounded,
-                          size: 45, color: Colors.white),
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: Text(
-                        servicio.nombre,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold),
+                    const SizedBox(width: 4),
+                    Text(
+                      '($numValoraciones)',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Precio del Servicio",
-                              style: TextStyle(color: Colors.grey[600])),
-                          Text(
-                            "${servicio.precio.toStringAsFixed(2)} €",
-                            style: const TextStyle(
-                                color: AppTheme.primary,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800),
-                          ),
-                        ],
+
+              const SizedBox(width: 12),
+
+              // Duración
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time,
+                        color: AppTheme.primary, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${servicio.duracion} min',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text("Duración",
-                              style: TextStyle(color: Colors.grey[600])),
-                          Row(
-                            children: [
-                              const Icon(Icons.access_time,
-                                  size: 18, color: AppTheme.primary),
-                              const SizedBox(width: 4),
-                              Text(
-                                "${servicio.duracion} min",
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  const Text("Sobre este servicio",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Text(
-                    servicio.descripcion.isNotEmpty
-                        ? servicio.descripcion
-                        : "Disfruta de una experiencia profesional con los mejores productos en nuestro salón.",
-                    style: TextStyle(
-                        fontSize: 16, color: Colors.grey[700], height: 1.5),
-                  ),
-                  const SizedBox(height: 30),
-                  const Divider(),
-                  const SizedBox(height: 20),
-                  const Text("Valoraciones de Clientes",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  if (todasValoraciones.isEmpty)
-                    const Text("Sé el primero en valorar este servicio",
-                        style: TextStyle(color: Colors.grey))
-                  else ...[
-                    Row(
-                      children: [
-                        Text(
-                          promedio.toStringAsFixed(1),
-                          style: const TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: List.generate(5, (index) {
-                                return Icon(
-                                  index < promedio.round()
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: Colors.amber,
-                                  size: 16,
-                                );
-                              }),
-                            ),
-                            Text(
-                              "${todasValoraciones.length} valoraciones",
-                              style: TextStyle(
-                                  color: Colors.grey[600], fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
-                    const SizedBox(height: 16),
-                    ...todasValoraciones
-                        .take(5)
-                        .map((v) => _buildValoracionCard(v)),
                   ],
-                ],
+                ),
               ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Precio
+          Row(
+            children: [
+              Text(
+                'Precio',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '\$${servicio.precio.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWhatIncludes() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Qué Incluye',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
+          const SizedBox(height: 16),
+          _buildIncludeItem('Consulta de estilo personalizada'),
+          _buildIncludeItem('Lavado y acondicionamiento profundo'),
+          _buildIncludeItem('Corte profesional con técnicas avanzadas'),
+          _buildIncludeItem('Estilizado y secado'),
+          _buildIncludeItem('Productos de acabado premium'),
+          _buildIncludeItem('Consejos de mantenimiento en casa'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncludeItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            height: 24,
+            width: 24,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5))
-              ],
+              color: Colors.green.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, "/booking",
-                      arguments: servicio),
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  label: const Text("Reservar Ahora",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
+            child: const Icon(
+              Icons.check,
+              color: Colors.green,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black87,
+                height: 1.4,
               ),
             ),
           ),
@@ -265,33 +385,282 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
   }
 
-  Widget _buildValoracionCard(Valoracion v) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                ...List.generate(
-                    v.puntuacion,
-                    (index) =>
-                        const Icon(Icons.star, color: Colors.amber, size: 16)),
-                ...List.generate(
-                    5 - v.puntuacion,
-                    (index) => const Icon(Icons.star_border,
-                        color: Colors.amber, size: 16)),
-                const Spacer(),
-                if (v.fechaValoracion != null)
-                  Text(v.fechaValoracion!,
-                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
-              ],
+  Widget _buildDescription(Servicio servicio) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Descripción',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 8),
-            Text(v.comentario, style: const TextStyle(fontSize: 14)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            servicio.descripcion.isNotEmpty
+                ? servicio.descripcion
+                : 'Nuestro servicio premium de corte y estilizado está diseñado para transformar tu look con técnicas profesionales y productos de alta calidad. Cada servicio incluye una consulta personalizada para asegurar que obtengas exactamente el estilo que deseas.',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[700],
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviews(List<Valoracion> valoraciones, double promedio) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Valoraciones de Clientes',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              if (valoraciones.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    // Navegar a ver todas las valoraciones
+                  },
+                  child: const Text('Ver todas'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (valoraciones.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    Icon(Icons.rate_review_outlined,
+                        size: 48, color: Colors.grey[300]),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Sé el primero en valorar este servicio',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            // Resumen de rating
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.amber.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    promedio.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: List.generate(5, (index) {
+                            return Icon(
+                              index < promedio.round()
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                              size: 20,
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Basado en ${valoraciones.length} valoraciones',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Lista de valoraciones
+            ...valoraciones.take(3).map((v) => _buildReviewCard(v)),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewCard(Valoracion v) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: AppTheme.primary.withOpacity(0.1),
+                child:
+                    const Icon(Icons.person, color: AppTheme.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cliente Verificado',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (v.fechaValoracion != null)
+                      Text(
+                        v.fechaValoracion!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(v.puntuacion, (index) {
+                  return const Icon(Icons.star, color: Colors.amber, size: 16);
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            v.comentario,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingBookButton(BuildContext context, Servicio servicio) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                "/booking",
+                arguments: servicio,
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.calendar_month_outlined, size: 22),
+                  SizedBox(width: 12),
+                  Text(
+                    'Reservar Ahora',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

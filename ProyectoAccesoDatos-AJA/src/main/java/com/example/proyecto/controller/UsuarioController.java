@@ -28,176 +28,107 @@ public class UsuarioController {
     @Autowired
     private AdministradorRepository administradorRepository;
 
-    // ✅ AÑADIR: Inyectar el PasswordEncoder para cifrar contraseñas
     @Autowired
     private PasswordEncoder encoder;
 
-    @GetMapping
-    public List<Usuario> all() {
-        return repo.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Usuario> get(@PathVariable int id) {
-        return repo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Usuario create(@RequestBody Usuario u) {
-        return repo.save(u);
-    }
-
+    // =========================
+    // CREAR USUARIO + CLIENTE
+    // =========================
     @Transactional
     @PostMapping(value = "/with-cliente", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> createUserWithCliente(@RequestBody Map<String, Object> payload) {
-        try {
-            // Paso 1: Crear y guardar Usuario
-            Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+    public ResponseEntity<Map<String, Object>> createUserWithCliente(
+            @RequestBody Map<String, Object> payload) {
 
-            // ✅ VERIFICAR si el correo ya existe
-            String correo = (String) userData.get("correo");
-            if (repo.findByEmail(correo) != null) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("error", "El correo ya está en uso");
-                return ResponseEntity.badRequest().body(error);
-            }
+        Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+        Map<String, Object> clienteData = (Map<String, Object>) payload.get("cliente");
 
-            Usuario usuario = new Usuario();
-            usuario.setNombre((String) userData.get("nombre"));
-            usuario.setApellidos((String) userData.get("apellidos"));
-            usuario.setCorreo(correo);
+        String correo = (String) userData.get("correo");
 
-            // ✅ CIFRAR LA CONTRASEÑA antes de guardarla
-            String contrasenaPlana = (String) userData.get("contrasena");
-            usuario.setContrasena(encoder.encode(contrasenaPlana));
-
-            String rolStr = (String) userData.get("rol");
-            if (rolStr != null) {
-                usuario.setRol(Usuario.Rol.valueOf(rolStr.toLowerCase()));
-            }
-
-            // Guardar usuario
-            usuario = repo.save(usuario);
-
-            // Paso 2: Crear Cliente con el mismo ID
-            Map<String, Object> clienteData = (Map<String, Object>) payload.get("cliente");
-            Cliente cliente = new Cliente();
-
-            // Establecer el ID del usuario como ID del cliente
-            cliente.setIdUsuario(usuario.getIdUsuario());
-
-            // Establecer los campos del cliente
-            if (clienteData.get("telefono") != null) {
-                cliente.setTelefono((String) clienteData.get("telefono"));
-            }
-            if (clienteData.get("direccion") != null) {
-                cliente.setDireccion((String) clienteData.get("direccion"));
-            }
-            if (clienteData.get("alergenos") != null) {
-                cliente.setAlergenos((String) clienteData.get("alergenos"));
-            }
-            if (clienteData.get("observaciones") != null) {
-                cliente.setObservaciones((String) clienteData.get("observaciones"));
-            }
-
-            // Guardar cliente
-            cliente = clienteRepository.save(cliente);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("usuario", usuario);
-            result.put("cliente", cliente);
-            result.put("message", "Usuario y cliente creados exitosamente");
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            error.put("type", e.getClass().getSimpleName());
-            return ResponseEntity.badRequest().body(error);
+        if (repo.findByEmail(correo) != null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El correo ya está en uso"));
         }
+
+        // 🔹 Crear usuario
+        Usuario usuario = new Usuario();
+        usuario.setNombre((String) userData.get("nombre"));
+        usuario.setApellidos((String) userData.get("apellidos"));
+        usuario.setCorreo(correo);
+        usuario.setContrasena(
+                encoder.encode((String) userData.get("contrasena"))
+        );
+
+        // 🔥 ROL FIJO
+        usuario.setRol(Usuario.Rol.CLIENTE);
+
+        usuario = repo.save(usuario);
+
+        // 🔹 Crear cliente
+        Cliente cliente = new Cliente();
+        cliente.setIdUsuario(usuario.getIdUsuario());
+
+        if (clienteData != null) {
+            cliente.setTelefono((String) clienteData.get("telefono"));
+            cliente.setDireccion((String) clienteData.get("direccion"));
+            cliente.setAlergenos((String) clienteData.get("alergenos"));
+            cliente.setObservaciones((String) clienteData.get("observaciones"));
+        }
+
+        cliente = clienteRepository.save(cliente);
+
+        return ResponseEntity.ok(Map.of(
+                "usuario", usuario,
+                "cliente", cliente,
+                "message", "Usuario cliente creado correctamente"
+        ));
     }
 
-    // ENDPOINT para crear Usuario con Administrador
+    // ==============================
+    // CREAR USUARIO + ADMINISTRADOR
+    // ==============================
     @Transactional
     @PostMapping(value = "/with-administrador", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> createUserWithAdministrador(@RequestBody Map<String, Object> payload) {
-        try {
-            // Paso 1: Crear y guardar Usuario
-            Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+    public ResponseEntity<Map<String, Object>> createUserWithAdministrador(
+            @RequestBody Map<String, Object> payload) {
 
-            // ✅ VERIFICAR si el correo ya existe
-            String correo = (String) userData.get("correo");
-            if (repo.findByEmail(correo) != null) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("error", "El correo ya está en uso");
-                return ResponseEntity.badRequest().body(error);
-            }
+        Map<String, Object> userData = (Map<String, Object>) payload.get("usuario");
+        Map<String, Object> adminData = (Map<String, Object>) payload.get("administrador");
 
-            Usuario usuario = new Usuario();
-            usuario.setNombre((String) userData.get("nombre"));
-            usuario.setApellidos((String) userData.get("apellidos"));
-            usuario.setCorreo(correo);
+        String correo = (String) userData.get("correo");
 
-            // ✅ CIFRAR LA CONTRASEÑA antes de guardarla
-            String contrasenaPlana = (String) userData.get("contrasena");
-            usuario.setContrasena(encoder.encode(contrasenaPlana));
-
-            String rolStr = (String) userData.get("rol");
-            if (rolStr != null) {
-                usuario.setRol(Usuario.Rol.valueOf(rolStr.toLowerCase()));
-            }
-
-            // Guardar usuario
-            usuario = repo.save(usuario);
-
-            // Paso 2: Crear Administrador con el mismo ID
-            Map<String, Object> administradorData = (Map<String, Object>) payload.get("administrador");
-            Administrador administrador = new Administrador();
-
-            // Establecer el ID del usuario como ID del administrador
-            administrador.setIdUsuario(usuario.getIdUsuario());
-
-            // Establecer los campos del administrador
-            if (administradorData != null && administradorData.get("especialidad") != null) {
-                administrador.setEspecialidad((String) administradorData.get("especialidad"));
-            }
-
-            // Guardar administrador
-            administrador = administradorRepository.save(administrador);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("usuario", usuario);
-            result.put("administrador", administrador);
-            result.put("message", "Usuario y administrador creados exitosamente");
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            error.put("type", e.getClass().getSimpleName());
-            return ResponseEntity.badRequest().body(error);
+        if (repo.findByEmail(correo) != null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El correo ya está en uso"));
         }
-    }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Usuario> update(@PathVariable int id, @RequestBody Usuario u) {
-        if (!repo.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        u.setIdUsuario(id);
-        return ResponseEntity.ok(repo.save(u));
-    }
+        // 🔹 Crear usuario
+        Usuario usuario = new Usuario();
+        usuario.setNombre((String) userData.get("nombre"));
+        usuario.setApellidos((String) userData.get("apellidos"));
+        usuario.setCorreo(correo);
+        usuario.setContrasena(
+                encoder.encode((String) userData.get("contrasena"))
+        );
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
-        if (!repo.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        // 🔥 ROL FIJO
+        usuario.setRol(Usuario.Rol.ADMINISTRADOR);
+
+        usuario = repo.save(usuario);
+
+        // 🔹 Crear administrador
+        Administrador administrador = new Administrador();
+        administrador.setIdUsuario(usuario.getIdUsuario());
+
+        if (adminData != null) {
+            administrador.setEspecialidad((String) adminData.get("especialidad"));
         }
-        repo.deleteById(id);
-        return ResponseEntity.noContent().build();
+
+        administrador = administradorRepository.save(administrador);
+
+        return ResponseEntity.ok(Map.of(
+                "usuario", usuario,
+                "administrador", administrador,
+                "message", "Usuario administrador creado correctamente"
+        ));
     }
 }

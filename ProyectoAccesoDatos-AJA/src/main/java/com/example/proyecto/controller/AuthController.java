@@ -2,14 +2,17 @@ package com.example.proyecto.controller;
 
 import com.example.proyecto.domain.Cliente;
 import com.example.proyecto.domain.Usuario;
+import com.example.proyecto.domain.PasswordResetToken;
 import com.example.proyecto.repository.ClienteRepository;
 import com.example.proyecto.repository.UsuarioRepository;
+import com.example.proyecto.repository.PasswordResetTokenRepository;
 import com.example.proyecto.security.jwt.JwtUtils;
 import com.example.proyecto.security.payload.JwtResponse;
 import com.example.proyecto.security.payload.LoginRequest;
 import com.example.proyecto.security.payload.MessageResponse;
 import com.example.proyecto.security.payload.SignupRequest;
 import com.example.proyecto.services.UserDetailsImpl;
+import com.example.proyecto.services.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -33,6 +41,12 @@ public class AuthController {
 
     @Autowired
     ClienteRepository clienteRepository;
+
+    @Autowired
+    PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    EmailService emailService;
 
     @Autowired
     PasswordEncoder encoder;
@@ -65,23 +79,20 @@ public class AuthController {
     @PostMapping("/signup")
     @Transactional
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        // Verificar si el correo ya existe
         if (usuarioRepository.findByEmail(signUpRequest.getCorreo()) != null) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: El correo ya está en uso"));
         }
 
-        // Crear nuevo usuario
         Usuario usuario = new Usuario();
         usuario.setNombre(signUpRequest.getNombre());
         usuario.setApellidos(signUpRequest.getApellidos());
         usuario.setCorreo(signUpRequest.getCorreo());
         usuario.setContrasena(encoder.encode(signUpRequest.getContrasena()));
 
-        // Asignar rol
         try {
-            Usuario.Rol rol = Usuario.Rol.valueOf(signUpRequest.getRol().toLowerCase());
+            Usuario.Rol rol = Usuario.Rol.valueOf(signUpRequest.getRol().toUpperCase());
             usuario.setRol(rol);
         } catch (IllegalArgumentException e) {
             return ResponseEntity
@@ -91,8 +102,7 @@ public class AuthController {
 
         usuario = usuarioRepository.save(usuario);
 
-        // Si el rol es cliente, crear también el registro en la tabla Cliente
-        if (usuario.getRol() == Usuario.Rol.cliente) {
+        if (usuario.getRol() == Usuario.Rol.CLIENTE) {
             Cliente cliente = new Cliente();
             cliente.setIdUsuario(usuario.getIdUsuario());
             cliente.setTelefono(signUpRequest.getTelefono());
@@ -123,5 +133,146 @@ public class AuthController {
                     rol));
         }
         return ResponseEntity.status(401).body(new MessageResponse("Token inválido"));
+    }
+
+    // ✅ NUEVO: Solicitar PIN de recuperación
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String correo = request.get("correo");
+
+        if (correo == null || correo.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("El correo es obligatorio"));
+        }
+
+        // Verificar que el usuario existe
+        Usuario usuario = usuarioRepository.findByEmail(correo);
+        if (usuario == null) {
+            return ResponseEntity.status(404)
+                    .body(new MessageResponse("No existe una cuenta con ese correo electrónico"));
+        }
+
+        try {
+            // Generar PIN de 6 dígitos
+            String pin = generatePin();
+
+            // Guardar el token en la base de datos
+            PasswordResetToken token = new PasswordResetToken(correo, pin);
+            passwordResetTokenRepository.save(token);
+
+            // Enviar correo con el PIN
+            emailService.sendPasswordResetEmail(correo, pin, usuario.getNombre());
+
+            return ResponseEntity.ok(new MessageResponse("PIN enviado al correo electrónico"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(new MessageResponse("Error al enviar el correo: " + e.getMessage()));
+        }
+    }
+
+    // ✅ NUEVO: Verificar PIN
+    @PostMapping("/verify-pin")
+    public ResponseEntity<?> verifyPin(@RequestBody Map<String, String> request) {
+        String correo = request.get("correo");
+        String pin = request.get("pin");
+
+        if (correo == null || pin == null) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Correo y PIN son obligatorios"));
+        }
+
+        // Buscar el token
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository
+                .findByCorreoAndPinAndUsadoFalse(correo, pin);
+
+        if (tokenOpt.isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body(new MessageResponse("PIN inválido o ya utilizado"));
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+
+        // Verificar si ha expirado
+        if (token.isExpired()) {
+            return ResponseEntity.status(400)
+                    .body(new MessageResponse("El PIN ha expirado. Solicita uno nuevo."));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "PIN verificado correctamente");
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ✅ NUEVO: Restablecer contraseña con PIN
+    @PostMapping("/reset-password")
+    @Transactional
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String correo = request.get("correo");
+        String pin = request.get("pin");
+        String nuevaContrasena = request.get("nuevaContrasena");
+
+        if (correo == null || pin == null || nuevaContrasena == null) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Todos los campos son obligatorios"));
+        }
+
+        if (nuevaContrasena.length() < 6) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("La contraseña debe tener al menos 6 caracteres"));
+        }
+
+        // Buscar el token
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository
+                .findByCorreoAndPinAndUsadoFalse(correo, pin);
+
+        if (tokenOpt.isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body(new MessageResponse("PIN inválido o ya utilizado"));
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+
+        // Verificar si ha expirado
+        if (token.isExpired()) {
+            return ResponseEntity.status(400)
+                    .body(new MessageResponse("El PIN ha expirado. Solicita uno nuevo."));
+        }
+
+        // Actualizar la contraseña
+        Usuario usuario = usuarioRepository.findByEmail(correo);
+        if (usuario == null) {
+            return ResponseEntity.status(404)
+                    .body(new MessageResponse("Usuario no encontrado"));
+        }
+
+        usuario.setContrasena(encoder.encode(nuevaContrasena));
+        usuarioRepository.save(usuario);
+
+        // Marcar el token como usado
+        token.setUsado(true);
+        passwordResetTokenRepository.save(token);
+
+        // Enviar correo de confirmación
+        try {
+            emailService.sendPasswordChangedConfirmation(correo, usuario.getNombre());
+        } catch (Exception e) {
+            // No fallar si el correo de confirmación no se envía
+            System.err.println("Error enviando correo de confirmación: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(new MessageResponse("Contraseña restablecida exitosamente"));
+    }
+
+    /**
+     * Genera un PIN aleatorio de 6 dígitos
+     */
+    private String generatePin() {
+        SecureRandom random = new SecureRandom();
+        int pin = 100000 + random.nextInt(900000);
+        return String.valueOf(pin);
     }
 }

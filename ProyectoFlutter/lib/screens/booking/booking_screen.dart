@@ -15,7 +15,7 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   DateTime? fecha;
-  String? franjaHorariaSeleccionada; // Ejemplo: "09:00-09:30"
+  String? franjaHorariaSeleccionada;
   bool loading = false;
   bool loadingHorarios = false;
 
@@ -42,7 +42,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
       if (response.data is List && (response.data as List).isNotEmpty) {
         setState(() {
-          horarioServicio = response.data[0]; // Tomar el primer horario
+          horarioServicio = response.data[0];
           debugPrint("✅ Horario cargado: $horarioServicio");
         });
       } else {
@@ -78,7 +78,7 @@ class _BookingScreenState extends State<BookingScreen> {
     if (newDate != null) {
       setState(() {
         fecha = newDate;
-        franjaHorariaSeleccionada = null; // Resetear franja
+        franjaHorariaSeleccionada = null;
       });
       await _generarFranjasHorarias(servicio);
     }
@@ -90,7 +90,6 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => loadingHorarios = true);
 
     try {
-      // Parsear horario del servicio
       final horaInicio = _parseTime(
           horarioServicio!['horaInicio'] ?? horarioServicio!['hora_inicio']);
       final horaFin = _parseTime(
@@ -101,12 +100,9 @@ class _BookingScreenState extends State<BookingScreen> {
       }
 
       final duracionMinutos = servicio.duracion;
-
-      // Obtener citas ya reservadas para este día
       final citasDelDia =
           await _obtenerCitasDelDia(servicio.idServicio!, fecha!);
 
-      // Generar franjas
       List<String> franjas = [];
       DateTime actual = DateTime(fecha!.year, fecha!.month, fecha!.day,
           horaInicio.hour, horaInicio.minute);
@@ -125,7 +121,6 @@ class _BookingScreenState extends State<BookingScreen> {
         final franjaStr =
             "${_formatTime(inicioFranja)}-${_formatTime(finFranja)}";
 
-        // Verificar si la franja está ocupada
         final estaOcupada = citasDelDia.any((cita) {
           final citaInicio =
               _parseTime(cita['horaInicio'] ?? cita['hora_inicio']);
@@ -138,7 +133,6 @@ class _BookingScreenState extends State<BookingScreen> {
           final citaFinDate = DateTime(fecha!.year, fecha!.month, fecha!.day,
               citaFin.hour, citaFin.minute);
 
-          // Verificar solapamiento
           return actual.isBefore(citaFinDate) &&
               actual
                   .add(Duration(minutes: duracionMinutos))
@@ -272,6 +266,24 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  String _getMonthName(int month) {
+    const months = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ];
+    return months[month - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     final Servicio servicio =
@@ -279,63 +291,119 @@ class _BookingScreenState extends State<BookingScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.pastelLavender,
-      appBar: AppBar(
-        title: const Text("Confirmar Reserva",
-            style: TextStyle(fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ENCABEZADO
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: AppTheme.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Header
+              _buildHeader(servicio),
+
+              // Contenido
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Título de sección
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 4,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Selecciona tu horario',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Selección de fecha
+                    _buildDateSelector(),
+
+                    // Horarios disponibles
+                    if (fecha != null) ...[
+                      const SizedBox(height: 24),
+                      _buildTimeSlots(),
+                    ],
+
+                    // Resumen
+                    if (franjaHorariaSeleccionada != null) ...[
+                      const SizedBox(height: 24),
+                      _buildSummary(servicio),
+                    ],
+
+                    const SizedBox(height: 120),
+                  ],
                 ),
               ),
+            ],
+          ),
+
+          // Botón de confirmación
+          if (franjaHorariaSeleccionada != null) _buildConfirmButton(servicio),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(Servicio servicio) {
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      backgroundColor: AppTheme.primary,
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primary),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppTheme.primary,
+                AppTheme.primary.withOpacity(0.8),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child:
-                        servicio.imagen != null && servicio.imagen!.isNotEmpty
-                            ? Image.network(servicio.imagen!,
-                                height: 120,
-                                width: 120,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                      height: 120,
-                                      width: 120,
-                                      color: Colors.white.withOpacity(0.2),
-                                      child: const Icon(Icons.content_cut,
-                                          size: 50, color: Colors.white),
-                                    ))
-                            : Container(
-                                height: 120,
-                                width: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(Icons.content_cut,
-                                    size: 50, color: Colors.white),
-                              ),
+                  const Text(
+                    'Reservar Cita',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(servicio.nombre,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Container(
                     padding:
@@ -344,231 +412,354 @@ class _BookingScreenState extends State<BookingScreen> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text("${servicio.precio.toStringAsFixed(2)} €",
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.content_cut,
+                            color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          servicio.nombre,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
 
-            const SizedBox(height: 30),
-
-            // SELECCIÓN DE FECHA
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5))
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Selecciona tu horario",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800])),
-                    const SizedBox(height: 24),
-                    _SelectionTile(
-                      label: "Fecha",
-                      value: fecha == null
-                          ? "Seleccionar día"
-                          : "${fecha!.day}/${fecha!.month}/${fecha!.year}",
-                      icon: Icons.calendar_today_rounded,
-                      isSelected: fecha != null,
-                      onTap: () => _pickDate(servicio),
+  Widget _buildDateSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _pickDate(
+                ModalRoute.of(context)!.settings.arguments as Servicio),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    height: 56,
+                    width: 56,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            // FRANJAS HORARIAS
-            if (fecha != null) ...[
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5))
-                    ],
+                    child: const Icon(
+                      Icons.calendar_today_rounded,
+                      color: AppTheme.primary,
+                      size: 28,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Horarios disponibles",
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Fecha',
                           style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800])),
-                      const SizedBox(height: 16),
-                      if (loadingHorarios)
-                        const Center(child: CircularProgressIndicator())
-                      else if (franjasDisponibles.isEmpty)
-                        const Center(
-                            child: Text(
-                                "No hay horarios disponibles para este día",
-                                style: TextStyle(color: Colors.grey)))
-                      else
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: franjasDisponibles.map((franja) {
-                            final isSelected =
-                                franjaHorariaSeleccionada == franja;
-                            return InkWell(
-                              onTap: () => setState(
-                                  () => franjaHorariaSeleccionada = franja),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppTheme.primary
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: isSelected
-                                          ? AppTheme.primary
-                                          : Colors.grey[300]!,
-                                      width: 2),
-                                ),
-                                child: Text(franja,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black87,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    )),
-                              ),
-                            );
-                          }).toList(),
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          fecha == null
+                              ? 'Seleccionar día'
+                              : "${fecha!.day} de ${_getMonthName(fecha!.month)}, ${fecha!.year}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: fecha == null
+                                ? Colors.grey[400]
+                                : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSlots() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Horarios disponibles',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (loadingHorarios)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (franjasDisponibles.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Icon(Icons.event_busy, size: 48, color: Colors.grey[300]),
+                      const SizedBox(height: 12),
+                      Text(
+                        "No hay horarios disponibles para este día",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                 ),
+              )
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: franjasDisponibles.map((franja) {
+                  final isSelected = franjaHorariaSeleccionada == franja;
+                  return InkWell(
+                    onTap: () =>
+                        setState(() => franjaHorariaSeleccionada = franja),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppTheme.primary : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color:
+                              isSelected ? AppTheme.primary : Colors.grey[300]!,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 18,
+                            color: isSelected ? Colors.white : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            franja,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-            ],
-
-            const SizedBox(height: 40),
-
-            // BOTÓN CONFIRMAR
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: loading ? null : () => _confirmBooking(servicio),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 8,
-                    shadowColor: AppTheme.primary.withOpacity(0.4),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: loading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5)
-                      : const Text("Confirmar Cita",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
-}
 
-class _SelectionTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool isSelected;
-
-  const _SelectionTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.onTap,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+  Widget _buildSummary(Servicio servicio) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: isSelected ? AppTheme.primary : Colors.grey[300]!,
-              width: isSelected ? 1.5 : 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary.withOpacity(0.1)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon,
-                  color: isSelected ? AppTheme.primary : Colors.grey[400],
-                  size: 22),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: AppTheme.primary.withOpacity(0.3), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(label,
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text(value,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.black87 : Colors.grey[500],
-                    )),
+                const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                const SizedBox(width: 12),
+                const Text(
+                  'Resumen de tu reserva',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
               ],
             ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Colors.grey[400])
+            const SizedBox(height: 20),
+            _buildSummaryRow('Servicio', servicio.nombre),
+            const Divider(height: 24),
+            _buildSummaryRow(
+                'Fecha', "${fecha!.day}/${fecha!.month}/${fecha!.year}"),
+            const Divider(height: 24),
+            _buildSummaryRow('Horario', franjaHorariaSeleccionada!),
+            const Divider(height: 24),
+            _buildSummaryRow(
+                'Precio', '\$${servicio.precio.toStringAsFixed(2)}',
+                isPrice: true),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {bool isPrice = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey[600],
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isPrice ? 20 : 15,
+            fontWeight: isPrice ? FontWeight.bold : FontWeight.w600,
+            color: isPrice ? AppTheme.primary : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfirmButton(Servicio servicio) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: loading ? null : () => _confirmBooking(servicio),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                disabledBackgroundColor: Colors.grey[300],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: loading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_outline, size: 22),
+                        SizedBox(width: 12),
+                        Text(
+                          'Confirmar Cita',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
         ),
       ),
     );

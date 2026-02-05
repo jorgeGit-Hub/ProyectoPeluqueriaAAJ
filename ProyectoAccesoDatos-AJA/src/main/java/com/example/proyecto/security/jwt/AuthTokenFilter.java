@@ -38,11 +38,25 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     /**
+     * ✅ SOLUCIÓN: Excluir endpoints de autenticación del filtro JWT
+     * Esto evita que el filtro intente validar un token que aún no existe
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth/");
+    }
+
+    /**
      * Lógica principal del filtro que se ejecuta en cada solicitud HTTP.
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // ✅ LOGGING para depuración (opcional, puedes comentarlo después)
+        logger.debug("🔍 Procesando request: {} {}", request.getMethod(), request.getRequestURI());
+
         try {
             // 1. Intentar extraer el token JWT de la cabecera de la solicitud.
             String jwt = parseJwt(request);
@@ -69,10 +83,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 // 7. Establecer el usuario autenticado en el contexto de seguridad de Spring.
                 // Esto permite que el resto de la aplicación (controladores) sepa quién está logueado.
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                logger.debug("✅ Usuario autenticado: {}", username);
+            } else {
+                logger.debug("⚠️ No hay token JWT válido en la petición");
             }
         } catch (Exception e) {
             // Registrar cualquier error ocurrido al intentar establecer la autenticación.
-            logger.error("Cannot set user authentication: {}", e.getMessage());
+            logger.error("❌ Cannot set user authentication: {}", e.getMessage());
         }
 
         // 8. Continuar con el siguiente filtro en la cadena de Spring Security.
