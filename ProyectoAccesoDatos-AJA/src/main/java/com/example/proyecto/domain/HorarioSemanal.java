@@ -19,6 +19,11 @@ public class HorarioSemanal {
     @JoinColumn(name="id_servicio")
     private Servicio servicio;
 
+    // ✅ NUEVO: Relación con Grupo
+    @ManyToOne
+    @JoinColumn(name="id_grupo")
+    private Grupo grupo;
+
     @Enumerated(EnumType.STRING)
     @Column(name="dia_semana")
     private DiaSemana diaSemana;
@@ -52,6 +57,15 @@ public class HorarioSemanal {
 
     public void setServicio(Servicio servicio) {
         this.servicio = servicio;
+    }
+
+    // ✅ NUEVO: Getter y Setter para Grupo
+    public Grupo getGrupo() {
+        return grupo;
+    }
+
+    public void setGrupo(Grupo grupo) {
+        this.grupo = grupo;
     }
 
     public DiaSemana getDiaSemana() {

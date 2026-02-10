@@ -8,13 +8,7 @@ import java.util.List;
 
 public interface ServicioRepository extends JpaRepository<Servicio, Integer> {
 
-    // ELIMINADO: findByDiaSemana (ahora se hace a través de HorarioSemanal)
-
-    // Buscar servicios impartidos por un grupo específico
-    @Query(value="SELECT * FROM Servicio WHERE id_grupo = :idGrupo", nativeQuery = true)
-    List<Servicio> findByGrupo(@Param("idGrupo") Integer idGrupo);
-
-    // ELIMINADO: findByDiaAndGrupo (ya no aplica)
+    // ❌ ELIMINADO: findByGrupo - ahora se consulta por HorarioSemanal
 
     @Query(value="SELECT * FROM Servicio WHERE precio <= ?1", nativeQuery = true)
     List<Servicio> findAffordable(double maxPrice);

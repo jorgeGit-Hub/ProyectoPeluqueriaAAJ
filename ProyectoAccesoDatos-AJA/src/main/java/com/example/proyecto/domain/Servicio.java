@@ -32,13 +32,8 @@ public class Servicio {
     @Column(name="imagen")
     private String imagen; // URL de la imagen
 
-
-
-    // ELIMINADOS: diaSemana y horario (ahora están en HorarioSemanal)
-
-    @ManyToOne
-    @JoinColumn(name="id_grupo")
-    private Grupo grupo;
+    // ❌ ELIMINADO: @ManyToOne con Grupo
+    // La relación con Grupo ahora está en HorarioSemanal
 
     // Constructor vacío
     public Servicio() {}
@@ -62,10 +57,8 @@ public class Servicio {
     public BigDecimal getPrecio(){ return precio; }
     public void setPrecio(BigDecimal precio){ this.precio = precio; }
 
-    public Grupo getGrupo(){ return grupo; }
-    public void setGrupo(Grupo grupo){ this.grupo = grupo; }
-
-
     public String getImagen() { return imagen; }
     public void setImagen(String imagen) { this.imagen = imagen; }
+
+    // ❌ ELIMINADOS: getGrupo() y setGrupo()
 }

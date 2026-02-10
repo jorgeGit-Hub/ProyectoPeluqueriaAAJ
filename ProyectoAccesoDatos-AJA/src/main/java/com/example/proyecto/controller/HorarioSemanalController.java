@@ -47,6 +47,18 @@ public class HorarioSemanalController {
         return repo.findByServicioAndDia(idServicio, dia);
     }
 
+    // ✅ NUEVO: Buscar horarios por grupo
+    @GetMapping("/grupo/{idGrupo}")
+    public List<HorarioSemanal> byGrupo(@PathVariable int idGrupo) {
+        return repo.findByGrupo(idGrupo);
+    }
+
+    // ✅ NUEVO: Buscar horarios por grupo y día
+    @GetMapping("/grupo/{idGrupo}/dia/{dia}")
+    public List<HorarioSemanal> byGrupoAndDia(@PathVariable int idGrupo, @PathVariable String dia) {
+        return repo.findByGrupoAndDia(idGrupo, dia);
+    }
+
     // Solo administradores pueden crear horarios
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping
