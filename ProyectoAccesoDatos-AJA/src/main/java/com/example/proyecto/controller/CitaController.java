@@ -2,9 +2,11 @@ package com.example.proyecto.controller;
 
 import com.example.proyecto.domain.Cita;
 import com.example.proyecto.domain.HorarioSemanal;
+import com.example.proyecto.domain.BloqueoHorario;
 import com.example.proyecto.repository.CitaRepository;
 import com.example.proyecto.repository.ClienteRepository;
 import com.example.proyecto.repository.HorarioSemanalRepository;
+import com.example.proyecto.repository.BloqueoHorarioRepository;
 import com.example.proyecto.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,10 @@ public class CitaController {
 
     @Autowired
     private HorarioSemanalRepository horarioRepository;
+
+    // ✅ NUEVO: Inyectar el repositorio de bloqueos
+    @Autowired
+    private BloqueoHorarioRepository bloqueoRepository;
 
     // --- CONSULTAS ---
 
@@ -104,6 +111,14 @@ public class CitaController {
                                     "Hora actual: " + java.time.LocalTime.now().toString()
                     ));
                 }
+            }
+
+            // ✅✅ NUEVO: VALIDAR BLOQUEOS DE HORARIO
+            String motivoBloqueo = verificarBloqueoHorario(c.getFecha(), horario.getHoraInicio(), horario.getHoraFin());
+            if (motivoBloqueo != null) {
+                return ResponseEntity.badRequest().body(createError(
+                        "No se puede crear la cita. " + motivoBloqueo
+                ));
             }
 
             // 5. ✅ NUEVA VALIDACIÓN: Verificar que el día de la semana coincida con el horario
@@ -215,6 +230,18 @@ public class CitaController {
                         ));
                     }
 
+                    // ✅✅ NUEVO: VALIDAR BLOQUEOS DE HORARIO
+                    String motivoBloqueo = verificarBloqueoHorario(
+                            c.getFecha(),
+                            nuevoHorario.getHoraInicio(),
+                            nuevoHorario.getHoraFin()
+                    );
+                    if (motivoBloqueo != null) {
+                        return ResponseEntity.badRequest().body(createError(
+                                "No se puede actualizar la cita. " + motivoBloqueo
+                        ));
+                    }
+
                     // ✅ VALIDAR CITA DUPLICADA (excluyendo la cita actual)
                     Integer idCliente = c.getCliente() != null ? c.getCliente().getIdUsuario() :
                             citaExistente.getCliente().getIdUsuario();
@@ -288,7 +315,59 @@ public class CitaController {
     }
 
     /**
-     * ✅ NUEVO: Cuenta cuántas citas existen para un horario específico en una fecha
+     * ✅✅ NUEVO: Verifica si existe un bloqueo de horario que impida crear la cita
+     *
+     * @param fecha Fecha de la cita
+     * @param horaInicio Hora de inicio del horario de la cita
+     * @param horaFin Hora de fin del horario de la cita
+     * @return String con el motivo del bloqueo, o null si no hay bloqueo
+     */
+    private String verificarBloqueoHorario(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        // Obtener todos los bloqueos para la fecha especificada
+        List<BloqueoHorario> bloqueosDelDia = bloqueoRepository.findByFecha(fecha);
+
+        if (bloqueosDelDia == null || bloqueosDelDia.isEmpty()) {
+            return null; // No hay bloqueos para esta fecha
+        }
+
+        // Verificar si algún bloqueo interfiere con el horario de la cita
+        for (BloqueoHorario bloqueo : bloqueosDelDia) {
+            if (hayConflictoHorario(horaInicio, horaFin, bloqueo.getHoraInicio(), bloqueo.getHoraFin())) {
+                String motivo = bloqueo.getMotivo() != null && !bloqueo.getMotivo().trim().isEmpty()
+                        ? bloqueo.getMotivo()
+                        : "Horario bloqueado";
+
+                return "El horario está bloqueado de " +
+                        bloqueo.getHoraInicio() + " a " + bloqueo.getHoraFin() +
+                        ". Motivo: " + motivo;
+            }
+        }
+
+        return null; // No hay conflictos
+    }
+
+    /**
+     * ✅✅ NUEVO: Verifica si dos rangos de horario se solapan
+     *
+     * @param inicio1 Hora de inicio del primer rango
+     * @param fin1 Hora de fin del primer rango
+     * @param inicio2 Hora de inicio del segundo rango
+     * @param fin2 Hora de fin del segundo rango
+     * @return true si hay solapamiento, false si no
+     */
+    private boolean hayConflictoHorario(LocalTime inicio1, LocalTime fin1,
+                                        LocalTime inicio2, LocalTime fin2) {
+        // Dos rangos se solapan si:
+        // - El inicio de uno está dentro del otro rango, O
+        // - El fin de uno está dentro del otro rango, O
+        // - Uno contiene completamente al otro
+
+        return !(fin1.isBefore(inicio2) || fin1.equals(inicio2) ||
+                inicio1.isAfter(fin2) || inicio1.equals(fin2));
+    }
+
+    /**
+     * ✅ Cuenta cuántas citas existen para un horario específico en una fecha
      */
     private int contarCitasEnHorario(Integer idHorario, LocalDate fecha) {
         List<Cita> citas = repo.findByHorarioAndFromDate(idHorario, fecha);
@@ -303,7 +382,7 @@ public class CitaController {
     }
 
     /**
-     * ✅ NUEVO: Cuenta citas excluyendo una específica (para updates)
+     * ✅ Cuenta citas excluyendo una específica (para updates)
      */
     private int contarCitasEnHorarioExcluyendo(Integer idHorario, LocalDate fecha, Integer idCitaExcluir) {
         List<Cita> citas = repo.findByHorarioAndFromDate(idHorario, fecha);
@@ -319,7 +398,7 @@ public class CitaController {
     }
 
     /**
-     * ✅ NUEVO: Verifica si existe una cita duplicada
+     * ✅ Verifica si existe una cita duplicada
      */
     private boolean existeCitaDuplicada(Integer idCliente, Integer idHorario, LocalDate fecha) {
         List<Cita> citasDelCliente = repo.findByClienteId(idCliente);
@@ -337,7 +416,7 @@ public class CitaController {
     }
 
     /**
-     * ✅ NUEVO: Verifica cita duplicada excluyendo una cita específica
+     * ✅ Verifica cita duplicada excluyendo una cita específica
      */
     private boolean existeCitaDuplicadaExcluyendo(Integer idCliente, Integer idHorario,
                                                   LocalDate fecha, Integer idCitaExcluir) {
