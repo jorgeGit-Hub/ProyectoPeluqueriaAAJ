@@ -1,13 +1,17 @@
 package com.example.proyecto.controller;
 
 import com.example.proyecto.domain.Cliente;
+import com.example.proyecto.domain.Usuario;
 import com.example.proyecto.repository.ClienteRepository;
 import com.example.proyecto.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -22,6 +26,33 @@ public class ClienteController {
     @GetMapping
     public List<Cliente> all() {
         return repo.findAll();
+    }
+
+    // ✅ NUEVO: Devuelve clientes con nombre, apellidos y correo del Usuario
+    @GetMapping("/completos")
+    public List<Map<String, Object>> allCompletos() {
+        List<Cliente> clientes = repo.findAll();
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Cliente cliente : clientes) {
+            Map<String, Object> datos = new HashMap<>();
+            datos.put("idUsuario", cliente.getIdUsuario());
+            datos.put("telefono", cliente.getTelefono());
+            datos.put("direccion", cliente.getDireccion());
+            datos.put("alergenos", cliente.getAlergenos());
+            datos.put("observaciones", cliente.getObservaciones());
+
+            // Añadir datos del Usuario relacionado
+            usuarioRepository.findById(cliente.getIdUsuario()).ifPresent(usuario -> {
+                datos.put("nombre", usuario.getNombre());
+                datos.put("apellidos", usuario.getApellidos());
+                datos.put("correo", usuario.getCorreo());
+            });
+
+            resultado.add(datos);
+        }
+
+        return resultado;
     }
 
     @GetMapping("/{id}")
@@ -49,16 +80,12 @@ public class ClienteController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Cliente c) {
         try {
-            // Verificar que el idUsuario esté presente
             if (c.getIdUsuario() == null) {
                 return ResponseEntity.badRequest().body("idUsuario es requerido");
             }
-
-            // Verificar que el usuario existe
             if (!usuarioRepository.existsById(c.getIdUsuario())) {
                 return ResponseEntity.badRequest().body("Usuario no encontrado con id: " + c.getIdUsuario());
             }
-
             return ResponseEntity.ok(repo.save(c));
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,7 +99,6 @@ public class ClienteController {
             if (!repo.existsById(id)) {
                 return ResponseEntity.notFound().build();
             }
-
             c.setIdUsuario(id);
             return ResponseEntity.ok(repo.save(c));
         } catch (Exception e) {
@@ -84,11 +110,9 @@ public class ClienteController {
     @PostMapping("/from-user/{userId}")
     public ResponseEntity<?> createFromUser(@PathVariable int userId, @RequestBody Cliente c) {
         try {
-            // Verificar que el usuario existe
             if (!usuarioRepository.existsById(userId)) {
                 return ResponseEntity.badRequest().body("Usuario no encontrado con id: " + userId);
             }
-
             c.setIdUsuario(userId);
             return ResponseEntity.ok(repo.save(c));
         } catch (Exception e) {

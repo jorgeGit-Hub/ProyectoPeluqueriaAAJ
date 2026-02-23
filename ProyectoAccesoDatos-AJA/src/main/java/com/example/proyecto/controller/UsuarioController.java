@@ -31,6 +31,51 @@ public class UsuarioController {
     @Autowired
     private PasswordEncoder encoder;
 
+    // ✅ NUEVO: Listar todos los usuarios
+    @GetMapping
+    public List<Usuario> all() {
+        return repo.findAll();
+    }
+
+    // ✅ NUEVO: Obtener un usuario por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Usuario> get(@PathVariable int id) {
+        return repo.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ✅ NUEVO: Actualizar un usuario
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable int id, @RequestBody Map<String, Object> payload) {
+        return repo.findById(id).map(usuario -> {
+            if (payload.containsKey("nombre"))
+                usuario.setNombre((String) payload.get("nombre"));
+            if (payload.containsKey("apellidos"))
+                usuario.setApellidos((String) payload.get("apellidos"));
+            if (payload.containsKey("correo"))
+                usuario.setCorreo((String) payload.get("correo"));
+            if (payload.containsKey("contrasena") && !((String) payload.get("contrasena")).isEmpty())
+                usuario.setContrasena(encoder.encode((String) payload.get("contrasena")));
+            if (payload.containsKey("rol")) {
+                try {
+                    usuario.setRol(Usuario.Rol.valueOf(((String) payload.get("rol")).toUpperCase()));
+                } catch (IllegalArgumentException ignored) {}
+            }
+            return ResponseEntity.ok(repo.save(usuario));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ✅ NUEVO: Eliminar un usuario
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable int id) {
+        if (!repo.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        repo.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // =========================
     // CREAR USUARIO + CLIENTE
     // =========================
@@ -49,21 +94,14 @@ public class UsuarioController {
                     .body(Map.of("error", "El correo ya está en uso"));
         }
 
-        // 🔹 Crear usuario
         Usuario usuario = new Usuario();
         usuario.setNombre((String) userData.get("nombre"));
         usuario.setApellidos((String) userData.get("apellidos"));
         usuario.setCorreo(correo);
-        usuario.setContrasena(
-                encoder.encode((String) userData.get("contrasena"))
-        );
-
-        // 🔥 ROL FIJO
+        usuario.setContrasena(encoder.encode((String) userData.get("contrasena")));
         usuario.setRol(Usuario.Rol.CLIENTE);
-
         usuario = repo.save(usuario);
 
-        // 🔹 Crear cliente
         Cliente cliente = new Cliente();
         cliente.setIdUsuario(usuario.getIdUsuario());
 
@@ -101,21 +139,14 @@ public class UsuarioController {
                     .body(Map.of("error", "El correo ya está en uso"));
         }
 
-        // 🔹 Crear usuario
         Usuario usuario = new Usuario();
         usuario.setNombre((String) userData.get("nombre"));
         usuario.setApellidos((String) userData.get("apellidos"));
         usuario.setCorreo(correo);
-        usuario.setContrasena(
-                encoder.encode((String) userData.get("contrasena"))
-        );
-
-        // 🔥 ROL FIJO
+        usuario.setContrasena(encoder.encode((String) userData.get("contrasena")));
         usuario.setRol(Usuario.Rol.ADMINISTRADOR);
-
         usuario = repo.save(usuario);
 
-        // 🔹 Crear administrador
         Administrador administrador = new Administrador();
         administrador.setIdUsuario(usuario.getIdUsuario());
 
