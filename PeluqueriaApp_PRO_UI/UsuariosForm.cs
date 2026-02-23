@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Net;
-using System.IO;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
 
@@ -25,7 +23,6 @@ namespace PeluqueriaApp
             UsuariosDataGrid.Columns.Add("apellidos", "Apellidos");
             UsuariosDataGrid.Columns.Add("correo", "Email");
             UsuariosDataGrid.Columns.Add("rol", "Rol");
-
             UsuariosDataGrid.Columns["idUsuario"].Width = 50;
         }
 
@@ -76,7 +73,6 @@ namespace PeluqueriaApp
             try
             {
                 var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
-
                 UsuariosDataGrid.Rows.Clear();
 
                 if (usuarios != null)
@@ -99,10 +95,8 @@ namespace PeluqueriaApp
                 }
 
                 if (UsuariosDataGrid.Rows.Count == 0)
-                {
                     MessageBox.Show($"No se encontraron usuarios con '{textoBusqueda}'",
                         "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
             }
             catch (Exception ex)
             {
@@ -114,12 +108,8 @@ namespace PeluqueriaApp
         private void CrearUsuarioBtn_Click(object sender, EventArgs e)
         {
             CrearEditarUsuarioForm crearForm = new CrearEditarUsuarioForm();
-            DialogResult result = crearForm.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
+            if (crearForm.ShowDialog() == DialogResult.OK)
                 CargarUsuarios();
-            }
         }
 
         private void EditarBtn_Click(object sender, EventArgs e)
@@ -132,14 +122,9 @@ namespace PeluqueriaApp
             }
 
             int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
-
             CrearEditarUsuarioForm editarForm = new CrearEditarUsuarioForm(idUsuario);
-            DialogResult result = editarForm.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
+            if (editarForm.ShowDialog() == DialogResult.OK)
                 CargarUsuarios();
-            }
         }
 
         private async void EliminarBtn_Click(object sender, EventArgs e)
@@ -151,21 +136,13 @@ namespace PeluqueriaApp
                 return;
             }
 
-            DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres eliminar este usuario?\n\nEsta acción no se puede deshacer.",
-                "Confirmar Eliminación",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning
-            );
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este usuario?\n\nEsta acción no se puede deshacer.",
+                "Confirmar Eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 try
                 {
                     int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
-
                     bool eliminado = await ApiService.DeleteAsync($"api/usuarios/{idUsuario}");
-
                     if (eliminado)
                     {
                         MessageBox.Show("Usuario eliminado correctamente", "Éxito",
@@ -175,76 +152,39 @@ namespace PeluqueriaApp
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al eliminar usuario: {ex.Message}",
-                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error al eliminar usuario: {ex.Message}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void IniciBoto_Click(object sender, EventArgs e)
-        {
-            HomeForm homeForm = new HomeForm();
-            homeForm.Show();
-            this.Hide();
-        }
+        private void IniciBoto_Click(object sender, EventArgs e) { new HomeForm().Show(); this.Hide(); }
+        private void ServiciosBoto_Click(object sender, EventArgs e) { new ServiciosForm().Show(); this.Hide(); }
+        private void ClientesBoto_Click(object sender, EventArgs e) { new ClientesForm().Show(); this.Hide(); }
+        private void CitasBoto_Click(object sender, EventArgs e) { new CitasForm().Show(); this.Hide(); }
+        private void GruposBoto_Click(object sender, EventArgs e) { new GruposForm().Show(); this.Hide(); }
+        private void HorarioSemanalBoto_Click(object sender, EventArgs e) { new HorarioSemanalForm().Show(); this.Hide(); }
 
-        private void ServiciosBoto_Click(object sender, EventArgs e)
+        private void HorarioForm_Click(object sender, EventArgs e)
         {
-            ServiciosForm serviciosForm = new ServiciosForm();
-            serviciosForm.Show();
-            this.Hide();
-        }
-
-        private void ClientesBoto_Click(object sender, EventArgs e)
-        {
-            ClientesForm clientesForm = new ClientesForm();
-            clientesForm.Show();
-            this.Hide();
-        }
-
-        private void CitasBoto_Click(object sender, EventArgs e)
-        {
-            CitasForm citasForm = new CitasForm();
-            citasForm.Show();
-            this.Hide();
-        }
-
-        private void GruposBoto_Click(object sender, EventArgs e)
-        {
-            GruposForm gruposForm = new GruposForm();
-            gruposForm.Show();
-            this.Hide();
-        }
-
-        private void HorarioSemanalBoto_Click(object sender, EventArgs e)
-        {
-            HorarioSemanalForm horarioForm = new HorarioSemanalForm();
+            HorarioForm horarioForm = new HorarioForm();
             horarioForm.Show();
             this.Hide();
         }
 
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres cerrar sesión?",
-                "Confirmar",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            );
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("¿Estás seguro de que quieres cerrar sesión?", "Confirmar",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 ApiService.ClearAuthToken();
                 UserSession.CerrarSesion();
-
-                LoginForm loginForm = new LoginForm();
-                loginForm.Show();
+                new LoginForm().Show();
                 this.Close();
             }
         }

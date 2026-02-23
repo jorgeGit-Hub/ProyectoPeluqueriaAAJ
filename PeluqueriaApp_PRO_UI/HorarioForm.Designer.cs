@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace PeluqueriaApp
 {
-    partial class GruposForm
+    partial class HorarioForm
     {
         private Panel LateralPanel;
         private Panel CapcaleraPanel;
@@ -16,15 +16,13 @@ namespace PeluqueriaApp
         private Button ClientesBoto;
         private Button CitasBoto;
         private Button GruposBoto;
-        private Button HorarioBoto;
         private Button HorarioSemanalBoto;
+        private Button HorarioBoto;
         private Button MiCuentaBoto;
         private Button TancarSessioBoto;
         private Label TitolPaginaLbl;
-        private TextBox BuscarGruposTxt;
-        private Button BuscarBtn;
-        private Button CrearGrupoBtn;
-        private DataGridView GruposDataGrid;
+        private Button CrearHorarioBtn;
+        private DataGridView HorariosDataGrid;
         private Button EditarBtn;
         private Button EliminarBtn;
 
@@ -41,24 +39,22 @@ namespace PeluqueriaApp
             this.ClientesBoto = new Button();
             this.CitasBoto = new Button();
             this.GruposBoto = new Button();
-            this.HorarioBoto = new Button();
             this.HorarioSemanalBoto = new Button();
+            this.HorarioBoto = new Button();
             this.MiCuentaBoto = new Button();
             this.TancarSessioBoto = new Button();
             this.TitolPaginaLbl = new Label();
-            this.BuscarGruposTxt = new TextBox();
-            this.BuscarBtn = new Button();
-            this.CrearGrupoBtn = new Button();
-            this.GruposDataGrid = new DataGridView();
+            this.CrearHorarioBtn = new Button();
+            this.HorariosDataGrid = new DataGridView();
             this.EditarBtn = new Button();
             this.EliminarBtn = new Button();
 
-            ((System.ComponentModel.ISupportInitialize)(this.GruposDataGrid)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HorariosDataGrid)).BeginInit();
 
-            // GruposForm
+            // HorarioForm
             this.ClientSize = new Size(1400, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "Peluquería Escola - Grupos";
+            this.Text = "Peluquería Escola - Horario Semanal";
             this.BackColor = Color.FromArgb(250, 245, 240);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -79,7 +75,6 @@ namespace PeluqueriaApp
 
             // IniciBoto
             this.IniciBoto.Text = "🏠  Inicio";
-            this.IniciBoto.Name = "IniciBoto";
             this.IniciBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.IniciBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.IniciBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -94,7 +89,6 @@ namespace PeluqueriaApp
 
             // ServiciosBoto
             this.ServiciosBoto.Text = "✂️  Servicios";
-            this.ServiciosBoto.Name = "ServiciosBoto";
             this.ServiciosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.ServiciosBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.ServiciosBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -109,7 +103,6 @@ namespace PeluqueriaApp
 
             // UsuariosBoto
             this.UsuariosBoto.Text = "👥  Usuarios";
-            this.UsuariosBoto.Name = "UsuariosBoto";
             this.UsuariosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.UsuariosBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.UsuariosBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -124,7 +117,6 @@ namespace PeluqueriaApp
 
             // ClientesBoto
             this.ClientesBoto.Text = "👤  Clientes";
-            this.ClientesBoto.Name = "ClientesBoto";
             this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.ClientesBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.ClientesBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -139,7 +131,6 @@ namespace PeluqueriaApp
 
             // CitasBoto
             this.CitasBoto.Text = "📅  Citas";
-            this.CitasBoto.Name = "CitasBoto";
             this.CitasBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.CitasBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.CitasBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -152,12 +143,11 @@ namespace PeluqueriaApp
             this.CitasBoto.Cursor = Cursors.Hand;
             this.CitasBoto.Click += new System.EventHandler(this.CitasBoto_Click);
 
-            // GruposBoto (activo)
-            this.GruposBoto.Text = "👨‍👩‍👧‍👦  Grupos";
-            this.GruposBoto.Name = "GruposBoto";
-            this.GruposBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.GruposBoto.ForeColor = Color.White;
-            this.GruposBoto.BackColor = Color.FromArgb(255, 140, 0);
+            // GruposBoto
+            this.GruposBoto.Text = "👥  Grupos";
+            this.GruposBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.GruposBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            this.GruposBoto.BackColor = Color.FromArgb(45, 35, 30);
             this.GruposBoto.FlatStyle = FlatStyle.Flat;
             this.GruposBoto.FlatAppearance.BorderSize = 0;
             this.GruposBoto.Size = new Size(240, 50);
@@ -165,6 +155,9 @@ namespace PeluqueriaApp
             this.GruposBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.GruposBoto.Padding = new Padding(20, 0, 0, 0);
             this.GruposBoto.Cursor = Cursors.Hand;
+            this.GruposBoto.Click += new System.EventHandler(this.GruposBoto_Click);
+
+
 
             // HorarioBoto
             this.HorarioBoto.Text = "🗓️  Horario Semanal";
@@ -181,7 +174,8 @@ namespace PeluqueriaApp
             this.HorarioBoto.Cursor = Cursors.Hand;
             this.HorarioBoto.Click += new System.EventHandler(this.HorarioForm_Click);
 
-            // HorarioSemanalBoto
+            // HorarioSemanalboto
+            // 
             this.HorarioSemanalBoto.Text = "🕐  Bloqueo Horario";
             this.HorarioSemanalBoto.Name = "HorarioSemanalBoto";
             this.HorarioSemanalBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
@@ -197,15 +191,14 @@ namespace PeluqueriaApp
             this.HorarioSemanalBoto.Click += new System.EventHandler(this.HorarioSemanalBoto_Click);
 
             // MiCuentaBoto
-            this.MiCuentaBoto.Text = "⚙️  Mi Cuenta";
-            this.MiCuentaBoto.Name = "MiCuentaBoto";
+            this.MiCuentaBoto.Text = "👤  Mi Cuenta";
             this.MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.MiCuentaBoto.ForeColor = Color.FromArgb(200, 200, 200);
             this.MiCuentaBoto.BackColor = Color.FromArgb(45, 35, 30);
             this.MiCuentaBoto.FlatStyle = FlatStyle.Flat;
             this.MiCuentaBoto.FlatAppearance.BorderSize = 0;
             this.MiCuentaBoto.Size = new Size(240, 50);
-            this.MiCuentaBoto.Location = new Point(10, 640);
+            this.MiCuentaBoto.Location = new Point(10, 720);
             this.MiCuentaBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.MiCuentaBoto.Padding = new Padding(20, 0, 0, 0);
             this.MiCuentaBoto.Cursor = Cursors.Hand;
@@ -213,7 +206,6 @@ namespace PeluqueriaApp
 
             // TancarSessioBoto
             this.TancarSessioBoto.Text = "🚪  Cerrar Sesión";
-            this.TancarSessioBoto.Name = "TancarSessioBoto";
             this.TancarSessioBoto.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
             this.TancarSessioBoto.ForeColor = Color.FromArgb(150, 150, 150);
             this.TancarSessioBoto.BackColor = Color.FromArgb(45, 35, 30);
@@ -233,7 +225,7 @@ namespace PeluqueriaApp
             this.CapcaleraPanel.BackColor = Color.White;
 
             // TitolAppLbl
-            this.TitolAppLbl.Text = "Gestión de Grupos";
+            this.TitolAppLbl.Text = "Gestión de Horarios";
             this.TitolAppLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolAppLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolAppLbl.AutoSize = true;
@@ -248,69 +240,48 @@ namespace PeluqueriaApp
             this.BienvenidaLbl.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             // TitolPaginaLbl
-            this.TitolPaginaLbl.Text = "Administrar Grupos";
+            this.TitolPaginaLbl.Text = "Administrar Horarios Semanales";
             this.TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolPaginaLbl.AutoSize = true;
-            this.TitolPaginaLbl.Location = new Point(290, 110);
+            this.TitolPaginaLbl.Location = new Point(290, 100);
 
-            // BuscarGruposTxt
-            this.BuscarGruposTxt.Name = "BuscarGruposTxt";
-            this.BuscarGruposTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.BuscarGruposTxt.Size = new Size(400, 32);
-            this.BuscarGruposTxt.Location = new Point(290, 160);
-            this.BuscarGruposTxt.BorderStyle = BorderStyle.FixedSingle;
-            this.BuscarGruposTxt.BackColor = Color.White;
-            this.BuscarGruposTxt.ForeColor = Color.FromArgb(45, 35, 30);
+            // CrearHorarioBtn
+            this.CrearHorarioBtn.Text = "➕ Crear Horario";
+            this.CrearHorarioBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CrearHorarioBtn.Size = new Size(200, 40);
+            this.CrearHorarioBtn.Location = new Point(1130, 155);
+            this.CrearHorarioBtn.BackColor = Color.FromArgb(139, 90, 60);
+            this.CrearHorarioBtn.ForeColor = Color.White;
+            this.CrearHorarioBtn.FlatStyle = FlatStyle.Flat;
+            this.CrearHorarioBtn.FlatAppearance.BorderSize = 0;
+            this.CrearHorarioBtn.Cursor = Cursors.Hand;
+            this.CrearHorarioBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.CrearHorarioBtn.Click += new System.EventHandler(this.CrearHorarioBtn_Click);
 
-            // BuscarBtn
-            this.BuscarBtn.Text = "🔍 Buscar";
-            this.BuscarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.BuscarBtn.Size = new Size(120, 32);
-            this.BuscarBtn.Location = new Point(700, 160);
-            this.BuscarBtn.BackColor = Color.FromArgb(255, 140, 0);
-            this.BuscarBtn.ForeColor = Color.White;
-            this.BuscarBtn.FlatStyle = FlatStyle.Flat;
-            this.BuscarBtn.FlatAppearance.BorderSize = 0;
-            this.BuscarBtn.Cursor = Cursors.Hand;
-            this.BuscarBtn.Click += new System.EventHandler(this.BuscarBtn_Click);
-
-            // CrearGrupoBtn
-            this.CrearGrupoBtn.Text = "➕ Crear Grupo";
-            this.CrearGrupoBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.CrearGrupoBtn.Size = new Size(180, 40);
-            this.CrearGrupoBtn.Location = new Point(1150, 157);
-            this.CrearGrupoBtn.BackColor = Color.FromArgb(139, 90, 60);
-            this.CrearGrupoBtn.ForeColor = Color.White;
-            this.CrearGrupoBtn.FlatStyle = FlatStyle.Flat;
-            this.CrearGrupoBtn.FlatAppearance.BorderSize = 0;
-            this.CrearGrupoBtn.Cursor = Cursors.Hand;
-            this.CrearGrupoBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            this.CrearGrupoBtn.Click += new System.EventHandler(this.CrearGrupoBtn_Click);
-
-            // GruposDataGrid
-            this.GruposDataGrid.Name = "GruposDataGrid";
-            this.GruposDataGrid.Location = new Point(290, 220);
-            this.GruposDataGrid.Size = new Size(1070, 480);
-            this.GruposDataGrid.BackgroundColor = Color.White;
-            this.GruposDataGrid.BorderStyle = BorderStyle.None;
-            this.GruposDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.GruposDataGrid.GridColor = Color.FromArgb(240, 240, 240);
-            this.GruposDataGrid.DefaultCellStyle.BackColor = Color.White;
-            this.GruposDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
-            this.GruposDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
-            this.GruposDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
-            this.GruposDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
-            this.GruposDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
-            this.GruposDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            this.GruposDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            this.GruposDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            this.GruposDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            this.GruposDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.GruposDataGrid.MultiSelect = false;
-            this.GruposDataGrid.ReadOnly = true;
-            this.GruposDataGrid.AllowUserToAddRows = false;
-            this.GruposDataGrid.AllowUserToDeleteRows = false;
+            // HorariosDataGrid
+            this.HorariosDataGrid.Name = "HorariosDataGrid";
+            this.HorariosDataGrid.Location = new Point(290, 210);
+            this.HorariosDataGrid.Size = new Size(1070, 490);
+            this.HorariosDataGrid.BackgroundColor = Color.White;
+            this.HorariosDataGrid.BorderStyle = BorderStyle.None;
+            this.HorariosDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.HorariosDataGrid.GridColor = Color.FromArgb(240, 240, 240);
+            this.HorariosDataGrid.DefaultCellStyle.BackColor = Color.White;
+            this.HorariosDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
+            this.HorariosDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
+            this.HorariosDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
+            this.HorariosDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
+            this.HorariosDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
+            this.HorariosDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            this.HorariosDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.HorariosDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            this.HorariosDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            this.HorariosDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.HorariosDataGrid.MultiSelect = false;
+            this.HorariosDataGrid.ReadOnly = true;
+            this.HorariosDataGrid.AllowUserToAddRows = false;
+            this.HorariosDataGrid.AllowUserToDeleteRows = false;
 
             // EditarBtn
             this.EditarBtn.Text = "✏️ Editar";
@@ -344,8 +315,8 @@ namespace PeluqueriaApp
             this.LateralPanel.Controls.Add(this.ClientesBoto);
             this.LateralPanel.Controls.Add(this.CitasBoto);
             this.LateralPanel.Controls.Add(this.GruposBoto);
-            this.LateralPanel.Controls.Add(this.HorarioBoto);
             this.LateralPanel.Controls.Add(this.HorarioSemanalBoto);
+            this.LateralPanel.Controls.Add(this.HorarioBoto);
             this.LateralPanel.Controls.Add(this.MiCuentaBoto);
             this.LateralPanel.Controls.Add(this.TancarSessioBoto);
 
@@ -356,15 +327,13 @@ namespace PeluqueriaApp
             // Add controls to Form
             this.Controls.Add(this.EliminarBtn);
             this.Controls.Add(this.EditarBtn);
-            this.Controls.Add(this.GruposDataGrid);
-            this.Controls.Add(this.CrearGrupoBtn);
-            this.Controls.Add(this.BuscarBtn);
-            this.Controls.Add(this.BuscarGruposTxt);
+            this.Controls.Add(this.HorariosDataGrid);
+            this.Controls.Add(this.CrearHorarioBtn);
             this.Controls.Add(this.TitolPaginaLbl);
             this.Controls.Add(this.CapcaleraPanel);
             this.Controls.Add(this.LateralPanel);
 
-            ((System.ComponentModel.ISupportInitialize)(this.GruposDataGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HorariosDataGrid)).EndInit();
         }
     }
 }

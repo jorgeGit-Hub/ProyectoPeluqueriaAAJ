@@ -171,6 +171,13 @@ namespace PeluqueriaApp
             this.Hide();
         }
 
+        private void HorarioForm_Click(object sender, EventArgs e)
+        {
+            HorarioForm horarioForm = new HorarioForm();
+            horarioForm.Show();
+            this.Hide();
+        }
+
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);

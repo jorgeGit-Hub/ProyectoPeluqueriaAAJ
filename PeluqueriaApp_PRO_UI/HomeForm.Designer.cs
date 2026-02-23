@@ -18,6 +18,7 @@ namespace PeluqueriaApp
         private Button CitasBoto;
         private Button GruposBoto;
         private Button HorarioSemanalBoto;
+        private Button HorarioBoto;
         private Button MiCuentaBoto;
         private Button TancarSessioBoto;
         private Label TitolPaginaLbl;
@@ -42,6 +43,7 @@ namespace PeluqueriaApp
             this.CitasBoto = new Button();
             this.GruposBoto = new Button();
             this.HorarioSemanalBoto = new Button();
+            this.HorarioBoto = new Button();
             this.MiCuentaBoto = new Button();
             this.TancarSessioBoto = new Button();
             this.TitolPaginaLbl = new Label();
@@ -178,9 +180,24 @@ namespace PeluqueriaApp
             this.GruposBoto.Cursor = Cursors.Hand;
             this.GruposBoto.Click += new System.EventHandler(this.GruposBoto_Click);
 
+            // HorarioBoto
+            this.HorarioBoto.Text = "🗓️  Horario Semanal";
+            this.HorarioBoto.Name = "HorarioBoto";
+            this.HorarioBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.HorarioBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            this.HorarioBoto.BackColor = Color.FromArgb(45, 35, 30);
+            this.HorarioBoto.FlatStyle = FlatStyle.Flat;
+            this.HorarioBoto.FlatAppearance.BorderSize = 0;
+            this.HorarioBoto.Size = new Size(240, 50);
+            this.HorarioBoto.Location = new Point(10, 520);
+            this.HorarioBoto.TextAlign = ContentAlignment.MiddleLeft;
+            this.HorarioBoto.Padding = new Padding(20, 0, 0, 0);
+            this.HorarioBoto.Cursor = Cursors.Hand;
+            this.HorarioBoto.Click += new System.EventHandler(this.HorarioForm_Click);
+
             // HorarioSemanalboto
             // 
-            this.HorarioSemanalBoto.Text = "🕐  Horario";
+            this.HorarioSemanalBoto.Text = "🕐  Bloqueo Horario";
             this.HorarioSemanalBoto.Name = "HorarioSemanalBoto";
             this.HorarioSemanalBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.HorarioSemanalBoto.ForeColor = Color.FromArgb(200, 200, 200);
@@ -188,7 +205,7 @@ namespace PeluqueriaApp
             this.HorarioSemanalBoto.FlatStyle = FlatStyle.Flat;
             this.HorarioSemanalBoto.FlatAppearance.BorderSize = 0;
             this.HorarioSemanalBoto.Size = new Size(240, 50);
-            this.HorarioSemanalBoto.Location = new Point(10, 520);
+            this.HorarioSemanalBoto.Location = new Point(10, 580);
             this.HorarioSemanalBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.HorarioSemanalBoto.Padding = new Padding(20, 0, 0, 0);
             this.HorarioSemanalBoto.Cursor = Cursors.Hand;
@@ -205,7 +222,7 @@ namespace PeluqueriaApp
             this.MiCuentaBoto.FlatStyle = FlatStyle.Flat;
             this.MiCuentaBoto.FlatAppearance.BorderSize = 0;
             this.MiCuentaBoto.Size = new Size(240, 50);
-            this.MiCuentaBoto.Location = new Point(10, 580);
+            this.MiCuentaBoto.Location = new Point(10, 640);
             this.MiCuentaBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.MiCuentaBoto.Padding = new Padding(20, 0, 0, 0);
             this.MiCuentaBoto.Cursor = Cursors.Hand;
@@ -422,6 +439,7 @@ namespace PeluqueriaApp
             this.LateralPanel.Controls.Add(this.CitasBoto);
             this.LateralPanel.Controls.Add(this.GruposBoto);
             this.LateralPanel.Controls.Add(this.HorarioSemanalBoto);
+            this.LateralPanel.Controls.Add(this.HorarioBoto);
             this.LateralPanel.Controls.Add(this.MiCuentaBoto);
             this.LateralPanel.Controls.Add(this.TancarSessioBoto);
 

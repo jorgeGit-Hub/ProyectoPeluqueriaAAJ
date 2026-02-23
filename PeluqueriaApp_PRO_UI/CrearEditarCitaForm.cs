@@ -12,6 +12,9 @@ namespace PeluqueriaApp
         private bool esEdicion = false;
         private List<HorarioDisponible> horariosDisponibles = new List<HorarioDisponible>();
 
+        // ✅ Guardamos el idHorario del slot seleccionado para enviarlo al backend
+        private int idHorarioSeleccionado = 0;
+
         public CrearEditarCitaForm()
         {
             InitializeComponent();
@@ -23,7 +26,6 @@ namespace PeluqueriaApp
             CargarClientes();
             CargarServicios();
 
-            // Eventos para actualizar horarios
             FechaCalendar.DateChanged += FechaCalendar_DateChanged;
             ServicioCombo.SelectedIndexChanged += ServicioCombo_SelectedIndexChanged;
         }
@@ -40,7 +42,6 @@ namespace PeluqueriaApp
             CargarServicios();
             CargarDatosCita(id);
 
-            // Eventos para actualizar horarios
             FechaCalendar.DateChanged += FechaCalendar_DateChanged;
             ServicioCombo.SelectedIndexChanged += ServicioCombo_SelectedIndexChanged;
         }
@@ -90,10 +91,9 @@ namespace PeluqueriaApp
                 {
                     foreach (var servicio in servicios)
                     {
-                        string grupoInfo = servicio.grupo != null ? $"Grupo {servicio.grupo.idGrupo}" : "Sin grupo";
                         ServicioCombo.Items.Add(new ComboItem
                         {
-                            Text = $"{servicio.nombre} ({grupoInfo}) - {servicio.precio}€",
+                            Text = $"{servicio.nombre} - {servicio.precio}€",
                             Value = servicio.idServicio
                         });
                     }
@@ -119,11 +119,10 @@ namespace PeluqueriaApp
 
         private async void CargarHorariosDisponibles()
         {
-            // Limpiar lista de horarios
             HorariosListBox.Items.Clear();
             horariosDisponibles.Clear();
+            idHorarioSeleccionado = 0;
 
-            // Validar que haya un servicio seleccionado
             if (ServicioCombo.SelectedIndex <= 0)
             {
                 HorariosListBox.Items.Add("Selecciona un servicio para ver horarios disponibles");
@@ -137,7 +136,7 @@ namespace PeluqueriaApp
                 string diaSemana = ObtenerDiaSemana(fechaSeleccionada);
                 string diaNombre = ObtenerNombreDia(fechaSeleccionada);
 
-                // Obtener horarios del servicio para ese día
+                // ✅ Los horarios ya incluyen idHorario, servicio y grupo
                 var horarios = await ApiService.GetAsync<List<HorarioSemanal>>(
                     $"api/horarios/servicio/{servicioSeleccionado.Value}/dia/{diaSemana}"
                 );
@@ -148,17 +147,15 @@ namespace PeluqueriaApp
                     return;
                 }
 
-                // Obtener el servicio completo para saber la duración
+                // Obtener duración del servicio
                 var servicio = await ApiService.GetAsync<Servicio>($"api/servicios/{servicioSeleccionado.Value}");
-                int duracionMinutos = ParsearDuracion(servicio.tiempoCliente);
+                int duracionMinutos = ParsearDuracion(servicio?.tiempoCliente);
 
-                // Generar slots de tiempo para cada horario
                 foreach (var horario in horarios)
                 {
                     GenerarSlotsDeHorario(horario, duracionMinutos, fechaSeleccionada);
                 }
 
-                // Mostrar en el ListBox
                 if (horariosDisponibles.Count == 0)
                 {
                     HorariosListBox.Items.Add("⚠️  No hay slots disponibles para este día");
@@ -166,7 +163,7 @@ namespace PeluqueriaApp
                 else
                 {
                     HorariosListBox.Items.Add($"✓ {horariosDisponibles.Count} horarios disponibles para {diaNombre}:");
-                    HorariosListBox.Items.Add(""); // Línea en blanco
+                    HorariosListBox.Items.Add("");
 
                     foreach (var slot in horariosDisponibles)
                     {
@@ -196,13 +193,13 @@ namespace PeluqueriaApp
 
                     horariosDisponibles.Add(new HorarioDisponible
                     {
+                        IdHorario = horario.idHorario,   // ✅ Guardamos el idHorario
                         HoraInicio = horaActual.ToString(@"hh\:mm\:ss"),
                         HoraFin = horaFinSlot.ToString(@"hh\:mm\:ss"),
                         Fecha = fecha,
                         DisplayText = $"🕐 {horaActual:hh\\:mm} - {horaFinSlot:hh\\:mm}"
                     });
 
-                    // Avanzar al siguiente slot (puede ser cada 30 min, 1 hora, etc.)
                     horaActual = horaActual.Add(duracion);
                 }
             }
@@ -215,48 +212,41 @@ namespace PeluqueriaApp
         private int ParsearDuracion(string tiempoCliente)
         {
             if (string.IsNullOrEmpty(tiempoCliente))
-                return 60; // 1 hora por defecto
+                return 60;
 
             try
             {
-                // Quitar espacios y convertir a minúsculas
                 tiempoCliente = tiempoCliente.Trim().ToLower();
 
-                // Casos comunes: "45'", "1h", "1,5h", "90min", etc.
                 if (tiempoCliente.Contains("h"))
                 {
-                    // Formato: "1h", "1.5h", "1,5h"
                     string numero = tiempoCliente.Replace("h", "").Replace(",", ".").Trim();
                     double horas = double.Parse(numero, System.Globalization.CultureInfo.InvariantCulture);
                     return (int)(horas * 60);
                 }
                 else if (tiempoCliente.Contains("min"))
                 {
-                    // Formato: "45min", "90min"
                     string numero = tiempoCliente.Replace("min", "").Trim();
                     return int.Parse(numero);
                 }
                 else if (tiempoCliente.Contains("'"))
                 {
-                    // Formato: "45'", "60'"
                     string numero = tiempoCliente.Replace("'", "").Trim();
                     return int.Parse(numero);
                 }
                 else
                 {
-                    // Intentar parsear como número directo (asumiendo minutos)
                     return int.Parse(tiempoCliente);
                 }
             }
             catch
             {
-                return 60; // 1 hora por defecto en caso de error
+                return 60;
             }
         }
 
         private async void GuardarBtn_Click(object sender, EventArgs e)
         {
-            // Validaciones
             if (ClienteCombo.SelectedIndex <= 0)
             {
                 MessageBox.Show("Debes seleccionar un cliente", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -278,7 +268,6 @@ namespace PeluqueriaApp
                 return;
             }
 
-            // Obtener el horario seleccionado
             var horarioSeleccionado = HorariosListBox.SelectedItem as HorarioDisponible;
             if (horarioSeleccionado == null)
             {
@@ -299,16 +288,14 @@ namespace PeluqueriaApp
             try
             {
                 var clienteSeleccionado = (ComboItem)ClienteCombo.SelectedItem;
-                var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
 
+                // ✅ ACTUALIZADO: Cita ahora usa horarioSemanal en lugar de horaInicio/horaFin/servicio
                 var cita = new Cita
                 {
                     fecha = horarioSeleccionado.Fecha.ToString("yyyy-MM-dd"),
-                    horaInicio = horarioSeleccionado.HoraInicio,
-                    horaFin = horarioSeleccionado.HoraFin,
                     estado = EstadoCombo.SelectedItem.ToString().ToLower(),
                     cliente = new ClienteSimple { idUsuario = clienteSeleccionado.Value },
-                    servicio = new Servicio { idServicio = servicioSeleccionado.Value }
+                    horarioSemanal = new HorarioSemanal { idHorario = horarioSeleccionado.IdHorario }
                 };
 
                 if (esEdicion)
@@ -330,7 +317,6 @@ namespace PeluqueriaApp
             {
                 string mensaje = ex.Message;
 
-                // Extraer el mensaje de error del JSON si existe
                 if (mensaje.Contains("error"))
                 {
                     try
@@ -421,13 +407,13 @@ namespace PeluqueriaApp
                     }
                 }
 
-                // Seleccionar servicio
-                if (cita.servicio != null)
+                // ✅ ACTUALIZADO: Seleccionar servicio desde horarioSemanal
+                if (cita.horarioSemanal?.servicio != null)
                 {
                     for (int i = 1; i < ServicioCombo.Items.Count; i++)
                     {
                         var item = (ComboItem)ServicioCombo.Items[i];
-                        if (item.Value == cita.servicio.idServicio)
+                        if (item.Value == cita.horarioSemanal.servicio.idServicio)
                         {
                             ServicioCombo.SelectedIndex = i;
                             break;
@@ -438,11 +424,11 @@ namespace PeluqueriaApp
                 // Esperar a que se carguen los horarios y seleccionar el correcto
                 await System.Threading.Tasks.Task.Delay(500);
 
-                // Buscar y seleccionar el horario correspondiente
+                // ✅ ACTUALIZADO: Buscar el slot que coincida con el idHorario de la cita
                 for (int i = 0; i < HorariosListBox.Items.Count; i++)
                 {
                     var item = HorariosListBox.Items[i] as HorarioDisponible;
-                    if (item != null && item.HoraInicio == cita.horaInicio && item.HoraFin == cita.horaFin)
+                    if (item != null && cita.horarioSemanal != null && item.IdHorario == cita.horarioSemanal.idHorario)
                     {
                         HorariosListBox.SelectedIndex = i;
                         break;
@@ -483,9 +469,10 @@ namespace PeluqueriaApp
             }
         }
 
-        // Clase para los horarios disponibles
+        // ✅ ACTUALIZADO: HorarioDisponible ahora guarda IdHorario
         private class HorarioDisponible
         {
+            public int IdHorario { get; set; }
             public string HoraInicio { get; set; }
             public string HoraFin { get; set; }
             public DateTime Fecha { get; set; }

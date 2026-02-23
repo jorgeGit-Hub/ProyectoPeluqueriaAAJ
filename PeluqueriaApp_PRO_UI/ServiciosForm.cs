@@ -27,7 +27,7 @@ namespace PeluqueriaApp
             ServiciosDataGrid.Columns.Add("aula", "Aula");
             ServiciosDataGrid.Columns.Add("tiempoCliente", "Tiempo");
             ServiciosDataGrid.Columns.Add("precio", "Precio (€)");
-            ServiciosDataGrid.Columns.Add("grupo", "Grupo");
+            // ✅ ELIMINADA columna "grupo" (la relación grupo ahora está en HorarioSemanal)
 
             ServiciosDataGrid.Columns["idServicio"].Width = 50;
             ServiciosDataGrid.Columns["aula"].Width = 80;
@@ -51,20 +51,14 @@ namespace PeluqueriaApp
 
                 foreach (var servicio in servicios)
                 {
-                    string grupoInfo = "N/A";
-                    if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
-                    {
-                        grupoInfo = $"Grupo {servicio.grupo.idGrupo}";
-                    }
-
+                    // ✅ ACTUALIZADO: Sin grupoInfo, Servicio ya no tiene grupo
                     ServiciosDataGrid.Rows.Add(
                         servicio.idServicio,
                         servicio.nombre ?? "",
                         servicio.modulo ?? "N/A",
                         servicio.aula ?? "N/A",
                         servicio.tiempoCliente ?? "N/A",
-                        servicio.precio.ToString("F2"),
-                        grupoInfo
+                        servicio.precio.ToString("F2")
                     );
                 }
             }
@@ -98,20 +92,13 @@ namespace PeluqueriaApp
 
                 foreach (var servicio in servicios)
                 {
-                    string grupoInfo = "N/A";
-                    if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
-                    {
-                        grupoInfo = $"Grupo {servicio.grupo.idGrupo}";
-                    }
-
                     ServiciosDataGrid.Rows.Add(
                         servicio.idServicio,
                         servicio.nombre ?? "",
                         servicio.modulo ?? "N/A",
                         servicio.aula ?? "N/A",
                         servicio.tiempoCliente ?? "N/A",
-                        servicio.precio.ToString("F2"),
-                        grupoInfo
+                        servicio.precio.ToString("F2")
                     );
                 }
             }
@@ -240,6 +227,13 @@ namespace PeluqueriaApp
         private void HorarioSemanalBoto_Click(object sender, EventArgs e)
         {
             HorarioSemanalForm horarioForm = new HorarioSemanalForm();
+            horarioForm.Show();
+            this.Hide();
+        }
+
+        private void HorarioForm_Click(object sender, EventArgs e)
+        {
+            HorarioForm horarioForm = new HorarioForm();
             horarioForm.Show();
             this.Hide();
         }

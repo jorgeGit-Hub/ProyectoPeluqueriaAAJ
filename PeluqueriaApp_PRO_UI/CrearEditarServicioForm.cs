@@ -17,7 +17,7 @@ namespace PeluqueriaApp
             this.Text = "Crear Nuevo Servicio";
             TituloLbl.Text = "Crear Nuevo Servicio";
             esEdicion = false;
-            CargarGrupos();
+            // ✅ ELIMINADO: CargarGrupos() — Servicio ya no tiene grupo
         }
 
         public CrearEditarServicioForm(int id)
@@ -27,37 +27,8 @@ namespace PeluqueriaApp
             TituloLbl.Text = "Editar Servicio";
             idServicio = id;
             esEdicion = true;
-            CargarGrupos();
+            // ✅ ELIMINADO: CargarGrupos() — Servicio ya no tiene grupo
             CargarDatosServicio(id);
-        }
-
-        private async void CargarGrupos()
-        {
-            try
-            {
-                var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
-
-                GrupoCombo.Items.Clear();
-                GrupoCombo.Items.Add("-- Seleccionar Grupo --");
-
-                if (grupos != null && grupos.Count > 0)
-                {
-                    foreach (var grupo in grupos)
-                    {
-                        GrupoCombo.Items.Add(new ComboItem
-                        {
-                            Text = $"{grupo.curso} - {grupo.turno}",
-                            Value = grupo.idGrupo
-                        });
-                    }
-                }
-
-                GrupoCombo.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al cargar grupos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private async void GuardarBtn_Click(object sender, EventArgs e)
@@ -84,28 +55,19 @@ namespace PeluqueriaApp
                 return;
             }
 
-            if (GrupoCombo.SelectedIndex <= 0)
-            {
-                MessageBox.Show("Debes seleccionar un grupo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                GrupoCombo.Focus();
-                return;
-            }
-
             GuardarBtn.Enabled = false;
             GuardarBtn.Text = "Guardando...";
 
             try
             {
-                var grupoSeleccionado = (ComboItem)GrupoCombo.SelectedItem;
-
+                // ✅ ACTUALIZADO: Servicio sin grupo
                 var servicio = new Servicio
                 {
                     nombre = NombreTxt.Text.Trim(),
                     modulo = ModuloTxt.Text.Trim(),
                     aula = AulaTxt.Text.Trim(),
                     tiempoCliente = TiempoClienteTxt.Text.Trim(),
-                    precio = precio,
-                    grupo = new GrupoSimple { idGrupo = grupoSeleccionado.Value }
+                    precio = precio
                 };
 
                 if (esEdicion)
@@ -145,20 +107,7 @@ namespace PeluqueriaApp
                 AulaTxt.Text = servicio.aula;
                 TiempoClienteTxt.Text = servicio.tiempoCliente;
                 PrecioTxt.Text = servicio.precio.ToString("F2");
-
-                // Seleccionar grupo
-                if (servicio.grupo != null && servicio.grupo.idGrupo > 0)
-                {
-                    for (int i = 1; i < GrupoCombo.Items.Count; i++)
-                    {
-                        var item = (ComboItem)GrupoCombo.Items[i];
-                        if (item.Value == servicio.grupo.idGrupo)
-                        {
-                            GrupoCombo.SelectedIndex = i;
-                            break;
-                        }
-                    }
-                }
+                // ✅ ELIMINADO: selección de grupo — Servicio ya no tiene grupo
             }
             catch (Exception ex)
             {

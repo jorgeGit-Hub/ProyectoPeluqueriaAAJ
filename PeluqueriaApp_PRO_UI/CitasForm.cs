@@ -23,15 +23,14 @@ namespace PeluqueriaApp
             CitasDataGrid.Columns.Add("horaInicio", "Hora Inicio");
             CitasDataGrid.Columns.Add("horaFin", "Hora Fin");
             CitasDataGrid.Columns.Add("cliente", "Cliente (ID)");
-            CitasDataGrid.Columns.Add("servicio", "Servicio");  // ✅ Ya no dice "ID"
+            CitasDataGrid.Columns.Add("servicio", "Servicio");
             CitasDataGrid.Columns.Add("estado", "Estado");
 
             CitasDataGrid.Columns["idCita"].Width = 50;
             CitasDataGrid.Columns["cliente"].Width = 100;
-            CitasDataGrid.Columns["servicio"].Width = 250;  // ✅ Más ancho para mostrar el nombre
+            CitasDataGrid.Columns["servicio"].Width = 250;
         }
 
-        // En CitasForm.cs - Método CargarCitas()
         private async void CargarCitas()
         {
             try
@@ -50,16 +49,18 @@ namespace PeluqueriaApp
                 {
                     string clienteInfo = cita.cliente != null ? $"ID: {cita.cliente.idUsuario}" : "N/A";
 
-                    // ✅ MEJORA: Mostrar nombre del servicio en lugar de solo ID
-                    string servicioInfo = cita.servicio != null
-                        ? $"{cita.servicio.nombre} (ID: {cita.servicio.idServicio})"
+                    // ✅ ACTUALIZADO: horaInicio/horaFin/servicio vienen de horarioSemanal
+                    string horaInicio = cita.horarioSemanal?.horaInicio ?? "N/A";
+                    string horaFin = cita.horarioSemanal?.horaFin ?? "N/A";
+                    string servicioInfo = cita.horarioSemanal?.servicio != null
+                        ? $"Servicio ID: {cita.horarioSemanal.servicio.idServicio}"
                         : "N/A";
 
                     CitasDataGrid.Rows.Add(
                         cita.idCita,
                         cita.fecha ?? "N/A",
-                        cita.horaInicio ?? "N/A",
-                        cita.horaFin ?? "N/A",
+                        horaInicio,
+                        horaFin,
                         clienteInfo,
                         servicioInfo,
                         cita.estado ?? "pendiente"
@@ -181,6 +182,13 @@ namespace PeluqueriaApp
         private void HorarioSemanalBoto_Click(object sender, EventArgs e)
         {
             HorarioSemanalForm horarioForm = new HorarioSemanalForm();
+            horarioForm.Show();
+            this.Hide();
+        }
+
+        private void HorarioForm_Click(object sender, EventArgs e)
+        {
+            HorarioForm horarioForm = new HorarioForm();
             horarioForm.Show();
             this.Hide();
         }

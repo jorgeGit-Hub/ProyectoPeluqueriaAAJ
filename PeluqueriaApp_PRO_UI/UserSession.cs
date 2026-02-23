@@ -1,6 +1,7 @@
-﻿namespace PeluqueriaApp
+﻿using PeluqueriaApp.Services;
+
+namespace PeluqueriaApp
 {
-    // Clase estática para guardar la información del usuario en sesión
     public static class UserSession
     {
         public static int UserId { get; set; }
@@ -9,19 +10,24 @@
         public static string Correo { get; set; }
         public static string Rol { get; set; }
 
-        // Método para obtener el nombre completo
+        // ✅ NUEVO: Guardar el token aquí también
+        public static string Token { get; set; }
+
         public static string NombreCompleto => $"{Nombre} {Apellidos}";
 
-        // Verificar si es administrador
         public static bool EsAdministrador => Rol?.ToLower() == "administrador";
-
-        // Verificar si es alumno
         public static bool EsAlumno => Rol?.ToLower() == "alumno";
-
-        // Verificar si es cliente
         public static bool EsCliente => Rol?.ToLower() == "cliente";
 
-        // Limpiar sesión
+        // ✅ NUEVO: Si ApiService perdió el token, lo restauramos desde aquí
+        public static void EnsureTokenInApiService()
+        {
+            if (!string.IsNullOrEmpty(Token) && string.IsNullOrEmpty(ApiService.Token))
+            {
+                ApiService.SetAuthToken(Token);
+            }
+        }
+
         public static void CerrarSesion()
         {
             UserId = 0;
@@ -29,6 +35,7 @@
             Apellidos = null;
             Correo = null;
             Rol = null;
+            Token = null; // ✅ Limpiar también el token
         }
     }
 }
