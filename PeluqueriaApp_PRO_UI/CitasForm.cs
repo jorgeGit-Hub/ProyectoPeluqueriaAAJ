@@ -12,6 +12,7 @@ namespace PeluqueriaApp
         public CitasForm()
         {
             InitializeComponent();
+            this.Load += CitasForm_Load;
             ConfigurarDataGrid();
             CargarCitas();
         }
@@ -248,6 +249,17 @@ namespace PeluqueriaApp
                 loginForm.Show();
                 this.Close();
             }
+        }
+
+        private void CitasForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
     }
 }

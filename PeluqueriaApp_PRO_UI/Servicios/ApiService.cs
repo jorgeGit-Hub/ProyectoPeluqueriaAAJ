@@ -28,6 +28,42 @@ namespace PeluqueriaApp.Services
             System.Diagnostics.Debug.WriteLine("Token eliminado");
         }
 
+        // Obtener Logo Base64 en texto plano (sin Json)
+        public static async Task<string> ObtenerLogoBase64Async()
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // Usamos la variable BASE_URL que ya tienes definida en tu archivo
+                    var url = $"{BASE_URL}/api/configuracion/logo";
+                    var request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+
+                    // No mandamos token porque configuramos esta ruta como pública en Spring Boot
+
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                    {
+                        using (var streamReader = new StreamReader(response.GetResponseStream()))
+                        {
+                            // Devolvemos el string gigante en Base64 tal cual llega
+                            return streamReader.ReadToEnd();
+                        }
+                    }
+                }
+                catch (WebException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error web al obtener el logo: {ex.Message}");
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error al obtener el logo: {ex.Message}");
+                    return null;
+                }
+            });
+        }
+
         // GET - Obtener datos
         public static async Task<T> GetAsync<T>(string endpoint)
         {

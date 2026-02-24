@@ -12,6 +12,7 @@ namespace PeluqueriaApp
         public HorarioSemanalForm()
         {
             InitializeComponent();
+            this.Load += HorarioSemanalForm_Load;
             ConfigurarDataGrid();
             CargarBloqueos();
         }
@@ -174,6 +175,17 @@ namespace PeluqueriaApp
                 new LoginForm().Show();
                 this.Close();
             }
+        }
+
+        private void HorarioSemanalForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
     }
 }

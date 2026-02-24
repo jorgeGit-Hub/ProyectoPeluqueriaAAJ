@@ -14,6 +14,7 @@ namespace PeluqueriaApp
         public ServiciosForm()
         {
             InitializeComponent();
+            this.Load += ServiciosForm_Load;
             ConfigurarDataGrid();
             CargarServicios();
         }
@@ -250,6 +251,17 @@ namespace PeluqueriaApp
             MiCuentaForm form = new MiCuentaForm();
             form.Show();
             this.Hide();
+        }
+
+        private void ServiciosForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)

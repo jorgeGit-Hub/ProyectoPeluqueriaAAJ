@@ -10,7 +10,7 @@ namespace PeluqueriaApp
         public RegistroForm()
         {
             InitializeComponent();
-
+            this.Load += RegistroForm_Load;
             // Configurar evento para cambio de rol
             RolCombo.SelectedIndexChanged += RolCombo_SelectedIndexChanged;
 
@@ -238,6 +238,16 @@ namespace PeluqueriaApp
 
             // Llamar al endpoint /api/auth/signup (sin token porque es registro público)
             var resultado = await ApiService.PostAsync<MessageResponse>("api/auth/signup", signupData, sendToken: false);
+        }
+        private void RegistroForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
 
         private void VolverLoginBtn_Click(object sender, EventArgs e)

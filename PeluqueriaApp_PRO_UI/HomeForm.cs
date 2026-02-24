@@ -9,6 +9,7 @@ namespace PeluqueriaApp
         public HomeForm()
         {
             InitializeComponent();
+            this.Load += HomeForm_Load;
         }
 
         private void ServiciosBoto_Click(object sender, EventArgs e)
@@ -97,6 +98,17 @@ namespace PeluqueriaApp
                 loginForm.Show();
                 this.Close();
             }
+        }
+
+        private void HomeForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
     }
 }

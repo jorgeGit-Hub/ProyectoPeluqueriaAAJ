@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -10,6 +12,42 @@ namespace PeluqueriaApp
         public LoginForm()
         {
             InitializeComponent();
+            // Conectamos el evento Load
+            this.Load += LoginForm_Load;
+        }
+
+        private async void LoginForm_Load(object sender, EventArgs e)
+        {
+            // 1. Verificamos si el logo ya está descargado
+            if (UserSession.LogoApp == null)
+            {
+                // 2. Llamamos al backend a por el texto en Base64
+                string base64String = await ApiService.ObtenerLogoBase64Async();
+
+                if (!string.IsNullOrEmpty(base64String))
+                {
+                    try
+                    {
+                        // 3. Convertimos a Imagen y la guardamos en la sesión global
+                        byte[] imageBytes = Convert.FromBase64String(base64String);
+                        using (MemoryStream ms = new MemoryStream(imageBytes))
+                        {
+                            UserSession.LogoApp = Image.FromStream(ms);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error procesando el logo: " + ex.Message);
+                    }
+                }
+            }
+
+            // 4. Mostramos el logo en los dos huecos del Login
+            if (UserSession.LogoApp != null)
+            {
+                pbLogoBienvenida.Image = UserSession.LogoApp;
+                pbLogoLogin.Image = UserSession.LogoApp;
+            }
         }
 
         private async void IniciarSesionBoto_Click(object sender, EventArgs e)
@@ -38,43 +76,20 @@ namespace PeluqueriaApp
 
                 var response = await ApiService.PostAsync<LoginResponse>("api/auth/signin", loginRequest, sendToken: false);
 
-                System.Diagnostics.Debug.WriteLine("=== RESPUESTA DEL SERVIDOR ===");
-                System.Diagnostics.Debug.WriteLine($"Response es null: {response == null}");
-
-                if (response != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Token es null o vacío: {string.IsNullOrEmpty(response.token)}");
-                    System.Diagnostics.Debug.WriteLine($"ID: {response.id}");
-                    System.Diagnostics.Debug.WriteLine($"Nombre: {response.nombre}");
-                    System.Diagnostics.Debug.WriteLine($"Rol: {response.rol}");
-                    if (!string.IsNullOrEmpty(response.token))
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Token (primeros 50): {response.token.Substring(0, Math.Min(50, response.token.Length))}");
-                    }
-                }
-
                 if (response == null || string.IsNullOrEmpty(response.token))
                 {
                     MessageBox.Show("Error: No se recibió respuesta válida del servidor.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                System.Diagnostics.Debug.WriteLine("Token recibido correctamente");
-
-                // ✅ Guardar token en ApiService
+                // Guardar token y sesión
                 ApiService.SetAuthToken(response.token);
-
-                // ✅ Guardar token también en UserSession como respaldo
                 UserSession.Token = response.token;
-
-                // Guardar información del usuario en sesión
                 UserSession.UserId = response.id;
                 UserSession.Nombre = response.nombre;
                 UserSession.Apellidos = response.apellidos;
                 UserSession.Correo = response.correo;
                 UserSession.Rol = response.rol;
-
-                System.Diagnostics.Debug.WriteLine($"Token guardado verificado: {!string.IsNullOrEmpty(ApiService.Token)}");
 
                 MessageBox.Show($"¡Bienvenido/a {response.nombre}!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -85,7 +100,6 @@ namespace PeluqueriaApp
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al iniciar sesión: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                System.Diagnostics.Debug.WriteLine($"Error completo: {ex}");
             }
             finally
             {

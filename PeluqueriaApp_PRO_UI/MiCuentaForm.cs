@@ -14,6 +14,7 @@ namespace PeluqueriaApp
         public MiCuentaForm()
         {
             InitializeComponent();
+            this.Load += MiCuentaForm_Load;
             CargarDatosUsuario();
         }
 
@@ -221,6 +222,17 @@ namespace PeluqueriaApp
                 new LoginForm().Show();
                 this.Close();
             }
+        }
+
+        private void MiCuentaForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
         }
     }
 }

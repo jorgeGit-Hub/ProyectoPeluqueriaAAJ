@@ -30,309 +30,443 @@ namespace PeluqueriaApp
 
         private void InitializeComponent()
         {
-            this.LateralPanel = new Panel();
-            this.CapcaleraPanel = new Panel();
-            this.LogoLbl = new Label();
-            this.TitolAppLbl = new Label();
-            this.BienvenidaLbl = new Label();
-            this.IniciBoto = new Button();
-            this.ServiciosBoto = new Button();
-            this.UsuariosBoto = new Button();
-            this.ClientesBoto = new Button();
-            this.CitasBoto = new Button();
-            this.GruposBoto = new Button();
-            this.HorarioBoto = new Button();
-            this.HorarioSemanalBoto = new Button();
-            this.ValoracionesBoto = new Button();
-            this.MiCuentaBoto = new Button();
-            this.TancarSessioBoto = new Button();
-            this.TitolPaginaLbl = new Label();
-            this.FiltroPuntuacionCombo = new ComboBox();
-            this.CrearValoracionBtn = new Button();
-            this.ValoracionesDataGrid = new DataGridView();
-            this.EditarBtn = new Button();
-            this.EliminarBtn = new Button();
-
-            ((System.ComponentModel.ISupportInitialize)(this.ValoracionesDataGrid)).BeginInit();
-
-            this.ClientSize = new Size(1400, 800);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "Peluquería Escola - Valoraciones";
-            this.BackColor = Color.FromArgb(250, 245, 240);
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-
-            this.LateralPanel.Dock = DockStyle.Left;
-            this.LateralPanel.Width = 260;
-            this.LateralPanel.BackColor = Color.FromArgb(45, 35, 30);
-
-            this.LogoLbl.Text = "✂️\nPeluquería\nEscola";
-            this.LogoLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
-            this.LogoLbl.ForeColor = Color.FromArgb(255, 140, 0);
-            this.LogoLbl.AutoSize = false;
-            this.LogoLbl.TextAlign = ContentAlignment.MiddleCenter;
-            this.LogoLbl.Size = new Size(260, 100);
-            this.LogoLbl.Location = new Point(0, 20);
-
-            this.IniciBoto.Text = "🏠  Inicio";
-            this.IniciBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.IniciBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.IniciBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.IniciBoto.FlatStyle = FlatStyle.Flat;
-            this.IniciBoto.FlatAppearance.BorderSize = 0;
-            this.IniciBoto.Size = new Size(240, 45);
-            this.IniciBoto.Location = new Point(10, 130);
-            this.IniciBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.IniciBoto.Padding = new Padding(20, 0, 0, 0);
-            this.IniciBoto.Cursor = Cursors.Hand;
-            this.IniciBoto.Click += new System.EventHandler(this.IniciBoto_Click);
-
-            this.ServiciosBoto.Text = "✂️  Servicios";
-            this.ServiciosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.ServiciosBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.ServiciosBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.ServiciosBoto.FlatStyle = FlatStyle.Flat;
-            this.ServiciosBoto.FlatAppearance.BorderSize = 0;
-            this.ServiciosBoto.Size = new Size(240, 45);
-            this.ServiciosBoto.Location = new Point(10, 180);
-            this.ServiciosBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.ServiciosBoto.Padding = new Padding(20, 0, 0, 0);
-            this.ServiciosBoto.Cursor = Cursors.Hand;
-            this.ServiciosBoto.Click += new System.EventHandler(this.ServiciosBoto_Click);
-
-            this.UsuariosBoto.Text = "👥  Usuarios";
-            this.UsuariosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.UsuariosBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.UsuariosBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.UsuariosBoto.FlatStyle = FlatStyle.Flat;
-            this.UsuariosBoto.FlatAppearance.BorderSize = 0;
-            this.UsuariosBoto.Size = new Size(240, 45);
-            this.UsuariosBoto.Location = new Point(10, 230);
-            this.UsuariosBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.UsuariosBoto.Padding = new Padding(20, 0, 0, 0);
-            this.UsuariosBoto.Cursor = Cursors.Hand;
-            this.UsuariosBoto.Click += new System.EventHandler(this.UsuariosBoto_Click);
-
-            this.ClientesBoto.Text = "👤  Clientes";
-            this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.ClientesBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.ClientesBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.ClientesBoto.FlatStyle = FlatStyle.Flat;
-            this.ClientesBoto.FlatAppearance.BorderSize = 0;
-            this.ClientesBoto.Size = new Size(240, 45);
-            this.ClientesBoto.Location = new Point(10, 280);
-            this.ClientesBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.ClientesBoto.Padding = new Padding(20, 0, 0, 0);
-            this.ClientesBoto.Cursor = Cursors.Hand;
-            this.ClientesBoto.Click += new System.EventHandler(this.ClientesBoto_Click);
-
-            this.CitasBoto.Text = "📅  Citas";
-            this.CitasBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.CitasBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.CitasBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.CitasBoto.FlatStyle = FlatStyle.Flat;
-            this.CitasBoto.FlatAppearance.BorderSize = 0;
-            this.CitasBoto.Size = new Size(240, 45);
-            this.CitasBoto.Location = new Point(10, 330);
-            this.CitasBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.CitasBoto.Padding = new Padding(20, 0, 0, 0);
-            this.CitasBoto.Cursor = Cursors.Hand;
-            this.CitasBoto.Click += new System.EventHandler(this.CitasBoto_Click);
-
-            this.GruposBoto.Text = "👨‍👩‍👧‍👦  Grupos";
-            this.GruposBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.GruposBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.GruposBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.GruposBoto.FlatStyle = FlatStyle.Flat;
-            this.GruposBoto.FlatAppearance.BorderSize = 0;
-            this.GruposBoto.Size = new Size(240, 45);
-            this.GruposBoto.Location = new Point(10, 380);
-            this.GruposBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.GruposBoto.Padding = new Padding(20, 0, 0, 0);
-            this.GruposBoto.Cursor = Cursors.Hand;
-            this.GruposBoto.Click += new System.EventHandler(this.GruposBoto_Click);
-
-            this.HorarioBoto.Text = "🗓️  Horario Semanal";
-            this.HorarioBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.HorarioBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.HorarioBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.HorarioBoto.FlatStyle = FlatStyle.Flat;
-            this.HorarioBoto.FlatAppearance.BorderSize = 0;
-            this.HorarioBoto.Size = new Size(240, 45);
-            this.HorarioBoto.Location = new Point(10, 430);
-            this.HorarioBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.HorarioBoto.Padding = new Padding(20, 0, 0, 0);
-            this.HorarioBoto.Cursor = Cursors.Hand;
-            this.HorarioBoto.Click += new System.EventHandler(this.HorarioForm_Click);
-
-            this.HorarioSemanalBoto.Text = "🕐  Bloqueo Horario";
-            this.HorarioSemanalBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.HorarioSemanalBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.HorarioSemanalBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.HorarioSemanalBoto.FlatStyle = FlatStyle.Flat;
-            this.HorarioSemanalBoto.FlatAppearance.BorderSize = 0;
-            this.HorarioSemanalBoto.Size = new Size(240, 45);
-            this.HorarioSemanalBoto.Location = new Point(10, 480);
-            this.HorarioSemanalBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.HorarioSemanalBoto.Padding = new Padding(20, 0, 0, 0);
-            this.HorarioSemanalBoto.Cursor = Cursors.Hand;
-            this.HorarioSemanalBoto.Click += new System.EventHandler(this.HorarioSemanalBoto_Click);
-
-            this.ValoracionesBoto.Text = "⭐  Valoraciones";
-            this.ValoracionesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.ValoracionesBoto.ForeColor = Color.White;
-            this.ValoracionesBoto.BackColor = Color.FromArgb(255, 140, 0);
-            this.ValoracionesBoto.FlatStyle = FlatStyle.Flat;
-            this.ValoracionesBoto.FlatAppearance.BorderSize = 0;
-            this.ValoracionesBoto.Size = new Size(240, 45);
-            this.ValoracionesBoto.Location = new Point(10, 530);
-            this.ValoracionesBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.ValoracionesBoto.Padding = new Padding(20, 0, 0, 0);
-            this.ValoracionesBoto.Cursor = Cursors.Hand;
-
-            this.MiCuentaBoto.Text = "⚙️  Mi Cuenta";
-            this.MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.MiCuentaBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.MiCuentaBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.MiCuentaBoto.FlatStyle = FlatStyle.Flat;
-            this.MiCuentaBoto.FlatAppearance.BorderSize = 0;
-            this.MiCuentaBoto.Size = new Size(240, 45);
-            this.MiCuentaBoto.Location = new Point(10, 580);
-            this.MiCuentaBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.MiCuentaBoto.Padding = new Padding(20, 0, 0, 0);
-            this.MiCuentaBoto.Cursor = Cursors.Hand;
-            this.MiCuentaBoto.Click += new System.EventHandler(this.MiCuentaBoto_Click);
-
-            this.TancarSessioBoto.Text = "🚪  Cerrar Sesión";
-            this.TancarSessioBoto.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            this.TancarSessioBoto.ForeColor = Color.FromArgb(150, 150, 150);
-            this.TancarSessioBoto.BackColor = Color.FromArgb(45, 35, 30);
-            this.TancarSessioBoto.FlatStyle = FlatStyle.Flat;
-            this.TancarSessioBoto.FlatAppearance.BorderSize = 0;
-            this.TancarSessioBoto.Size = new Size(240, 45);
-            this.TancarSessioBoto.Location = new Point(10, 720);
-            this.TancarSessioBoto.TextAlign = ContentAlignment.MiddleLeft;
-            this.TancarSessioBoto.Padding = new Padding(20, 0, 0, 0);
-            this.TancarSessioBoto.Cursor = Cursors.Hand;
-            this.TancarSessioBoto.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            this.TancarSessioBoto.Click += new System.EventHandler(this.TancarSessioBoto_Click);
-
-            this.CapcaleraPanel.Dock = DockStyle.Top;
-            this.CapcaleraPanel.Height = 80;
-            this.CapcaleraPanel.BackColor = Color.White;
-            this.CapcaleraPanel.Controls.Add(this.TitolAppLbl);
-            this.CapcaleraPanel.Controls.Add(this.BienvenidaLbl);
-
-            this.TitolAppLbl.Text = "Gestión de Valoraciones";
-            this.TitolAppLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
-            this.TitolAppLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.TitolAppLbl.AutoSize = true;
-            this.TitolAppLbl.Location = new Point(30, 25);
-
-            this.BienvenidaLbl.Text = "Bienvenido/a";
-            this.BienvenidaLbl.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            this.BienvenidaLbl.ForeColor = Color.FromArgb(139, 90, 60);
-            this.BienvenidaLbl.AutoSize = true;
-            this.BienvenidaLbl.Location = new Point(1050, 30);
-            this.BienvenidaLbl.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            this.TitolPaginaLbl.Text = "Administrar Valoraciones";
-            this.TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
-            this.TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.TitolPaginaLbl.AutoSize = true;
-            this.TitolPaginaLbl.Location = new Point(290, 110);
-
-            this.FiltroPuntuacionCombo.Name = "FiltroPuntuacionCombo";
-            this.FiltroPuntuacionCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.FiltroPuntuacionCombo.Size = new Size(200, 32);
-            this.FiltroPuntuacionCombo.Location = new Point(290, 160);
-            this.FiltroPuntuacionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.FiltroPuntuacionCombo.BackColor = Color.White;
-            this.FiltroPuntuacionCombo.Items.AddRange(new object[] { "Todas", "5 estrellas", "4+ estrellas", "3+ estrellas" });
-            this.FiltroPuntuacionCombo.SelectedIndex = 0;
-            this.FiltroPuntuacionCombo.SelectedIndexChanged += new System.EventHandler(this.FiltroPuntuacionCombo_SelectedIndexChanged);
-
-            this.CrearValoracionBtn.Text = "➕ Nueva Valoración";
-            this.CrearValoracionBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.CrearValoracionBtn.Size = new Size(220, 40);
-            this.CrearValoracionBtn.Location = new Point(1140, 157);
-            this.CrearValoracionBtn.BackColor = Color.FromArgb(139, 90, 60);
-            this.CrearValoracionBtn.ForeColor = Color.White;
-            this.CrearValoracionBtn.FlatStyle = FlatStyle.Flat;
-            this.CrearValoracionBtn.FlatAppearance.BorderSize = 0;
-            this.CrearValoracionBtn.Cursor = Cursors.Hand;
-            this.CrearValoracionBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            this.CrearValoracionBtn.Click += new System.EventHandler(this.CrearValoracionBtn_Click);
-
-            this.ValoracionesDataGrid.Name = "ValoracionesDataGrid";
-            this.ValoracionesDataGrid.Location = new Point(290, 220);
-            this.ValoracionesDataGrid.Size = new Size(1070, 440);
-            this.ValoracionesDataGrid.ScrollBars = ScrollBars.Both;
-            this.ValoracionesDataGrid.BackgroundColor = Color.White;
-            this.ValoracionesDataGrid.BorderStyle = BorderStyle.None;
-            this.ValoracionesDataGrid.GridColor = Color.FromArgb(240, 240, 240);
-            this.ValoracionesDataGrid.DefaultCellStyle.BackColor = Color.White;
-            this.ValoracionesDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ValoracionesDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
-            this.ValoracionesDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
-            this.ValoracionesDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
-            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
-            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            this.ValoracionesDataGrid.EnableHeadersVisualStyles = false;
-            this.ValoracionesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            this.ValoracionesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.ValoracionesDataGrid.MultiSelect = false;
-            this.ValoracionesDataGrid.ReadOnly = true;
-            this.ValoracionesDataGrid.AllowUserToAddRows = false;
-            this.ValoracionesDataGrid.AllowUserToDeleteRows = false;
-
-            this.EditarBtn.Text = "✏️ Editar";
-            this.EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.EditarBtn.Size = new Size(150, 45);
-            this.EditarBtn.Location = new Point(290, 680);
-            this.EditarBtn.BackColor = Color.FromArgb(255, 140, 0);
-            this.EditarBtn.ForeColor = Color.White;
-            this.EditarBtn.FlatStyle = FlatStyle.Flat;
-            this.EditarBtn.FlatAppearance.BorderSize = 0;
-            this.EditarBtn.Cursor = Cursors.Hand;
-            this.EditarBtn.Click += new System.EventHandler(this.EditarBtn_Click);
-
-            this.EliminarBtn.Text = "🗑️ Eliminar";
-            this.EliminarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.EliminarBtn.Size = new Size(150, 45);
-            this.EliminarBtn.Location = new Point(460, 680);
-            this.EliminarBtn.BackColor = Color.FromArgb(200, 50, 50);
-            this.EliminarBtn.ForeColor = Color.White;
-            this.EliminarBtn.FlatStyle = FlatStyle.Flat;
-            this.EliminarBtn.FlatAppearance.BorderSize = 0;
-            this.EliminarBtn.Cursor = Cursors.Hand;
-            this.EliminarBtn.Click += new System.EventHandler(this.EliminarBtn_Click);
-
-            this.LateralPanel.Controls.Add(this.LogoLbl);
-            this.LateralPanel.Controls.Add(this.IniciBoto);
-            this.LateralPanel.Controls.Add(this.ServiciosBoto);
-            this.LateralPanel.Controls.Add(this.UsuariosBoto);
-            this.LateralPanel.Controls.Add(this.ClientesBoto);
-            this.LateralPanel.Controls.Add(this.CitasBoto);
-            this.LateralPanel.Controls.Add(this.GruposBoto);
-            this.LateralPanel.Controls.Add(this.HorarioBoto);
-            this.LateralPanel.Controls.Add(this.HorarioSemanalBoto);
-            this.LateralPanel.Controls.Add(this.ValoracionesBoto);
-            this.LateralPanel.Controls.Add(this.MiCuentaBoto);
-            this.LateralPanel.Controls.Add(this.TancarSessioBoto);
-
-            this.Controls.Add(this.EliminarBtn);
-            this.Controls.Add(this.EditarBtn);
-            this.Controls.Add(this.ValoracionesDataGrid);
-            this.Controls.Add(this.CrearValoracionBtn);
-            this.Controls.Add(this.FiltroPuntuacionCombo);
-            this.Controls.Add(this.TitolPaginaLbl);
-            this.Controls.Add(this.CapcaleraPanel);
-            this.Controls.Add(this.LateralPanel);
-
-            ((System.ComponentModel.ISupportInitialize)(this.ValoracionesDataGrid)).EndInit();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            LateralPanel = new Panel();
+            LogoLbl = new Label();
+            IniciBoto = new Button();
+            ServiciosBoto = new Button();
+            UsuariosBoto = new Button();
+            ClientesBoto = new Button();
+            CitasBoto = new Button();
+            GruposBoto = new Button();
+            HorarioBoto = new Button();
+            HorarioSemanalBoto = new Button();
+            ValoracionesBoto = new Button();
+            MiCuentaBoto = new Button();
+            TancarSessioBoto = new Button();
+            CapcaleraPanel = new Panel();
+            TitolAppLbl = new Label();
+            BienvenidaLbl = new Label();
+            TitolPaginaLbl = new Label();
+            FiltroPuntuacionCombo = new ComboBox();
+            CrearValoracionBtn = new Button();
+            ValoracionesDataGrid = new DataGridView();
+            EditarBtn = new Button();
+            EliminarBtn = new Button();
+            pbLogo = new PictureBox();
+            LateralPanel.SuspendLayout();
+            CapcaleraPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)ValoracionesDataGrid).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pbLogo).BeginInit();
+            SuspendLayout();
+            // 
+            // LateralPanel
+            // 
+            LateralPanel.BackColor = Color.FromArgb(45, 35, 30);
+            LateralPanel.Controls.Add(pbLogo);
+            LateralPanel.Controls.Add(LogoLbl);
+            LateralPanel.Controls.Add(IniciBoto);
+            LateralPanel.Controls.Add(ServiciosBoto);
+            LateralPanel.Controls.Add(UsuariosBoto);
+            LateralPanel.Controls.Add(ClientesBoto);
+            LateralPanel.Controls.Add(CitasBoto);
+            LateralPanel.Controls.Add(GruposBoto);
+            LateralPanel.Controls.Add(HorarioBoto);
+            LateralPanel.Controls.Add(HorarioSemanalBoto);
+            LateralPanel.Controls.Add(ValoracionesBoto);
+            LateralPanel.Controls.Add(MiCuentaBoto);
+            LateralPanel.Controls.Add(TancarSessioBoto);
+            LateralPanel.Dock = DockStyle.Left;
+            LateralPanel.Location = new Point(0, 0);
+            LateralPanel.Name = "LateralPanel";
+            LateralPanel.Size = new Size(260, 749);
+            LateralPanel.TabIndex = 7;
+            // 
+            // LogoLbl
+            // 
+            LogoLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
+            LogoLbl.ForeColor = Color.FromArgb(255, 140, 0);
+            LogoLbl.Location = new Point(0, 20);
+            LogoLbl.Name = "LogoLbl";
+            LogoLbl.Size = new Size(260, 100);
+            LogoLbl.TabIndex = 0;
+            LogoLbl.Text = "\nPeluquería\nBernat Sarriá";
+            LogoLbl.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // IniciBoto
+            // 
+            IniciBoto.BackColor = Color.FromArgb(45, 35, 30);
+            IniciBoto.Cursor = Cursors.Hand;
+            IniciBoto.FlatAppearance.BorderSize = 0;
+            IniciBoto.FlatStyle = FlatStyle.Flat;
+            IniciBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            IniciBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            IniciBoto.Location = new Point(10, 130);
+            IniciBoto.Name = "IniciBoto";
+            IniciBoto.Padding = new Padding(20, 0, 0, 0);
+            IniciBoto.Size = new Size(240, 45);
+            IniciBoto.TabIndex = 1;
+            IniciBoto.Text = "🏠  Inicio";
+            IniciBoto.TextAlign = ContentAlignment.MiddleLeft;
+            IniciBoto.UseVisualStyleBackColor = false;
+            IniciBoto.Click += IniciBoto_Click;
+            // 
+            // ServiciosBoto
+            // 
+            ServiciosBoto.BackColor = Color.FromArgb(45, 35, 30);
+            ServiciosBoto.Cursor = Cursors.Hand;
+            ServiciosBoto.FlatAppearance.BorderSize = 0;
+            ServiciosBoto.FlatStyle = FlatStyle.Flat;
+            ServiciosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            ServiciosBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            ServiciosBoto.Location = new Point(10, 180);
+            ServiciosBoto.Name = "ServiciosBoto";
+            ServiciosBoto.Padding = new Padding(20, 0, 0, 0);
+            ServiciosBoto.Size = new Size(240, 45);
+            ServiciosBoto.TabIndex = 2;
+            ServiciosBoto.Text = "✂️  Servicios";
+            ServiciosBoto.TextAlign = ContentAlignment.MiddleLeft;
+            ServiciosBoto.UseVisualStyleBackColor = false;
+            ServiciosBoto.Click += ServiciosBoto_Click;
+            // 
+            // UsuariosBoto
+            // 
+            UsuariosBoto.BackColor = Color.FromArgb(45, 35, 30);
+            UsuariosBoto.Cursor = Cursors.Hand;
+            UsuariosBoto.FlatAppearance.BorderSize = 0;
+            UsuariosBoto.FlatStyle = FlatStyle.Flat;
+            UsuariosBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            UsuariosBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            UsuariosBoto.Location = new Point(10, 230);
+            UsuariosBoto.Name = "UsuariosBoto";
+            UsuariosBoto.Padding = new Padding(20, 0, 0, 0);
+            UsuariosBoto.Size = new Size(240, 45);
+            UsuariosBoto.TabIndex = 3;
+            UsuariosBoto.Text = "👥  Usuarios";
+            UsuariosBoto.TextAlign = ContentAlignment.MiddleLeft;
+            UsuariosBoto.UseVisualStyleBackColor = false;
+            UsuariosBoto.Click += UsuariosBoto_Click;
+            // 
+            // ClientesBoto
+            // 
+            ClientesBoto.BackColor = Color.FromArgb(45, 35, 30);
+            ClientesBoto.Cursor = Cursors.Hand;
+            ClientesBoto.FlatAppearance.BorderSize = 0;
+            ClientesBoto.FlatStyle = FlatStyle.Flat;
+            ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            ClientesBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            ClientesBoto.Location = new Point(10, 280);
+            ClientesBoto.Name = "ClientesBoto";
+            ClientesBoto.Padding = new Padding(20, 0, 0, 0);
+            ClientesBoto.Size = new Size(240, 45);
+            ClientesBoto.TabIndex = 4;
+            ClientesBoto.Text = "👤  Clientes";
+            ClientesBoto.TextAlign = ContentAlignment.MiddleLeft;
+            ClientesBoto.UseVisualStyleBackColor = false;
+            ClientesBoto.Click += ClientesBoto_Click;
+            // 
+            // CitasBoto
+            // 
+            CitasBoto.BackColor = Color.FromArgb(45, 35, 30);
+            CitasBoto.Cursor = Cursors.Hand;
+            CitasBoto.FlatAppearance.BorderSize = 0;
+            CitasBoto.FlatStyle = FlatStyle.Flat;
+            CitasBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            CitasBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            CitasBoto.Location = new Point(10, 330);
+            CitasBoto.Name = "CitasBoto";
+            CitasBoto.Padding = new Padding(20, 0, 0, 0);
+            CitasBoto.Size = new Size(240, 45);
+            CitasBoto.TabIndex = 5;
+            CitasBoto.Text = "📅  Citas";
+            CitasBoto.TextAlign = ContentAlignment.MiddleLeft;
+            CitasBoto.UseVisualStyleBackColor = false;
+            CitasBoto.Click += CitasBoto_Click;
+            // 
+            // GruposBoto
+            // 
+            GruposBoto.BackColor = Color.FromArgb(45, 35, 30);
+            GruposBoto.Cursor = Cursors.Hand;
+            GruposBoto.FlatAppearance.BorderSize = 0;
+            GruposBoto.FlatStyle = FlatStyle.Flat;
+            GruposBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            GruposBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            GruposBoto.Location = new Point(10, 380);
+            GruposBoto.Name = "GruposBoto";
+            GruposBoto.Padding = new Padding(20, 0, 0, 0);
+            GruposBoto.Size = new Size(240, 45);
+            GruposBoto.TabIndex = 6;
+            GruposBoto.Text = "👨‍👩‍👧‍👦  Grupos";
+            GruposBoto.TextAlign = ContentAlignment.MiddleLeft;
+            GruposBoto.UseVisualStyleBackColor = false;
+            GruposBoto.Click += GruposBoto_Click;
+            // 
+            // HorarioBoto
+            // 
+            HorarioBoto.BackColor = Color.FromArgb(45, 35, 30);
+            HorarioBoto.Cursor = Cursors.Hand;
+            HorarioBoto.FlatAppearance.BorderSize = 0;
+            HorarioBoto.FlatStyle = FlatStyle.Flat;
+            HorarioBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            HorarioBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            HorarioBoto.Location = new Point(10, 430);
+            HorarioBoto.Name = "HorarioBoto";
+            HorarioBoto.Padding = new Padding(20, 0, 0, 0);
+            HorarioBoto.Size = new Size(240, 45);
+            HorarioBoto.TabIndex = 7;
+            HorarioBoto.Text = "🗓️  Horario Semanal";
+            HorarioBoto.TextAlign = ContentAlignment.MiddleLeft;
+            HorarioBoto.UseVisualStyleBackColor = false;
+            HorarioBoto.Click += HorarioForm_Click;
+            // 
+            // HorarioSemanalBoto
+            // 
+            HorarioSemanalBoto.BackColor = Color.FromArgb(45, 35, 30);
+            HorarioSemanalBoto.Cursor = Cursors.Hand;
+            HorarioSemanalBoto.FlatAppearance.BorderSize = 0;
+            HorarioSemanalBoto.FlatStyle = FlatStyle.Flat;
+            HorarioSemanalBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            HorarioSemanalBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            HorarioSemanalBoto.Location = new Point(10, 480);
+            HorarioSemanalBoto.Name = "HorarioSemanalBoto";
+            HorarioSemanalBoto.Padding = new Padding(20, 0, 0, 0);
+            HorarioSemanalBoto.Size = new Size(240, 45);
+            HorarioSemanalBoto.TabIndex = 8;
+            HorarioSemanalBoto.Text = "🕐  Bloqueo Horario";
+            HorarioSemanalBoto.TextAlign = ContentAlignment.MiddleLeft;
+            HorarioSemanalBoto.UseVisualStyleBackColor = false;
+            HorarioSemanalBoto.Click += HorarioSemanalBoto_Click;
+            // 
+            // ValoracionesBoto
+            // 
+            ValoracionesBoto.BackColor = Color.FromArgb(255, 140, 0);
+            ValoracionesBoto.Cursor = Cursors.Hand;
+            ValoracionesBoto.FlatAppearance.BorderSize = 0;
+            ValoracionesBoto.FlatStyle = FlatStyle.Flat;
+            ValoracionesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            ValoracionesBoto.ForeColor = Color.White;
+            ValoracionesBoto.Location = new Point(10, 530);
+            ValoracionesBoto.Name = "ValoracionesBoto";
+            ValoracionesBoto.Padding = new Padding(20, 0, 0, 0);
+            ValoracionesBoto.Size = new Size(240, 45);
+            ValoracionesBoto.TabIndex = 9;
+            ValoracionesBoto.Text = "⭐  Valoraciones";
+            ValoracionesBoto.TextAlign = ContentAlignment.MiddleLeft;
+            ValoracionesBoto.UseVisualStyleBackColor = false;
+            // 
+            // MiCuentaBoto
+            // 
+            MiCuentaBoto.BackColor = Color.FromArgb(45, 35, 30);
+            MiCuentaBoto.Cursor = Cursors.Hand;
+            MiCuentaBoto.FlatAppearance.BorderSize = 0;
+            MiCuentaBoto.FlatStyle = FlatStyle.Flat;
+            MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            MiCuentaBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            MiCuentaBoto.Location = new Point(10, 580);
+            MiCuentaBoto.Name = "MiCuentaBoto";
+            MiCuentaBoto.Padding = new Padding(20, 0, 0, 0);
+            MiCuentaBoto.Size = new Size(240, 45);
+            MiCuentaBoto.TabIndex = 10;
+            MiCuentaBoto.Text = "⚙️  Mi Cuenta";
+            MiCuentaBoto.TextAlign = ContentAlignment.MiddleLeft;
+            MiCuentaBoto.UseVisualStyleBackColor = false;
+            MiCuentaBoto.Click += MiCuentaBoto_Click;
+            // 
+            // TancarSessioBoto
+            // 
+            TancarSessioBoto.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            TancarSessioBoto.BackColor = Color.FromArgb(45, 35, 30);
+            TancarSessioBoto.Cursor = Cursors.Hand;
+            TancarSessioBoto.FlatAppearance.BorderSize = 0;
+            TancarSessioBoto.FlatStyle = FlatStyle.Flat;
+            TancarSessioBoto.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            TancarSessioBoto.ForeColor = Color.FromArgb(150, 150, 150);
+            TancarSessioBoto.Location = new Point(10, 1369);
+            TancarSessioBoto.Name = "TancarSessioBoto";
+            TancarSessioBoto.Padding = new Padding(20, 0, 0, 0);
+            TancarSessioBoto.Size = new Size(240, 45);
+            TancarSessioBoto.TabIndex = 11;
+            TancarSessioBoto.Text = "🚪  Cerrar Sesión";
+            TancarSessioBoto.TextAlign = ContentAlignment.MiddleLeft;
+            TancarSessioBoto.UseVisualStyleBackColor = false;
+            TancarSessioBoto.Click += TancarSessioBoto_Click;
+            // 
+            // CapcaleraPanel
+            // 
+            CapcaleraPanel.BackColor = Color.White;
+            CapcaleraPanel.Controls.Add(TitolAppLbl);
+            CapcaleraPanel.Controls.Add(BienvenidaLbl);
+            CapcaleraPanel.Dock = DockStyle.Top;
+            CapcaleraPanel.Location = new Point(260, 0);
+            CapcaleraPanel.Name = "CapcaleraPanel";
+            CapcaleraPanel.Size = new Size(1110, 80);
+            CapcaleraPanel.TabIndex = 6;
+            // 
+            // TitolAppLbl
+            // 
+            TitolAppLbl.AutoSize = true;
+            TitolAppLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
+            TitolAppLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            TitolAppLbl.Location = new Point(30, 25);
+            TitolAppLbl.Name = "TitolAppLbl";
+            TitolAppLbl.Size = new Size(260, 30);
+            TitolAppLbl.TabIndex = 0;
+            TitolAppLbl.Text = "Gestión de Valoraciones";
+            // 
+            // BienvenidaLbl
+            // 
+            BienvenidaLbl.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            BienvenidaLbl.AutoSize = true;
+            BienvenidaLbl.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            BienvenidaLbl.ForeColor = Color.FromArgb(139, 90, 60);
+            BienvenidaLbl.Location = new Point(1960, 30);
+            BienvenidaLbl.Name = "BienvenidaLbl";
+            BienvenidaLbl.Size = new Size(88, 19);
+            BienvenidaLbl.TabIndex = 1;
+            BienvenidaLbl.Text = "Bienvenido/a";
+            // 
+            // TitolPaginaLbl
+            // 
+            TitolPaginaLbl.AutoSize = true;
+            TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            TitolPaginaLbl.Location = new Point(290, 110);
+            TitolPaginaLbl.Name = "TitolPaginaLbl";
+            TitolPaginaLbl.Size = new Size(302, 32);
+            TitolPaginaLbl.TabIndex = 5;
+            TitolPaginaLbl.Text = "Administrar Valoraciones";
+            // 
+            // FiltroPuntuacionCombo
+            // 
+            FiltroPuntuacionCombo.BackColor = Color.White;
+            FiltroPuntuacionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            FiltroPuntuacionCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            FiltroPuntuacionCombo.Items.AddRange(new object[] { "Todas", "5 estrellas", "4+ estrellas", "3+ estrellas" });
+            FiltroPuntuacionCombo.Location = new Point(290, 160);
+            FiltroPuntuacionCombo.Name = "FiltroPuntuacionCombo";
+            FiltroPuntuacionCombo.Size = new Size(200, 28);
+            FiltroPuntuacionCombo.TabIndex = 4;
+            FiltroPuntuacionCombo.SelectedIndexChanged += FiltroPuntuacionCombo_SelectedIndexChanged;
+            // 
+            // CrearValoracionBtn
+            // 
+            CrearValoracionBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            CrearValoracionBtn.BackColor = Color.FromArgb(139, 90, 60);
+            CrearValoracionBtn.Cursor = Cursors.Hand;
+            CrearValoracionBtn.FlatAppearance.BorderSize = 0;
+            CrearValoracionBtn.FlatStyle = FlatStyle.Flat;
+            CrearValoracionBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            CrearValoracionBtn.ForeColor = Color.White;
+            CrearValoracionBtn.Location = new Point(1110, 157);
+            CrearValoracionBtn.Name = "CrearValoracionBtn";
+            CrearValoracionBtn.Size = new Size(220, 40);
+            CrearValoracionBtn.TabIndex = 3;
+            CrearValoracionBtn.Text = "➕ Nueva Valoración";
+            CrearValoracionBtn.UseVisualStyleBackColor = false;
+            CrearValoracionBtn.Click += CrearValoracionBtn_Click;
+            // 
+            // ValoracionesDataGrid
+            // 
+            ValoracionesDataGrid.AllowUserToAddRows = false;
+            ValoracionesDataGrid.AllowUserToDeleteRows = false;
+            ValoracionesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            ValoracionesDataGrid.BackgroundColor = Color.White;
+            ValoracionesDataGrid.BorderStyle = BorderStyle.None;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(255, 140, 0);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            dataGridViewCellStyle3.ForeColor = Color.White;
+            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            ValoracionesDataGrid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = Color.White;
+            dataGridViewCellStyle4.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle4.ForeColor = Color.FromArgb(45, 35, 30);
+            dataGridViewCellStyle4.SelectionBackColor = Color.FromArgb(255, 160, 50);
+            dataGridViewCellStyle4.SelectionForeColor = Color.White;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.False;
+            ValoracionesDataGrid.DefaultCellStyle = dataGridViewCellStyle4;
+            ValoracionesDataGrid.EnableHeadersVisualStyles = false;
+            ValoracionesDataGrid.GridColor = Color.FromArgb(240, 240, 240);
+            ValoracionesDataGrid.Location = new Point(290, 220);
+            ValoracionesDataGrid.MultiSelect = false;
+            ValoracionesDataGrid.Name = "ValoracionesDataGrid";
+            ValoracionesDataGrid.ReadOnly = true;
+            ValoracionesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            ValoracionesDataGrid.Size = new Size(1070, 440);
+            ValoracionesDataGrid.TabIndex = 2;
+            // 
+            // EditarBtn
+            // 
+            EditarBtn.BackColor = Color.FromArgb(255, 140, 0);
+            EditarBtn.Cursor = Cursors.Hand;
+            EditarBtn.FlatAppearance.BorderSize = 0;
+            EditarBtn.FlatStyle = FlatStyle.Flat;
+            EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            EditarBtn.ForeColor = Color.White;
+            EditarBtn.Location = new Point(290, 680);
+            EditarBtn.Name = "EditarBtn";
+            EditarBtn.Size = new Size(150, 45);
+            EditarBtn.TabIndex = 1;
+            EditarBtn.Text = "✏️ Editar";
+            EditarBtn.UseVisualStyleBackColor = false;
+            EditarBtn.Click += EditarBtn_Click;
+            // 
+            // EliminarBtn
+            // 
+            EliminarBtn.BackColor = Color.FromArgb(200, 50, 50);
+            EliminarBtn.Cursor = Cursors.Hand;
+            EliminarBtn.FlatAppearance.BorderSize = 0;
+            EliminarBtn.FlatStyle = FlatStyle.Flat;
+            EliminarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            EliminarBtn.ForeColor = Color.White;
+            EliminarBtn.Location = new Point(460, 680);
+            EliminarBtn.Name = "EliminarBtn";
+            EliminarBtn.Size = new Size(150, 45);
+            EliminarBtn.TabIndex = 0;
+            EliminarBtn.Text = "🗑️ Eliminar";
+            EliminarBtn.UseVisualStyleBackColor = false;
+            EliminarBtn.Click += EliminarBtn_Click;
+            // 
+            // pbLogo
+            // 
+            pbLogo.Location = new Point(78, 5);
+            pbLogo.Name = "pbLogo";
+            pbLogo.Size = new Size(100, 50);
+            pbLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            pbLogo.TabIndex = 12;
+            pbLogo.TabStop = false;
+            
+            // 
+            // ValoracionesForm
+            // 
+            BackColor = Color.FromArgb(250, 245, 240);
+            ClientSize = new Size(1370, 749);
+            Controls.Add(EliminarBtn);
+            Controls.Add(EditarBtn);
+            Controls.Add(ValoracionesDataGrid);
+            Controls.Add(CrearValoracionBtn);
+            Controls.Add(FiltroPuntuacionCombo);
+            Controls.Add(TitolPaginaLbl);
+            Controls.Add(CapcaleraPanel);
+            Controls.Add(LateralPanel);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            Name = "ValoracionesForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Peluquería Bernat Sarriá - Valoraciones";
+            LateralPanel.ResumeLayout(false);
+            CapcaleraPanel.ResumeLayout(false);
+            CapcaleraPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)ValoracionesDataGrid).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pbLogo).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
+
+        private PictureBox pbLogo;
     }
 }

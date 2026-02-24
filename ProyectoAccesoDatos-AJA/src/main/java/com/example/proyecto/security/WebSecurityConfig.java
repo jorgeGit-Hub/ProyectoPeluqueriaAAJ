@@ -62,6 +62,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // Otros endpoints públicos
+                        .requestMatchers("/api/configuracion/**").permitAll() // ✅ AÑADIDO: Ruta pública para cargar el logo
                         .requestMatchers("/api/dev/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/servicios/**").permitAll()

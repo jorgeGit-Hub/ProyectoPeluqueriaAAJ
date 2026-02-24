@@ -7,7 +7,8 @@ namespace PeluqueriaApp
     {
         private Panel FondoIzquierdoPanel;
         private Panel LoginPanel;
-        private Label LogoLbl;
+        private PictureBox pbLogoLogin; // ✅ Cambiado de Label a PictureBox
+        private PictureBox pbLogoBienvenida; // ✅ Añadido PictureBox para el lado izquierdo
         private Label TituloLbl;
         private Label SubtituloLbl;
         private Label CorreoLbl;
@@ -23,7 +24,8 @@ namespace PeluqueriaApp
         {
             this.FondoIzquierdoPanel = new Panel();
             this.LoginPanel = new Panel();
-            this.LogoLbl = new Label();
+            this.pbLogoLogin = new PictureBox();
+            this.pbLogoBienvenida = new PictureBox();
             this.TituloLbl = new Label();
             this.SubtituloLbl = new Label();
             this.CorreoLbl = new Label();
@@ -34,6 +36,9 @@ namespace PeluqueriaApp
             this.RegistrarseBoto = new Button();
             this.BienvenidaLbl = new Label();
             this.InfoLbl = new Label();
+
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogoLogin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogoBienvenida)).BeginInit();
 
             // 
             // LoginForm
@@ -53,9 +58,17 @@ namespace PeluqueriaApp
             this.FondoIzquierdoPanel.BackColor = Color.FromArgb(255, 140, 0);
 
             // 
+            // pbLogoBienvenida (Logo lado izquierdo)
+            // 
+            this.pbLogoBienvenida.Size = new Size(160, 160);
+            this.pbLogoBienvenida.Location = new Point(145, 40);
+            this.pbLogoBienvenida.SizeMode = PictureBoxSizeMode.Zoom;
+            this.pbLogoBienvenida.BackColor = Color.Transparent;
+
+            // 
             // BienvenidaLbl
             // 
-            this.BienvenidaLbl.Text = "✂️\nPeluquería IES Bernat Sarriá";
+            this.BienvenidaLbl.Text = "Peluquería IES Bernat Sarriá"; // ✅ Emoji de tijeras borrado
             this.BienvenidaLbl.Font = new Font("Segoe UI", 28F, FontStyle.Bold, GraphicsUnit.Point);
             this.BienvenidaLbl.ForeColor = Color.White;
             this.BienvenidaLbl.AutoSize = false;
@@ -82,15 +95,12 @@ namespace PeluqueriaApp
             this.LoginPanel.Location = new Point(500, 50);
 
             // 
-            // LogoLbl
+            // pbLogoLogin (Logo en el panel derecho)
             // 
-            this.LogoLbl.Text = "✂";
-            this.LogoLbl.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Regular, GraphicsUnit.Point);
-            this.LogoLbl.ForeColor = Color.FromArgb(255, 140, 0);
-            this.LogoLbl.AutoSize = false;
-            this.LogoLbl.TextAlign = ContentAlignment.MiddleCenter;
-            this.LogoLbl.Size = new Size(480, 70);
-            this.LogoLbl.Location = new Point(0, 30);
+            this.pbLogoLogin.Size = new Size(100, 70);
+            this.pbLogoLogin.Location = new Point(190, 30);
+            this.pbLogoLogin.SizeMode = PictureBoxSizeMode.Zoom;
+            this.pbLogoLogin.BackColor = Color.Transparent;
 
             // 
             // TituloLbl
@@ -187,13 +197,14 @@ namespace PeluqueriaApp
             // 
             // Add controls to FondoIzquierdoPanel
             // 
+            this.FondoIzquierdoPanel.Controls.Add(this.pbLogoBienvenida);
             this.FondoIzquierdoPanel.Controls.Add(this.BienvenidaLbl);
             this.FondoIzquierdoPanel.Controls.Add(this.InfoLbl);
 
             // 
             // Add controls to LoginPanel
             // 
-            this.LoginPanel.Controls.Add(this.LogoLbl);
+            this.LoginPanel.Controls.Add(this.pbLogoLogin);
             this.LoginPanel.Controls.Add(this.TituloLbl);
             this.LoginPanel.Controls.Add(this.SubtituloLbl);
             this.LoginPanel.Controls.Add(this.CorreoLbl);
@@ -208,6 +219,9 @@ namespace PeluqueriaApp
             // 
             this.Controls.Add(this.LoginPanel);
             this.Controls.Add(this.FondoIzquierdoPanel);
+
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogoLogin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbLogoBienvenida)).EndInit();
         }
     }
 }

@@ -15,7 +15,9 @@ namespace PeluqueriaApp
         public ValoracionesForm()
         {
             InitializeComponent();
-            
+
+            this.Load += ValoracionesForm_Load;
+
             ConfigurarDataGrid();
             CargarValoraciones();
         }
@@ -131,5 +133,18 @@ namespace PeluqueriaApp
             new LoginForm().Show();
             this.Close();
         }
+
+        private void ValoracionesForm_Load(object sender, EventArgs e)
+        {
+            // Cargar el logo desde la memoria global de la app
+            if (UserSession.LogoApp != null)
+            {
+                pbLogo.Image = UserSession.LogoApp;
+            }
+
+            // (Aquí debajo dejas el resto de código que ya tuvieras en este Load, si había algo)
+        }
+
+
     }
 }

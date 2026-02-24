@@ -1,5 +1,5 @@
 ﻿using PeluqueriaApp.Services;
-
+using System.Drawing;
 namespace PeluqueriaApp
 {
     public static class UserSession
@@ -12,6 +12,8 @@ namespace PeluqueriaApp
 
         // ✅ NUEVO: Guardar el token aquí también
         public static string Token { get; set; }
+
+        public static Image LogoApp { get; set; }
 
         public static string NombreCompleto => $"{Nombre} {Apellidos}";
 
