@@ -24,4 +24,4 @@ public class ConfiguracionController {
         }
         return ResponseEntity.notFound().build();
     }
-}
+}//a

@@ -21,4 +21,4 @@ public class Configuracion {
     // Getters y Setters...
     public String getValorBase64() { return valorBase64; }
     public void setValorBase64(String valorBase64) { this.valorBase64 = valorBase64; }
-}
+}//a
