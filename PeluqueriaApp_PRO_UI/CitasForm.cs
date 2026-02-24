@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq; // ✅ IMPORTANTE: Necesario para usar ToDictionary y cruzar datos
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -18,16 +19,20 @@ namespace PeluqueriaApp
         private void ConfigurarDataGrid()
         {
             CitasDataGrid.Columns.Clear();
-            CitasDataGrid.Columns.Add("idCita", "ID");
+            // ❌ ELIMINADA la columna visible de idCita
             CitasDataGrid.Columns.Add("fecha", "Fecha");
             CitasDataGrid.Columns.Add("horaInicio", "Hora Inicio");
             CitasDataGrid.Columns.Add("horaFin", "Hora Fin");
-            CitasDataGrid.Columns.Add("cliente", "Cliente (ID)");
+            CitasDataGrid.Columns.Add("cliente", "Cliente"); // ✅ Ya no dice "(ID)"
             CitasDataGrid.Columns.Add("servicio", "Servicio");
             CitasDataGrid.Columns.Add("estado", "Estado");
 
-            CitasDataGrid.Columns["idCita"].Width = 50;
-            CitasDataGrid.Columns["cliente"].Width = 100;
+            // ✅ NUEVO: Agregamos el ID de la cita pero de forma OCULTA 
+            // para que los botones de Editar y Eliminar sigan sabiendo qué cita es.
+            CitasDataGrid.Columns.Add("idCita", "ID Oculto");
+            CitasDataGrid.Columns["idCita"].Visible = false;
+
+            CitasDataGrid.Columns["cliente"].Width = 150;
             CitasDataGrid.Columns["servicio"].Width = 250;
         }
 
@@ -35,7 +40,14 @@ namespace PeluqueriaApp
         {
             try
             {
+                // ✅ Obtenemos Citas, Usuarios y Servicios al mismo tiempo
                 var citas = await ApiService.GetAsync<List<Cita>>("api/citas");
+                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
+                var servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
+
+                // ✅ Creamos "Diccionarios" para buscar el nombre por ID instantáneamente
+                var dictUsuarios = usuarios?.ToDictionary(u => u.idUsuario, u => $"{u.nombre} {u.apellidos}") ?? new Dictionary<int, string>();
+                var dictServicios = servicios?.ToDictionary(s => s.idServicio, s => s.nombre) ?? new Dictionary<int, string>();
 
                 CitasDataGrid.Rows.Clear();
 
@@ -47,23 +59,32 @@ namespace PeluqueriaApp
 
                 foreach (var cita in citas)
                 {
-                    string clienteInfo = cita.cliente != null ? $"ID: {cita.cliente.idUsuario}" : "N/A";
+                    // 1. Obtener Nombre del Cliente cruzando el ID
+                    string clienteNombre = "Desconocido";
+                    if (cita.cliente != null && dictUsuarios.ContainsKey(cita.cliente.idUsuario))
+                    {
+                        clienteNombre = dictUsuarios[cita.cliente.idUsuario];
+                    }
 
-                    // ✅ ACTUALIZADO: horaInicio/horaFin/servicio vienen de horarioSemanal
-                    string horaInicio = cita.horarioSemanal?.horaInicio ?? "N/A";
-                    string horaFin = cita.horarioSemanal?.horaFin ?? "N/A";
-                    string servicioInfo = cita.horarioSemanal?.servicio != null
-                        ? $"Servicio ID: {cita.horarioSemanal.servicio.idServicio}"
-                        : "N/A";
+                    // 2. Obtener Nombre del Servicio cruzando el ID
+                    string servicioNombre = "Desconocido";
+                    if (cita.horarioSemanal?.servicio != null && dictServicios.ContainsKey(cita.horarioSemanal.servicio.idServicio))
+                    {
+                        servicioNombre = dictServicios[cita.horarioSemanal.servicio.idServicio];
+                    }
+
+                    // 3. Obtener las horas propias de la cita
+                    string horaInicio = cita.horaInicio ?? "N/A";
+                    string horaFin = cita.horaFin ?? "N/A";
 
                     CitasDataGrid.Rows.Add(
-                        cita.idCita,
                         cita.fecha ?? "N/A",
                         horaInicio,
                         horaFin,
-                        clienteInfo,
-                        servicioInfo,
-                        cita.estado ?? "pendiente"
+                        clienteNombre,
+                        servicioNombre,
+                        cita.estado ?? "pendiente",
+                        cita.idCita // ✅ Se guarda en la columna oculta
                     );
                 }
             }
@@ -92,6 +113,7 @@ namespace PeluqueriaApp
                 return;
             }
 
+            // ✅ Sigue funcionando porque saca el ID de la columna oculta
             int idCita = Convert.ToInt32(CitasDataGrid.SelectedRows[0].Cells["idCita"].Value);
 
             CrearEditarCitaForm editarForm = new CrearEditarCitaForm(idCita);
@@ -122,6 +144,7 @@ namespace PeluqueriaApp
             {
                 try
                 {
+                    // ✅ Sigue funcionando porque saca el ID de la columna oculta
                     int idCita = Convert.ToInt32(CitasDataGrid.SelectedRows[0].Cells["idCita"].Value);
 
                     bool eliminado = await ApiService.DeleteAsync($"api/citas/{idCita}");
@@ -193,9 +216,18 @@ namespace PeluqueriaApp
             this.Hide();
         }
 
+        private void ValoracionForm_Click(object sender, EventArgs e)
+        {
+            ValoracionesForm valoracionform = new ValoracionesForm();
+            valoracionform.Show();
+            this.Hide();
+        }
+
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MiCuentaForm form = new MiCuentaForm();
+            form.Show();
+            this.Hide();
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)

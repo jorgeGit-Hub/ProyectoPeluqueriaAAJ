@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -12,7 +13,7 @@ namespace PeluqueriaApp
         private bool esEdicion = false;
         private List<HorarioDisponible> horariosDisponibles = new List<HorarioDisponible>();
 
-        // ✅ Guardamos el idHorario del slot seleccionado para enviarlo al backend
+        // Guardamos el idHorario del slot base seleccionado para enviarlo al backend
         private int idHorarioSeleccionado = 0;
 
         public CrearEditarCitaForm()
@@ -23,6 +24,8 @@ namespace PeluqueriaApp
             esEdicion = false;
 
             FechaCalendar.SetDate(DateTime.Now);
+            EstadoCombo.SelectedIndex = 0; // pendiente por defecto
+
             CargarClientes();
             CargarServicios();
 
@@ -50,31 +53,19 @@ namespace PeluqueriaApp
         {
             try
             {
-                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
-
+                var clientes = await ApiService.GetAsync<List<ClienteCompleto>>("api/clientes/completos");
                 ClienteCombo.Items.Clear();
-                ClienteCombo.Items.Add("-- Seleccionar Cliente --");
-
-                if (usuarios != null && usuarios.Count > 0)
+                if (clientes != null)
                 {
-                    foreach (var usuario in usuarios)
+                    foreach (var c in clientes)
                     {
-                        if (usuario.rol?.ToLower() == "cliente")
-                        {
-                            ClienteCombo.Items.Add(new ComboItem
-                            {
-                                Text = $"{usuario.nombre} {usuario.apellidos} (ID: {usuario.idUsuario})",
-                                Value = usuario.idUsuario
-                            });
-                        }
+                        ClienteCombo.Items.Add(new ComboItem { Text = $"{c.nombre} {c.apellidos}", Value = c.idUsuario });
                     }
                 }
-
-                ClienteCombo.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar clientes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar clientes: {ex.Message}");
             }
         }
 
@@ -83,33 +74,19 @@ namespace PeluqueriaApp
             try
             {
                 var servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
-
                 ServicioCombo.Items.Clear();
-                ServicioCombo.Items.Add("-- Seleccionar Servicio --");
-
-                if (servicios != null && servicios.Count > 0)
+                if (servicios != null)
                 {
-                    foreach (var servicio in servicios)
+                    foreach (var s in servicios)
                     {
-                        ServicioCombo.Items.Add(new ComboItem
-                        {
-                            Text = $"{servicio.nombre} - {servicio.precio}€",
-                            Value = servicio.idServicio
-                        });
+                        ServicioCombo.Items.Add(new ComboItem { Text = s.nombre, Value = s.idServicio });
                     }
                 }
-
-                ServicioCombo.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar servicios: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar servicios: {ex.Message}");
             }
-        }
-
-        private void ServicioCombo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            CargarHorariosDisponibles();
         }
 
         private void FechaCalendar_DateChanged(object sender, DateRangeEventArgs e)
@@ -117,236 +94,69 @@ namespace PeluqueriaApp
             CargarHorariosDisponibles();
         }
 
+        private void ServicioCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CargarHorariosDisponibles();
+        }
+
         private async void CargarHorariosDisponibles()
         {
-            HorariosListBox.Items.Clear();
-            horariosDisponibles.Clear();
-            idHorarioSeleccionado = 0;
+            if (ServicioCombo.SelectedItem == null) return;
 
-            if (ServicioCombo.SelectedIndex <= 0)
-            {
-                HorariosListBox.Items.Add("Selecciona un servicio para ver horarios disponibles");
-                return;
-            }
+            int idServ = ((ComboItem)ServicioCombo.SelectedItem).Value;
+            DateTime fechaSelec = FechaCalendar.SelectionStart;
+            string diaSemana = TraducirDia(fechaSelec.DayOfWeek);
 
             try
             {
-                var servicioSeleccionado = (ComboItem)ServicioCombo.SelectedItem;
-                DateTime fechaSeleccionada = FechaCalendar.SelectionStart;
-                string diaSemana = ObtenerDiaSemana(fechaSeleccionada);
-                string diaNombre = ObtenerNombreDia(fechaSeleccionada);
+                var horarios = await ApiService.GetAsync<List<HorarioSemanal>>($"api/horarios/servicio/{idServ}");
+                var horariosDelDia = horarios?.Where(h => h.diaSemana?.ToLower() == diaSemana).ToList();
 
-                // ✅ Los horarios ya incluyen idHorario, servicio y grupo
-                var horarios = await ApiService.GetAsync<List<HorarioSemanal>>(
-                    $"api/horarios/servicio/{servicioSeleccionado.Value}/dia/{diaSemana}"
-                );
+                HorariosListBox.Items.Clear();
+                horariosDisponibles.Clear();
 
-                if (horarios == null || horarios.Count == 0)
+                if (horariosDelDia != null)
                 {
-                    HorariosListBox.Items.Add($"⚠️  No hay horarios disponibles para {diaNombre}");
-                    return;
-                }
-
-                // Obtener duración del servicio
-                var servicio = await ApiService.GetAsync<Servicio>($"api/servicios/{servicioSeleccionado.Value}");
-                int duracionMinutos = ParsearDuracion(servicio?.tiempoCliente);
-
-                foreach (var horario in horarios)
-                {
-                    GenerarSlotsDeHorario(horario, duracionMinutos, fechaSeleccionada);
-                }
-
-                if (horariosDisponibles.Count == 0)
-                {
-                    HorariosListBox.Items.Add("⚠️  No hay slots disponibles para este día");
-                }
-                else
-                {
-                    HorariosListBox.Items.Add($"✓ {horariosDisponibles.Count} horarios disponibles para {diaNombre}:");
-                    HorariosListBox.Items.Add("");
-
-                    foreach (var slot in horariosDisponibles)
+                    foreach (var h in horariosDelDia)
                     {
-                        HorariosListBox.Items.Add(slot);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                HorariosListBox.Items.Add($"Error al cargar horarios: {ex.Message}");
-            }
-        }
-
-        private void GenerarSlotsDeHorario(HorarioSemanal horario, int duracionMinutos, DateTime fecha)
-        {
-            try
-            {
-                TimeSpan horaInicio = TimeSpan.Parse(horario.horaInicio);
-                TimeSpan horaFin = TimeSpan.Parse(horario.horaFin);
-                TimeSpan duracion = TimeSpan.FromMinutes(duracionMinutos);
-
-                TimeSpan horaActual = horaInicio;
-
-                while (horaActual.Add(duracion) <= horaFin)
-                {
-                    TimeSpan horaFinSlot = horaActual.Add(duracion);
-
-                    horariosDisponibles.Add(new HorarioDisponible
-                    {
-                        IdHorario = horario.idHorario,   // ✅ Guardamos el idHorario
-                        HoraInicio = horaActual.ToString(@"hh\:mm\:ss"),
-                        HoraFin = horaFinSlot.ToString(@"hh\:mm\:ss"),
-                        Fecha = fecha,
-                        DisplayText = $"🕐 {horaActual:hh\\:mm} - {horaFinSlot:hh\\:mm}"
-                    });
-
-                    horaActual = horaActual.Add(duracion);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error generando slots: {ex.Message}");
-            }
-        }
-
-        private int ParsearDuracion(string tiempoCliente)
-        {
-            if (string.IsNullOrEmpty(tiempoCliente))
-                return 60;
-
-            try
-            {
-                tiempoCliente = tiempoCliente.Trim().ToLower();
-
-                if (tiempoCliente.Contains("h"))
-                {
-                    string numero = tiempoCliente.Replace("h", "").Replace(",", ".").Trim();
-                    double horas = double.Parse(numero, System.Globalization.CultureInfo.InvariantCulture);
-                    return (int)(horas * 60);
-                }
-                else if (tiempoCliente.Contains("min"))
-                {
-                    string numero = tiempoCliente.Replace("min", "").Trim();
-                    return int.Parse(numero);
-                }
-                else if (tiempoCliente.Contains("'"))
-                {
-                    string numero = tiempoCliente.Replace("'", "").Trim();
-                    return int.Parse(numero);
-                }
-                else
-                {
-                    return int.Parse(tiempoCliente);
-                }
-            }
-            catch
-            {
-                return 60;
-            }
-        }
-
-        private async void GuardarBtn_Click(object sender, EventArgs e)
-        {
-            if (ClienteCombo.SelectedIndex <= 0)
-            {
-                MessageBox.Show("Debes seleccionar un cliente", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ClienteCombo.Focus();
-                return;
-            }
-
-            if (ServicioCombo.SelectedIndex <= 0)
-            {
-                MessageBox.Show("Debes seleccionar un servicio", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ServicioCombo.Focus();
-                return;
-            }
-
-            if (HorariosListBox.SelectedIndex < 0)
-            {
-                MessageBox.Show("Debes seleccionar un horario de la lista", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                HorariosListBox.Focus();
-                return;
-            }
-
-            var horarioSeleccionado = HorariosListBox.SelectedItem as HorarioDisponible;
-            if (horarioSeleccionado == null)
-            {
-                MessageBox.Show("Por favor selecciona un horario válido", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (EstadoCombo.SelectedItem == null)
-            {
-                MessageBox.Show("Debes seleccionar un estado", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                EstadoCombo.Focus();
-                return;
-            }
-
-            GuardarBtn.Enabled = false;
-            GuardarBtn.Text = "Guardando...";
-
-            try
-            {
-                var clienteSeleccionado = (ComboItem)ClienteCombo.SelectedItem;
-
-                // ✅ ACTUALIZADO: Cita ahora usa horarioSemanal en lugar de horaInicio/horaFin/servicio
-                var cita = new Cita
-                {
-                    fecha = horarioSeleccionado.Fecha.ToString("yyyy-MM-dd"),
-                    estado = EstadoCombo.SelectedItem.ToString().ToLower(),
-                    cliente = new ClienteSimple { idUsuario = clienteSeleccionado.Value },
-                    horarioSemanal = new HorarioSemanal { idHorario = horarioSeleccionado.IdHorario }
-                };
-
-                if (esEdicion)
-                {
-                    cita.idCita = idCita.Value;
-                    await ApiService.PutAsync<Cita>($"api/citas/{idCita.Value}", cita);
-                    MessageBox.Show("Cita actualizada correctamente", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    await ApiService.PostAsync<Cita>("api/citas", cita);
-                    MessageBox.Show("Cita creada correctamente", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-            catch (Exception ex)
-            {
-                string mensaje = ex.Message;
-
-                if (mensaje.Contains("error"))
-                {
-                    try
-                    {
-                        int startIndex = mensaje.IndexOf("{\"error\":");
-                        if (startIndex >= 0)
+                        // ✅ FIX: GetValueOrDefault() para extraer el número del int? de forma segura
+                        var hd = new HorarioDisponible
                         {
-                            string jsonPart = mensaje.Substring(startIndex);
-                            var errorObj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonPart);
-                            if (errorObj != null && errorObj.ContainsKey("error"))
-                            {
-                                mensaje = errorObj["error"];
-                            }
-                        }
+                            IdHorario = h.idHorario.GetValueOrDefault(),
+                            HoraInicio = h.horaInicio,
+                            HoraFin = h.horaFin,
+                            DisplayText = $"{h.horaInicio} a {h.horaFin} (Grupo ID: {h.grupo?.idGrupo})"
+                        };
+                        HorariosListBox.Items.Add(hd);
+                        horariosDisponibles.Add(hd);
                     }
-                    catch { }
                 }
-
-                MessageBox.Show($"Error al guardar:\n\n{mensaje}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
+            catch (Exception ex)
             {
-                GuardarBtn.Enabled = true;
-                GuardarBtn.Text = "💾 Guardar";
+                MessageBox.Show($"Error al cargar horarios: {ex.Message}");
             }
         }
 
-        private string ObtenerDiaSemana(DateTime fecha)
+        // AUTOCOMPLETAR HORAS: Cuando selecciona un bloque horario base, ponemos sus horas en los campos
+        private void HorariosListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (fecha.DayOfWeek)
+            if (HorariosListBox.SelectedItem is HorarioDisponible seleccionado)
+            {
+                idHorarioSeleccionado = seleccionado.IdHorario;
+
+                // Rellenar las horas si están vacías, para ayudar al usuario
+                if (string.IsNullOrWhiteSpace(HoraInicioTxt.Text))
+                    HoraInicioTxt.Text = seleccionado.HoraInicio;
+
+                if (string.IsNullOrWhiteSpace(HoraFinTxt.Text))
+                    HoraFinTxt.Text = seleccionado.HoraFin;
+            }
+        }
+
+        private string TraducirDia(DayOfWeek day)
+        {
+            switch (day)
             {
                 case DayOfWeek.Monday: return "lunes";
                 case DayOfWeek.Tuesday: return "martes";
@@ -359,18 +169,75 @@ namespace PeluqueriaApp
             }
         }
 
-        private string ObtenerNombreDia(DateTime fecha)
+        private async void GuardarBtn_Click(object sender, EventArgs e)
         {
-            switch (fecha.DayOfWeek)
+            // Validaciones
+            if (ClienteCombo.SelectedItem == null)
             {
-                case DayOfWeek.Monday: return "lunes";
-                case DayOfWeek.Tuesday: return "martes";
-                case DayOfWeek.Wednesday: return "miércoles";
-                case DayOfWeek.Thursday: return "jueves";
-                case DayOfWeek.Friday: return "viernes";
-                case DayOfWeek.Saturday: return "sábado";
-                case DayOfWeek.Sunday: return "domingo";
-                default: return "";
+                MessageBox.Show("Debes seleccionar un cliente.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (ServicioCombo.SelectedItem == null)
+            {
+                MessageBox.Show("Debes seleccionar un servicio.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (idHorarioSeleccionado == 0)
+            {
+                MessageBox.Show("Debes seleccionar un turno semanal base de la lista.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(HoraInicioTxt.Text) || string.IsNullOrWhiteSpace(HoraFinTxt.Text))
+            {
+                MessageBox.Show("Debe especificar la Hora de Inicio y Fin de la cita.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string hInicioStr = HoraInicioTxt.Text.Trim();
+            string hFinStr = HoraFinTxt.Text.Trim();
+
+            // Aseguramos formato HH:mm:ss requerido por el backend (LocalTime)
+            if (hInicioStr.Length == 5) hInicioStr += ":00";
+            if (hFinStr.Length == 5) hFinStr += ":00";
+
+            GuardarBtn.Enabled = false;
+            GuardarBtn.Text = "Guardando...";
+
+            try
+            {
+                var citaPayload = new Cita
+                {
+                    fecha = FechaCalendar.SelectionStart.ToString("yyyy-MM-dd"),
+                    horaInicio = hInicioStr,
+                    horaFin = hFinStr,
+                    estado = EstadoCombo.SelectedItem?.ToString() ?? "pendiente",
+                    cliente = new ClienteSimple { idUsuario = ((ComboItem)ClienteCombo.SelectedItem).Value },
+                    horarioSemanal = new HorarioSemanal { idHorario = idHorarioSeleccionado }
+                };
+
+                if (esEdicion && idCita.HasValue)
+                {
+                    await ApiService.PutAsync<Cita>($"api/citas/{idCita.Value}", citaPayload);
+                    MessageBox.Show("Cita actualizada correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    await ApiService.PostAsync<Cita>("api/citas", citaPayload);
+                    MessageBox.Show("Cita creada correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al guardar cita: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                GuardarBtn.Enabled = true;
+                GuardarBtn.Text = "💾 Guardar Cita";
             }
         }
 
@@ -379,109 +246,87 @@ namespace PeluqueriaApp
             try
             {
                 var cita = await ApiService.GetAsync<Cita>($"api/citas/{id}");
+                if (cita == null) return;
 
-                // Cargar fecha
-                if (!string.IsNullOrEmpty(cita.fecha))
+                if (DateTime.TryParse(cita.fecha, out DateTime fechaCita))
                 {
-                    FechaCalendar.SetDate(DateTime.Parse(cita.fecha));
+                    FechaCalendar.SetDate(fechaCita);
                 }
 
-                // Seleccionar estado
-                if (!string.IsNullOrEmpty(cita.estado))
-                {
-                    string estadoCapitalizado = char.ToUpper(cita.estado[0]) + cita.estado.Substring(1).ToLower();
-                    EstadoCombo.SelectedItem = estadoCapitalizado;
-                }
+                // Cargar horas
+                HoraInicioTxt.Text = cita.horaInicio;
+                HoraFinTxt.Text = cita.horaFin;
 
-                // Seleccionar cliente
                 if (cita.cliente != null)
                 {
-                    for (int i = 1; i < ClienteCombo.Items.Count; i++)
+                    foreach (ComboItem item in ClienteCombo.Items)
                     {
-                        var item = (ComboItem)ClienteCombo.Items[i];
                         if (item.Value == cita.cliente.idUsuario)
                         {
-                            ClienteCombo.SelectedIndex = i;
+                            ClienteCombo.SelectedItem = item;
                             break;
                         }
                     }
                 }
 
-                // ✅ ACTUALIZADO: Seleccionar servicio desde horarioSemanal
-                if (cita.horarioSemanal?.servicio != null)
+                if (!string.IsNullOrEmpty(cita.estado))
                 {
-                    for (int i = 1; i < ServicioCombo.Items.Count; i++)
+                    foreach (string item in EstadoCombo.Items)
                     {
-                        var item = (ComboItem)ServicioCombo.Items[i];
-                        if (item.Value == cita.horarioSemanal.servicio.idServicio)
+                        if (item.ToLower() == cita.estado.ToLower())
                         {
-                            ServicioCombo.SelectedIndex = i;
+                            EstadoCombo.SelectedItem = item;
                             break;
                         }
                     }
                 }
 
-                // Esperar a que se carguen los horarios y seleccionar el correcto
-                await System.Threading.Tasks.Task.Delay(500);
-
-                // ✅ ACTUALIZADO: Buscar el slot que coincida con el idHorario de la cita
-                for (int i = 0; i < HorariosListBox.Items.Count; i++)
+                // ✅ FIX: Comprobación segura y uso del .Value para el int nullable
+                if (cita.horarioSemanal != null && cita.horarioSemanal.idHorario != null && cita.horarioSemanal.idHorario != 0)
                 {
-                    var item = HorariosListBox.Items[i] as HorarioDisponible;
-                    if (item != null && cita.horarioSemanal != null && item.IdHorario == cita.horarioSemanal.idHorario)
+                    idHorarioSeleccionado = cita.horarioSemanal.idHorario.Value;
+
+                    var horario = await ApiService.GetAsync<HorarioSemanal>($"api/horarios/{idHorarioSeleccionado}");
+                    if (horario != null && horario.servicio != null)
                     {
-                        HorariosListBox.SelectedIndex = i;
-                        break;
+                        foreach (ComboItem item in ServicioCombo.Items)
+                        {
+                            if (item.Value == horario.servicio.idServicio)
+                            {
+                                ServicioCombo.SelectedItem = item;
+                                break;
+                            }
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar datos de la cita: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar datos de la cita: {ex.Message}");
             }
         }
 
         private void CancelarBtn_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres cancelar? Se perderán los cambios no guardados.",
-                "Confirmar",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            );
-
-            if (result == DialogResult.Yes)
-            {
-                this.DialogResult = DialogResult.Cancel;
-                this.Close();
-            }
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
         }
 
-        // Clase auxiliar para ComboBox
+        // Clases auxiliares
         private class ComboItem
         {
             public string Text { get; set; }
             public int Value { get; set; }
-
-            public override string ToString()
-            {
-                return Text;
-            }
+            public override string ToString() => Text;
         }
 
-        // ✅ ACTUALIZADO: HorarioDisponible ahora guarda IdHorario
         private class HorarioDisponible
         {
             public int IdHorario { get; set; }
             public string HoraInicio { get; set; }
             public string HoraFin { get; set; }
-            public DateTime Fecha { get; set; }
             public string DisplayText { get; set; }
-
-            public override string ToString()
-            {
-                return DisplayText;
-            }
+            public override string ToString() => DisplayText;
         }
     }
 }

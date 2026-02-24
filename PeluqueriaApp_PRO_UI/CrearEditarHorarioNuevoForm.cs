@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
@@ -11,18 +12,16 @@ namespace PeluqueriaApp
         private int? idHorario = null;
         private bool esEdicion = false;
 
-        // Constructor para CREAR
         public CrearEditarHorarioNuevoForm()
         {
             InitializeComponent();
             this.Text = "Crear Horario Semanal";
             TituloLbl.Text = "Crear Horario Semanal";
             esEdicion = false;
-            CargarServicios();
-            CargarGrupos();
+
+            _ = CargarListasAsync();
         }
 
-        // Constructor para EDITAR
         public CrearEditarHorarioNuevoForm(int idHorario)
         {
             InitializeComponent();
@@ -30,51 +29,38 @@ namespace PeluqueriaApp
             this.Text = "Editar Horario Semanal";
             TituloLbl.Text = "Editar Horario Semanal";
             esEdicion = true;
-            CargarServicios();
-            CargarGrupos();
-            CargarDatosHorario(idHorario);
+
+            CargarListasYDatos(idHorario);
         }
 
-        private async void CargarServicios()
+        private async Task CargarListasAsync()
         {
             try
             {
                 var servicios = await ApiService.GetAsync<List<Servicio>>("api/servicios");
                 ServicioCombo.Items.Clear();
-                ServicioCombo.Items.Add(new ComboItem("-- Sin servicio --", 0));
-
                 if (servicios != null)
-                    foreach (var s in servicios)
-                        ServicioCombo.Items.Add(new ComboItem($"{s.nombre} (ID: {s.idServicio})", s.idServicio));
+                {
+                    foreach (var s in servicios) ServicioCombo.Items.Add(new ComboItem(s.nombre, s.idServicio));
+                }
 
-                ServicioCombo.SelectedIndex = 0;
+                var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
+                GrupoCombo.Items.Clear();
+                if (grupos != null)
+                {
+                    foreach (var g in grupos) GrupoCombo.Items.Add(new ComboItem($"{g.curso} ({g.turno})", g.idGrupo));
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar servicios: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar listas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private async void CargarGrupos()
+        private async void CargarListasYDatos(int id)
         {
-            try
-            {
-                var grupos = await ApiService.GetAsync<List<Grupo>>("api/grupos");
-                GrupoCombo.Items.Clear();
-                GrupoCombo.Items.Add(new ComboItem("-- Sin grupo --", 0));
-
-                if (grupos != null)
-                    foreach (var g in grupos)
-                        GrupoCombo.Items.Add(new ComboItem($"{g.curso} - {g.turno} (ID: {g.idGrupo})", g.idGrupo));
-
-                GrupoCombo.SelectedIndex = 0;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al cargar grupos: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            await CargarListasAsync();
+            CargarDatosHorario(id);
         }
 
         private async void CargarDatosHorario(int id)
@@ -82,45 +68,42 @@ namespace PeluqueriaApp
             try
             {
                 var horario = await ApiService.GetAsync<HorarioSemanal>($"api/horarios/{id}");
+                if (horario == null) return;
 
-                // Seleccionar día
                 if (!string.IsNullOrEmpty(horario.diaSemana))
                 {
-                    string dia = horario.diaSemana.ToLower();
-                    for (int i = 0; i < DiaCombo.Items.Count; i++)
+                    foreach (string item in DiaCombo.Items)
                     {
-                        if (DiaCombo.Items[i].ToString().ToLower() == dia)
+                        if (item.ToLower() == horario.diaSemana.ToLower())
                         {
-                            DiaCombo.SelectedIndex = i;
+                            DiaCombo.SelectedItem = item;
                             break;
                         }
                     }
                 }
 
-                HoraInicioTxt.Text = horario.horaInicio ?? "";
-                HoraFinTxt.Text = horario.horaFin ?? "";
+                HoraInicioTxt.Text = horario.horaInicio;
+                HoraFinTxt.Text = horario.horaFin;
 
-                // Seleccionar servicio
                 if (horario.servicio != null)
                 {
-                    for (int i = 0; i < ServicioCombo.Items.Count; i++)
+                    foreach (ComboItem item in ServicioCombo.Items)
                     {
-                        if (ServicioCombo.Items[i] is ComboItem item && item.Id == horario.servicio.idServicio)
+                        if (item.Id == horario.servicio.idServicio)
                         {
-                            ServicioCombo.SelectedIndex = i;
+                            ServicioCombo.SelectedItem = item;
                             break;
                         }
                     }
                 }
 
-                // Seleccionar grupo
                 if (horario.grupo != null)
                 {
-                    for (int i = 0; i < GrupoCombo.Items.Count; i++)
+                    foreach (ComboItem item in GrupoCombo.Items)
                     {
-                        if (GrupoCombo.Items[i] is ComboItem item && item.Id == horario.grupo.idGrupo)
+                        if (item.Id == horario.grupo.idGrupo)
                         {
-                            GrupoCombo.SelectedIndex = i;
+                            GrupoCombo.SelectedItem = item;
                             break;
                         }
                     }
@@ -128,63 +111,60 @@ namespace PeluqueriaApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar datos del horario: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar datos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private async void GuardarBtn_Click(object sender, EventArgs e)
         {
-            if (DiaCombo.SelectedItem == null || DiaCombo.SelectedIndex == -1)
+            // 🚨 ESCUDO 1: Comprobación estricta del Token
+            if (string.IsNullOrEmpty(ApiService.Token))
             {
-                MessageBox.Show("Debes seleccionar un día de la semana", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("❌ Tu sesión de seguridad (Token) está vacía o se ha perdido.\n\nPor favor, cierra sesión en el menú lateral, vuelve a iniciar sesión e inténtalo de nuevo.", "Sesión Inválida", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(HoraInicioTxt.Text))
+            if (DiaCombo.SelectedItem == null || string.IsNullOrWhiteSpace(HoraInicioTxt.Text) || string.IsNullOrWhiteSpace(HoraFinTxt.Text) || ServicioCombo.SelectedItem == null || GrupoCombo.SelectedItem == null)
             {
-                MessageBox.Show("La hora de inicio es obligatoria (formato HH:mm:ss)", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Por favor, rellena todos los campos.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(HoraFinTxt.Text))
-            {
-                MessageBox.Show("La hora de fin es obligatoria (formato HH:mm:ss)", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            string hInicioStr = HoraInicioTxt.Text.Trim();
+            string hFinStr = HoraFinTxt.Text.Trim();
+
+            // Formatear la hora de forma segura para Spring Boot
+            if (hInicioStr.Length == 5) hInicioStr += ":00";
+            if (hFinStr.Length == 5) hFinStr += ":00";
 
             GuardarBtn.Enabled = false;
             GuardarBtn.Text = "Guardando...";
 
             try
             {
-                // Construir objeto del horario
-                int idServicioSel = (ServicioCombo.SelectedItem is ComboItem si) ? si.Id : 0;
-                int idGrupoSel = (GrupoCombo.SelectedItem is ComboItem gi) ? gi.Id : 0;
+                int idServicioSeleccionado = ((ComboItem)ServicioCombo.SelectedItem).Id;
+                int idGrupoSeleccionado = ((ComboItem)GrupoCombo.SelectedItem).Id;
 
+                // 🚨 ESCUDO 2: JSON Blindado
+                // Usamos un objeto anónimo puro para asegurarnos de que los JsonConverters no rompen el envío
                 var horarioData = new
                 {
-                    servicio = idServicioSel > 0 ? new { idServicio = idServicioSel } : (object)null,
-                    grupo = idGrupoSel > 0 ? new { idGrupo = idGrupoSel } : (object)null,
-                    diaSemana = DiaCombo.SelectedItem.ToString().ToLower(),
-                    horaInicio = HoraInicioTxt.Text.Trim(),
-                    horaFin = HoraFinTxt.Text.Trim()
+                    diaSemana = DiaCombo.SelectedItem.ToString().ToLower(), // Lo enviamos en minúscula
+                    horaInicio = hInicioStr,
+                    horaFin = hFinStr,
+                    servicio = new { idServicio = idServicioSeleccionado },
+                    grupo = new { idGrupo = idGrupoSeleccionado }
                 };
 
-                if (esEdicion)
+                if (esEdicion && idHorario.HasValue)
                 {
                     await ApiService.PutAsync<object>($"api/horarios/{idHorario.Value}", horarioData);
-                    MessageBox.Show("Horario actualizado correctamente", "Éxito",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Horario actualizado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
                     await ApiService.PostAsync<object>("api/horarios", horarioData);
-                    MessageBox.Show("Horario creado correctamente", "Éxito",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Horario creado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 this.DialogResult = DialogResult.OK;
@@ -192,8 +172,7 @@ namespace PeluqueriaApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al guardar el horario:\n\n{ex.Message}", "Error del Servidor", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -204,26 +183,18 @@ namespace PeluqueriaApp
 
         private void CancelarBtn_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("¿Estás seguro de que quieres cancelar?",
-                "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show("¿Seguro que quieres cancelar?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
             }
         }
 
-        // Clase auxiliar para los ComboBox con ID
         private class ComboItem
         {
             public string Texto { get; }
             public int Id { get; }
-
-            public ComboItem(string texto, int id)
-            {
-                Texto = texto;
-                Id = id;
-            }
-
+            public ComboItem(string texto, int id) { Texto = texto; Id = id; }
             public override string ToString() => Texto;
         }
     }

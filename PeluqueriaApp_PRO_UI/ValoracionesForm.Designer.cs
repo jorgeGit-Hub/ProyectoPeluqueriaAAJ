@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace PeluqueriaApp
 {
-    partial class ClientesForm
+    partial class ValoracionesForm
     {
         private Panel LateralPanel;
         private Panel CapcaleraPanel;
@@ -22,13 +22,11 @@ namespace PeluqueriaApp
         private Button MiCuentaBoto;
         private Button TancarSessioBoto;
         private Label TitolPaginaLbl;
-        private TextBox BuscarClientesTxt;
-        private Button BuscarBtn;
-        private Button CrearClienteBtn;
-        private DataGridView ClientesDataGrid;
+        private ComboBox FiltroPuntuacionCombo;
+        private Button CrearValoracionBtn;
+        private DataGridView ValoracionesDataGrid;
         private Button EditarBtn;
         private Button EliminarBtn;
-        private ComboBox FiltroBusquedaCombo;
 
         private void InitializeComponent()
         {
@@ -43,25 +41,23 @@ namespace PeluqueriaApp
             this.ClientesBoto = new Button();
             this.CitasBoto = new Button();
             this.GruposBoto = new Button();
-            this.HorarioSemanalBoto = new Button();
             this.HorarioBoto = new Button();
+            this.HorarioSemanalBoto = new Button();
             this.ValoracionesBoto = new Button();
             this.MiCuentaBoto = new Button();
             this.TancarSessioBoto = new Button();
             this.TitolPaginaLbl = new Label();
-            this.BuscarClientesTxt = new TextBox();
-            this.BuscarBtn = new Button();
-            this.CrearClienteBtn = new Button();
-            this.ClientesDataGrid = new DataGridView();
+            this.FiltroPuntuacionCombo = new ComboBox();
+            this.CrearValoracionBtn = new Button();
+            this.ValoracionesDataGrid = new DataGridView();
             this.EditarBtn = new Button();
             this.EliminarBtn = new Button();
-            this.FiltroBusquedaCombo = new ComboBox();
 
-            ((System.ComponentModel.ISupportInitialize)(this.ClientesDataGrid)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ValoracionesDataGrid)).BeginInit();
 
             this.ClientSize = new Size(1400, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "Peluquería Escola - Clientes";
+            this.Text = "Peluquería Escola - Valoraciones";
             this.BackColor = Color.FromArgb(250, 245, 240);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -118,9 +114,9 @@ namespace PeluqueriaApp
             this.UsuariosBoto.Click += new System.EventHandler(this.UsuariosBoto_Click);
 
             this.ClientesBoto.Text = "👤  Clientes";
-            this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.ClientesBoto.ForeColor = Color.White;
-            this.ClientesBoto.BackColor = Color.FromArgb(255, 140, 0);
+            this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.ClientesBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            this.ClientesBoto.BackColor = Color.FromArgb(45, 35, 30);
             this.ClientesBoto.FlatStyle = FlatStyle.Flat;
             this.ClientesBoto.FlatAppearance.BorderSize = 0;
             this.ClientesBoto.Size = new Size(240, 45);
@@ -128,6 +124,7 @@ namespace PeluqueriaApp
             this.ClientesBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.ClientesBoto.Padding = new Padding(20, 0, 0, 0);
             this.ClientesBoto.Cursor = Cursors.Hand;
+            this.ClientesBoto.Click += new System.EventHandler(this.ClientesBoto_Click);
 
             this.CitasBoto.Text = "📅  Citas";
             this.CitasBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
@@ -182,9 +179,9 @@ namespace PeluqueriaApp
             this.HorarioSemanalBoto.Click += new System.EventHandler(this.HorarioSemanalBoto_Click);
 
             this.ValoracionesBoto.Text = "⭐  Valoraciones";
-            this.ValoracionesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.ValoracionesBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.ValoracionesBoto.BackColor = Color.FromArgb(45, 35, 30);
+            this.ValoracionesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.ValoracionesBoto.ForeColor = Color.White;
+            this.ValoracionesBoto.BackColor = Color.FromArgb(255, 140, 0);
             this.ValoracionesBoto.FlatStyle = FlatStyle.Flat;
             this.ValoracionesBoto.FlatAppearance.BorderSize = 0;
             this.ValoracionesBoto.Size = new Size(240, 45);
@@ -192,7 +189,6 @@ namespace PeluqueriaApp
             this.ValoracionesBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.ValoracionesBoto.Padding = new Padding(20, 0, 0, 0);
             this.ValoracionesBoto.Cursor = Cursors.Hand;
-            this.ValoracionesBoto.Click += new System.EventHandler(this.ValoracionForm_Click);
 
             this.MiCuentaBoto.Text = "⚙️  Mi Cuenta";
             this.MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
@@ -224,8 +220,10 @@ namespace PeluqueriaApp
             this.CapcaleraPanel.Dock = DockStyle.Top;
             this.CapcaleraPanel.Height = 80;
             this.CapcaleraPanel.BackColor = Color.White;
+            this.CapcaleraPanel.Controls.Add(this.TitolAppLbl);
+            this.CapcaleraPanel.Controls.Add(this.BienvenidaLbl);
 
-            this.TitolAppLbl.Text = "Gestión de Clientes";
+            this.TitolAppLbl.Text = "Gestión de Valoraciones";
             this.TitolAppLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolAppLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolAppLbl.AutoSize = true;
@@ -238,75 +236,57 @@ namespace PeluqueriaApp
             this.BienvenidaLbl.Location = new Point(1050, 30);
             this.BienvenidaLbl.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
-            this.TitolPaginaLbl.Text = "Administrar Clientes";
+            this.TitolPaginaLbl.Text = "Administrar Valoraciones";
             this.TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolPaginaLbl.AutoSize = true;
             this.TitolPaginaLbl.Location = new Point(290, 110);
 
-            this.FiltroBusquedaCombo.Name = "FiltroBusquedaCombo";
-            this.FiltroBusquedaCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.FiltroBusquedaCombo.Size = new Size(150, 32);
-            this.FiltroBusquedaCombo.Location = new Point(290, 160);
-            this.FiltroBusquedaCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.FiltroBusquedaCombo.BackColor = Color.White;
-            this.FiltroBusquedaCombo.Items.AddRange(new object[] { "Nombre", "Teléfono", "Email", "Dirección" });
-            this.FiltroBusquedaCombo.SelectedIndex = 0;
+            this.FiltroPuntuacionCombo.Name = "FiltroPuntuacionCombo";
+            this.FiltroPuntuacionCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.FiltroPuntuacionCombo.Size = new Size(200, 32);
+            this.FiltroPuntuacionCombo.Location = new Point(290, 160);
+            this.FiltroPuntuacionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.FiltroPuntuacionCombo.BackColor = Color.White;
+            this.FiltroPuntuacionCombo.Items.AddRange(new object[] { "Todas", "5 estrellas", "4+ estrellas", "3+ estrellas" });
+            this.FiltroPuntuacionCombo.SelectedIndex = 0;
+            this.FiltroPuntuacionCombo.SelectedIndexChanged += new System.EventHandler(this.FiltroPuntuacionCombo_SelectedIndexChanged);
 
-            this.BuscarClientesTxt.Name = "BuscarClientesTxt";
-            this.BuscarClientesTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.BuscarClientesTxt.Size = new Size(400, 32);
-            this.BuscarClientesTxt.Location = new Point(450, 160);
-            this.BuscarClientesTxt.BorderStyle = BorderStyle.FixedSingle;
-            this.BuscarClientesTxt.BackColor = Color.White;
-            this.BuscarClientesTxt.ForeColor = Color.FromArgb(45, 35, 30);
+            this.CrearValoracionBtn.Text = "➕ Nueva Valoración";
+            this.CrearValoracionBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CrearValoracionBtn.Size = new Size(220, 40);
+            this.CrearValoracionBtn.Location = new Point(1140, 157);
+            this.CrearValoracionBtn.BackColor = Color.FromArgb(139, 90, 60);
+            this.CrearValoracionBtn.ForeColor = Color.White;
+            this.CrearValoracionBtn.FlatStyle = FlatStyle.Flat;
+            this.CrearValoracionBtn.FlatAppearance.BorderSize = 0;
+            this.CrearValoracionBtn.Cursor = Cursors.Hand;
+            this.CrearValoracionBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.CrearValoracionBtn.Click += new System.EventHandler(this.CrearValoracionBtn_Click);
 
-            this.BuscarBtn.Text = "🔍 Buscar";
-            this.BuscarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.BuscarBtn.Size = new Size(120, 32);
-            this.BuscarBtn.Location = new Point(860, 160);
-            this.BuscarBtn.BackColor = Color.FromArgb(255, 140, 0);
-            this.BuscarBtn.ForeColor = Color.White;
-            this.BuscarBtn.FlatStyle = FlatStyle.Flat;
-            this.BuscarBtn.FlatAppearance.BorderSize = 0;
-            this.BuscarBtn.Cursor = Cursors.Hand;
-            this.BuscarBtn.Click += new System.EventHandler(this.BuscarBtn_Click);
-
-            this.CrearClienteBtn.Text = "➕ Crear Cliente";
-            this.CrearClienteBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.CrearClienteBtn.Size = new Size(180, 40);
-            this.CrearClienteBtn.Location = new Point(1150, 157);
-            this.CrearClienteBtn.BackColor = Color.FromArgb(139, 90, 60);
-            this.CrearClienteBtn.ForeColor = Color.White;
-            this.CrearClienteBtn.FlatStyle = FlatStyle.Flat;
-            this.CrearClienteBtn.FlatAppearance.BorderSize = 0;
-            this.CrearClienteBtn.Cursor = Cursors.Hand;
-            this.CrearClienteBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            this.CrearClienteBtn.Click += new System.EventHandler(this.CrearClienteBtn_Click);
-
-            this.ClientesDataGrid.Name = "ClientesDataGrid";
-            this.ClientesDataGrid.Location = new Point(290, 220);
-            this.ClientesDataGrid.Size = new Size(1070, 440);
-            this.ClientesDataGrid.ScrollBars = ScrollBars.Both;
-            this.ClientesDataGrid.BackgroundColor = Color.White;
-            this.ClientesDataGrid.BorderStyle = BorderStyle.None;
-            this.ClientesDataGrid.GridColor = Color.FromArgb(240, 240, 240);
-            this.ClientesDataGrid.DefaultCellStyle.BackColor = Color.White;
-            this.ClientesDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ClientesDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
-            this.ClientesDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
-            this.ClientesDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            this.ClientesDataGrid.EnableHeadersVisualStyles = false;
-            this.ClientesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            this.ClientesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.ClientesDataGrid.MultiSelect = false;
-            this.ClientesDataGrid.ReadOnly = true;
-            this.ClientesDataGrid.AllowUserToAddRows = false;
-            this.ClientesDataGrid.AllowUserToDeleteRows = false;
+            this.ValoracionesDataGrid.Name = "ValoracionesDataGrid";
+            this.ValoracionesDataGrid.Location = new Point(290, 220);
+            this.ValoracionesDataGrid.Size = new Size(1070, 440);
+            this.ValoracionesDataGrid.ScrollBars = ScrollBars.Both;
+            this.ValoracionesDataGrid.BackgroundColor = Color.White;
+            this.ValoracionesDataGrid.BorderStyle = BorderStyle.None;
+            this.ValoracionesDataGrid.GridColor = Color.FromArgb(240, 240, 240);
+            this.ValoracionesDataGrid.DefaultCellStyle.BackColor = Color.White;
+            this.ValoracionesDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
+            this.ValoracionesDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
+            this.ValoracionesDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
+            this.ValoracionesDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
+            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
+            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.ValoracionesDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            this.ValoracionesDataGrid.EnableHeadersVisualStyles = false;
+            this.ValoracionesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            this.ValoracionesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.ValoracionesDataGrid.MultiSelect = false;
+            this.ValoracionesDataGrid.ReadOnly = true;
+            this.ValoracionesDataGrid.AllowUserToAddRows = false;
+            this.ValoracionesDataGrid.AllowUserToDeleteRows = false;
 
             this.EditarBtn.Text = "✏️ Editar";
             this.EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
@@ -343,21 +323,16 @@ namespace PeluqueriaApp
             this.LateralPanel.Controls.Add(this.MiCuentaBoto);
             this.LateralPanel.Controls.Add(this.TancarSessioBoto);
 
-            this.CapcaleraPanel.Controls.Add(this.TitolAppLbl);
-            this.CapcaleraPanel.Controls.Add(this.BienvenidaLbl);
-
             this.Controls.Add(this.EliminarBtn);
             this.Controls.Add(this.EditarBtn);
-            this.Controls.Add(this.ClientesDataGrid);
-            this.Controls.Add(this.CrearClienteBtn);
-            this.Controls.Add(this.BuscarBtn);
-            this.Controls.Add(this.BuscarClientesTxt);
-            this.Controls.Add(this.FiltroBusquedaCombo);
+            this.Controls.Add(this.ValoracionesDataGrid);
+            this.Controls.Add(this.CrearValoracionBtn);
+            this.Controls.Add(this.FiltroPuntuacionCombo);
             this.Controls.Add(this.TitolPaginaLbl);
             this.Controls.Add(this.CapcaleraPanel);
             this.Controls.Add(this.LateralPanel);
 
-            ((System.ComponentModel.ISupportInitialize)(this.ClientesDataGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ValoracionesDataGrid)).EndInit();
         }
     }
 }

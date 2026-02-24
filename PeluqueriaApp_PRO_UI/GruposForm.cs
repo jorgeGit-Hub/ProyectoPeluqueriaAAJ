@@ -153,10 +153,18 @@ namespace PeluqueriaApp
         private void CitasBoto_Click(object sender, EventArgs e) { new CitasForm().Show(); this.Hide(); }
         private void HorarioForm_Click(object sender, EventArgs e) { new HorarioForm().Show(); this.Hide(); }
         private void HorarioSemanalBoto_Click(object sender, EventArgs e) { new HorarioSemanalForm().Show(); this.Hide(); }
+
+        private void ValoracionForm_Click(object sender, EventArgs e)
+        {
+            ValoracionesForm valoracionform = new ValoracionesForm();
+            valoracionform.Show();
+            this.Hide();
+        }
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MiCuentaForm form = new MiCuentaForm();
+            form.Show();
+            this.Hide();
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)

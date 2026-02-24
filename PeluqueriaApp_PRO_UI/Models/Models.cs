@@ -265,10 +265,11 @@ namespace PeluqueriaApp.Models
     }
 
     // ========== HORARIO SEMANAL ==========
-
     public class HorarioSemanal
     {
-        public int idHorario { get; set; }
+        // ✅ AÑADIMOS EL '?' para hacerlo nullable y que lo ignore al crear uno nuevo
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? idHorario { get; set; }
 
         [JsonConverter(typeof(ServicioSimpleConverter))]
         public ServicioSimple servicio { get; set; }
@@ -288,6 +289,11 @@ namespace PeluqueriaApp.Models
     {
         public int idCita { get; set; }
         public string fecha { get; set; }
+
+        // ✅ NUEVO: Vuelven los campos de hora específica de la cita
+        public string horaInicio { get; set; }
+        public string horaFin { get; set; }
+
         public string estado { get; set; }
         public ClienteSimple cliente { get; set; }
 
@@ -363,7 +369,10 @@ namespace PeluqueriaApp.Models
 
     public class Valoracion
     {
-        public int idValoracion { get; set; }
+        // ✅ AÑADIDO: Nullable e Ignore para que Spring Boot permita crear nuevas
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? idValoracion { get; set; }
+
         public Cita cita { get; set; }
         public int puntuacion { get; set; }
         public string comentario { get; set; }

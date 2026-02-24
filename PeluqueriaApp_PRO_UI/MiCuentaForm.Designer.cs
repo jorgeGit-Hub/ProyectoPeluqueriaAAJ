@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace PeluqueriaApp
 {
-    partial class ClientesForm
+    partial class MiCuentaForm
     {
         private Panel LateralPanel;
         private Panel CapcaleraPanel;
@@ -21,14 +21,21 @@ namespace PeluqueriaApp
         private Button ValoracionesBoto;
         private Button MiCuentaBoto;
         private Button TancarSessioBoto;
+
+        // Controles específicos de Mi Cuenta
         private Label TitolPaginaLbl;
-        private TextBox BuscarClientesTxt;
-        private Button BuscarBtn;
-        private Button CrearClienteBtn;
-        private DataGridView ClientesDataGrid;
-        private Button EditarBtn;
-        private Button EliminarBtn;
-        private ComboBox FiltroBusquedaCombo;
+        private Panel TarjetaPerfilPanel;
+        private Label TituloDatosLbl;
+        private Label NombreLbl;
+        private TextBox NombreTxt;
+        private Label ApellidosLbl;
+        private TextBox ApellidosTxt;
+        private Label CorreoLbl;
+        private TextBox CorreoTxt;
+        private Label RolLbl;
+        private TextBox RolTxt;
+        private Button GuardarCambiosBtn;
+        private Button CambiarPasswordBtn;
 
         private void InitializeComponent()
         {
@@ -43,33 +50,44 @@ namespace PeluqueriaApp
             this.ClientesBoto = new Button();
             this.CitasBoto = new Button();
             this.GruposBoto = new Button();
-            this.HorarioSemanalBoto = new Button();
             this.HorarioBoto = new Button();
+            this.HorarioSemanalBoto = new Button();
             this.ValoracionesBoto = new Button();
             this.MiCuentaBoto = new Button();
             this.TancarSessioBoto = new Button();
+
             this.TitolPaginaLbl = new Label();
-            this.BuscarClientesTxt = new TextBox();
-            this.BuscarBtn = new Button();
-            this.CrearClienteBtn = new Button();
-            this.ClientesDataGrid = new DataGridView();
-            this.EditarBtn = new Button();
-            this.EliminarBtn = new Button();
-            this.FiltroBusquedaCombo = new ComboBox();
+            this.TarjetaPerfilPanel = new Panel();
+            this.TituloDatosLbl = new Label();
+            this.NombreLbl = new Label();
+            this.NombreTxt = new TextBox();
+            this.ApellidosLbl = new Label();
+            this.ApellidosTxt = new TextBox();
+            this.CorreoLbl = new Label();
+            this.CorreoTxt = new TextBox();
+            this.RolLbl = new Label();
+            this.RolTxt = new TextBox();
+            this.GuardarCambiosBtn = new Button();
+            this.CambiarPasswordBtn = new Button();
 
-            ((System.ComponentModel.ISupportInitialize)(this.ClientesDataGrid)).BeginInit();
+            this.SuspendLayout();
 
+            // 
+            // MiCuentaForm
+            // 
             this.ClientSize = new Size(1400, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "Peluquería Escola - Clientes";
+            this.Text = "Peluquería Escola - Mi Cuenta";
             this.BackColor = Color.FromArgb(250, 245, 240);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
+            // LateralPanel
             this.LateralPanel.Dock = DockStyle.Left;
             this.LateralPanel.Width = 260;
             this.LateralPanel.BackColor = Color.FromArgb(45, 35, 30);
 
+            // LogoLbl
             this.LogoLbl.Text = "✂️\nPeluquería\nEscola";
             this.LogoLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
             this.LogoLbl.ForeColor = Color.FromArgb(255, 140, 0);
@@ -78,6 +96,7 @@ namespace PeluqueriaApp
             this.LogoLbl.Size = new Size(260, 100);
             this.LogoLbl.Location = new Point(0, 20);
 
+            // Botones Menú Lateral (MiCuenta es el Activo)
             this.IniciBoto.Text = "🏠  Inicio";
             this.IniciBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
             this.IniciBoto.ForeColor = Color.FromArgb(200, 200, 200);
@@ -118,9 +137,9 @@ namespace PeluqueriaApp
             this.UsuariosBoto.Click += new System.EventHandler(this.UsuariosBoto_Click);
 
             this.ClientesBoto.Text = "👤  Clientes";
-            this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.ClientesBoto.ForeColor = Color.White;
-            this.ClientesBoto.BackColor = Color.FromArgb(255, 140, 0);
+            this.ClientesBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            this.ClientesBoto.ForeColor = Color.FromArgb(200, 200, 200);
+            this.ClientesBoto.BackColor = Color.FromArgb(45, 35, 30);
             this.ClientesBoto.FlatStyle = FlatStyle.Flat;
             this.ClientesBoto.FlatAppearance.BorderSize = 0;
             this.ClientesBoto.Size = new Size(240, 45);
@@ -128,6 +147,7 @@ namespace PeluqueriaApp
             this.ClientesBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.ClientesBoto.Padding = new Padding(20, 0, 0, 0);
             this.ClientesBoto.Cursor = Cursors.Hand;
+            this.ClientesBoto.Click += new System.EventHandler(this.ClientesBoto_Click);
 
             this.CitasBoto.Text = "📅  Citas";
             this.CitasBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
@@ -194,10 +214,11 @@ namespace PeluqueriaApp
             this.ValoracionesBoto.Cursor = Cursors.Hand;
             this.ValoracionesBoto.Click += new System.EventHandler(this.ValoracionForm_Click);
 
+            // BOTÓN ACTIVO (Mi Cuenta)
             this.MiCuentaBoto.Text = "⚙️  Mi Cuenta";
-            this.MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.MiCuentaBoto.ForeColor = Color.FromArgb(200, 200, 200);
-            this.MiCuentaBoto.BackColor = Color.FromArgb(45, 35, 30);
+            this.MiCuentaBoto.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.MiCuentaBoto.ForeColor = Color.White;
+            this.MiCuentaBoto.BackColor = Color.FromArgb(255, 140, 0);
             this.MiCuentaBoto.FlatStyle = FlatStyle.Flat;
             this.MiCuentaBoto.FlatAppearance.BorderSize = 0;
             this.MiCuentaBoto.Size = new Size(240, 45);
@@ -205,7 +226,6 @@ namespace PeluqueriaApp
             this.MiCuentaBoto.TextAlign = ContentAlignment.MiddleLeft;
             this.MiCuentaBoto.Padding = new Padding(20, 0, 0, 0);
             this.MiCuentaBoto.Cursor = Cursors.Hand;
-            this.MiCuentaBoto.Click += new System.EventHandler(this.MiCuentaBoto_Click);
 
             this.TancarSessioBoto.Text = "🚪  Cerrar Sesión";
             this.TancarSessioBoto.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
@@ -221,11 +241,12 @@ namespace PeluqueriaApp
             this.TancarSessioBoto.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             this.TancarSessioBoto.Click += new System.EventHandler(this.TancarSessioBoto_Click);
 
+            // CapcaleraPanel
             this.CapcaleraPanel.Dock = DockStyle.Top;
             this.CapcaleraPanel.Height = 80;
             this.CapcaleraPanel.BackColor = Color.White;
 
-            this.TitolAppLbl.Text = "Gestión de Clientes";
+            this.TitolAppLbl.Text = "Mi Perfil";
             this.TitolAppLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolAppLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolAppLbl.AutoSize = true;
@@ -238,98 +259,114 @@ namespace PeluqueriaApp
             this.BienvenidaLbl.Location = new Point(1050, 30);
             this.BienvenidaLbl.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
-            this.TitolPaginaLbl.Text = "Administrar Clientes";
-            this.TitolPaginaLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            // TitolPaginaLbl
+            this.TitolPaginaLbl.Text = "Datos de tu Cuenta";
+            this.TitolPaginaLbl.Font = new Font("Segoe UI", 20F, FontStyle.Bold, GraphicsUnit.Point);
             this.TitolPaginaLbl.ForeColor = Color.FromArgb(45, 35, 30);
             this.TitolPaginaLbl.AutoSize = true;
             this.TitolPaginaLbl.Location = new Point(290, 110);
 
-            this.FiltroBusquedaCombo.Name = "FiltroBusquedaCombo";
-            this.FiltroBusquedaCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.FiltroBusquedaCombo.Size = new Size(150, 32);
-            this.FiltroBusquedaCombo.Location = new Point(290, 160);
-            this.FiltroBusquedaCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.FiltroBusquedaCombo.BackColor = Color.White;
-            this.FiltroBusquedaCombo.Items.AddRange(new object[] { "Nombre", "Teléfono", "Email", "Dirección" });
-            this.FiltroBusquedaCombo.SelectedIndex = 0;
+            // TarjetaPerfilPanel (Fondo blanco para los datos)
+            this.TarjetaPerfilPanel.BackColor = Color.White;
+            this.TarjetaPerfilPanel.Location = new Point(290, 170);
+            this.TarjetaPerfilPanel.Size = new Size(600, 450);
+            this.TarjetaPerfilPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            this.BuscarClientesTxt.Name = "BuscarClientesTxt";
-            this.BuscarClientesTxt.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.BuscarClientesTxt.Size = new Size(400, 32);
-            this.BuscarClientesTxt.Location = new Point(450, 160);
-            this.BuscarClientesTxt.BorderStyle = BorderStyle.FixedSingle;
-            this.BuscarClientesTxt.BackColor = Color.White;
-            this.BuscarClientesTxt.ForeColor = Color.FromArgb(45, 35, 30);
+            // TituloDatosLbl
+            this.TituloDatosLbl.Text = "Información Personal";
+            this.TituloDatosLbl.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point);
+            this.TituloDatosLbl.ForeColor = Color.FromArgb(255, 140, 0);
+            this.TituloDatosLbl.AutoSize = true;
+            this.TituloDatosLbl.Location = new Point(30, 30);
 
-            this.BuscarBtn.Text = "🔍 Buscar";
-            this.BuscarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.BuscarBtn.Size = new Size(120, 32);
-            this.BuscarBtn.Location = new Point(860, 160);
-            this.BuscarBtn.BackColor = Color.FromArgb(255, 140, 0);
-            this.BuscarBtn.ForeColor = Color.White;
-            this.BuscarBtn.FlatStyle = FlatStyle.Flat;
-            this.BuscarBtn.FlatAppearance.BorderSize = 0;
-            this.BuscarBtn.Cursor = Cursors.Hand;
-            this.BuscarBtn.Click += new System.EventHandler(this.BuscarBtn_Click);
+            // Nombre
+            this.NombreLbl.Text = "Nombre:";
+            this.NombreLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.NombreLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.NombreLbl.Location = new Point(30, 90);
+            this.NombreLbl.AutoSize = true;
 
-            this.CrearClienteBtn.Text = "➕ Crear Cliente";
-            this.CrearClienteBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.CrearClienteBtn.Size = new Size(180, 40);
-            this.CrearClienteBtn.Location = new Point(1150, 157);
-            this.CrearClienteBtn.BackColor = Color.FromArgb(139, 90, 60);
-            this.CrearClienteBtn.ForeColor = Color.White;
-            this.CrearClienteBtn.FlatStyle = FlatStyle.Flat;
-            this.CrearClienteBtn.FlatAppearance.BorderSize = 0;
-            this.CrearClienteBtn.Cursor = Cursors.Hand;
-            this.CrearClienteBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            this.CrearClienteBtn.Click += new System.EventHandler(this.CrearClienteBtn_Click);
+            this.NombreTxt.Font = new Font("Segoe UI", 11F);
+            this.NombreTxt.Location = new Point(30, 120);
+            this.NombreTxt.Size = new Size(530, 32);
+            this.NombreTxt.ReadOnly = true; // Por ahora modo lectura
+            this.NombreTxt.BackColor = Color.FromArgb(245, 245, 245);
 
-            this.ClientesDataGrid.Name = "ClientesDataGrid";
-            this.ClientesDataGrid.Location = new Point(290, 220);
-            this.ClientesDataGrid.Size = new Size(1070, 440);
-            this.ClientesDataGrid.ScrollBars = ScrollBars.Both;
-            this.ClientesDataGrid.BackgroundColor = Color.White;
-            this.ClientesDataGrid.BorderStyle = BorderStyle.None;
-            this.ClientesDataGrid.GridColor = Color.FromArgb(240, 240, 240);
-            this.ClientesDataGrid.DefaultCellStyle.BackColor = Color.White;
-            this.ClientesDataGrid.DefaultCellStyle.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ClientesDataGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 160, 50);
-            this.ClientesDataGrid.DefaultCellStyle.SelectionForeColor = Color.White;
-            this.ClientesDataGrid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(255, 140, 0);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            this.ClientesDataGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            this.ClientesDataGrid.EnableHeadersVisualStyles = false;
-            this.ClientesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            this.ClientesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            this.ClientesDataGrid.MultiSelect = false;
-            this.ClientesDataGrid.ReadOnly = true;
-            this.ClientesDataGrid.AllowUserToAddRows = false;
-            this.ClientesDataGrid.AllowUserToDeleteRows = false;
+            // Apellidos
+            this.ApellidosLbl.Text = "Apellidos:";
+            this.ApellidosLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.ApellidosLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.ApellidosLbl.Location = new Point(30, 170);
+            this.ApellidosLbl.AutoSize = true;
 
-            this.EditarBtn.Text = "✏️ Editar";
-            this.EditarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.EditarBtn.Size = new Size(150, 45);
-            this.EditarBtn.Location = new Point(290, 680);
-            this.EditarBtn.BackColor = Color.FromArgb(255, 140, 0);
-            this.EditarBtn.ForeColor = Color.White;
-            this.EditarBtn.FlatStyle = FlatStyle.Flat;
-            this.EditarBtn.FlatAppearance.BorderSize = 0;
-            this.EditarBtn.Cursor = Cursors.Hand;
-            this.EditarBtn.Click += new System.EventHandler(this.EditarBtn_Click);
+            this.ApellidosTxt.Font = new Font("Segoe UI", 11F);
+            this.ApellidosTxt.Location = new Point(30, 200);
+            this.ApellidosTxt.Size = new Size(530, 32);
+            this.ApellidosTxt.ReadOnly = true;
+            this.ApellidosTxt.BackColor = Color.FromArgb(245, 245, 245);
 
-            this.EliminarBtn.Text = "🗑️ Eliminar";
-            this.EliminarBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
-            this.EliminarBtn.Size = new Size(150, 45);
-            this.EliminarBtn.Location = new Point(460, 680);
-            this.EliminarBtn.BackColor = Color.FromArgb(200, 50, 50);
-            this.EliminarBtn.ForeColor = Color.White;
-            this.EliminarBtn.FlatStyle = FlatStyle.Flat;
-            this.EliminarBtn.FlatAppearance.BorderSize = 0;
-            this.EliminarBtn.Cursor = Cursors.Hand;
-            this.EliminarBtn.Click += new System.EventHandler(this.EliminarBtn_Click);
+            // Correo
+            this.CorreoLbl.Text = "Correo Electrónico:";
+            this.CorreoLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.CorreoLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.CorreoLbl.Location = new Point(30, 250);
+            this.CorreoLbl.AutoSize = true;
 
+            this.CorreoTxt.Font = new Font("Segoe UI", 11F);
+            this.CorreoTxt.Location = new Point(30, 280);
+            this.CorreoTxt.Size = new Size(530, 32);
+            this.CorreoTxt.ReadOnly = true;
+            this.CorreoTxt.BackColor = Color.FromArgb(245, 245, 245);
+
+            // Rol
+            this.RolLbl.Text = "Rol en el Sistema:";
+            this.RolLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.RolLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.RolLbl.Location = new Point(30, 330);
+            this.RolLbl.AutoSize = true;
+
+            this.RolTxt.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.RolTxt.Location = new Point(30, 360);
+            this.RolTxt.Size = new Size(530, 32);
+            this.RolTxt.ReadOnly = true;
+            this.RolTxt.BackColor = Color.FromArgb(245, 245, 245);
+            this.RolTxt.ForeColor = Color.FromArgb(139, 90, 60);
+
+            // Botones de acción (Deshabilitados por ahora o muestran un mensaje)
+            this.GuardarCambiosBtn.Text = "💾 Guardar Cambios";
+            this.GuardarCambiosBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.GuardarCambiosBtn.Size = new Size(200, 45);
+            this.GuardarCambiosBtn.Location = new Point(290, 640);
+            this.GuardarCambiosBtn.BackColor = Color.FromArgb(139, 90, 60);
+            this.GuardarCambiosBtn.ForeColor = Color.White;
+            this.GuardarCambiosBtn.FlatStyle = FlatStyle.Flat;
+            this.GuardarCambiosBtn.FlatAppearance.BorderSize = 0;
+            this.GuardarCambiosBtn.Cursor = Cursors.Hand;
+            this.GuardarCambiosBtn.Click += new System.EventHandler(this.AccionDesarrollo_Click);
+
+            this.CambiarPasswordBtn.Text = "🔑 Cambiar Contraseña";
+            this.CambiarPasswordBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CambiarPasswordBtn.Size = new Size(220, 45);
+            this.CambiarPasswordBtn.Location = new Point(510, 640);
+            this.CambiarPasswordBtn.BackColor = Color.FromArgb(70, 130, 180);
+            this.CambiarPasswordBtn.ForeColor = Color.White;
+            this.CambiarPasswordBtn.FlatStyle = FlatStyle.Flat;
+            this.CambiarPasswordBtn.FlatAppearance.BorderSize = 0;
+            this.CambiarPasswordBtn.Cursor = Cursors.Hand;
+            this.CambiarPasswordBtn.Click += new System.EventHandler(this.AccionDesarrollo_Click);
+
+            // Agrupamos en Tarjeta
+            this.TarjetaPerfilPanel.Controls.Add(this.TituloDatosLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.NombreLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.NombreTxt);
+            this.TarjetaPerfilPanel.Controls.Add(this.ApellidosLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.ApellidosTxt);
+            this.TarjetaPerfilPanel.Controls.Add(this.CorreoLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.CorreoTxt);
+            this.TarjetaPerfilPanel.Controls.Add(this.RolLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.RolTxt);
+
+            // Add controls to LateralPanel
             this.LateralPanel.Controls.Add(this.LogoLbl);
             this.LateralPanel.Controls.Add(this.IniciBoto);
             this.LateralPanel.Controls.Add(this.ServiciosBoto);
@@ -343,21 +380,20 @@ namespace PeluqueriaApp
             this.LateralPanel.Controls.Add(this.MiCuentaBoto);
             this.LateralPanel.Controls.Add(this.TancarSessioBoto);
 
+            // Add controls to CapcaleraPanel
             this.CapcaleraPanel.Controls.Add(this.TitolAppLbl);
             this.CapcaleraPanel.Controls.Add(this.BienvenidaLbl);
 
-            this.Controls.Add(this.EliminarBtn);
-            this.Controls.Add(this.EditarBtn);
-            this.Controls.Add(this.ClientesDataGrid);
-            this.Controls.Add(this.CrearClienteBtn);
-            this.Controls.Add(this.BuscarBtn);
-            this.Controls.Add(this.BuscarClientesTxt);
-            this.Controls.Add(this.FiltroBusquedaCombo);
+            // Add controls to Form
+            this.Controls.Add(this.GuardarCambiosBtn);
+            this.Controls.Add(this.CambiarPasswordBtn);
+            this.Controls.Add(this.TarjetaPerfilPanel);
             this.Controls.Add(this.TitolPaginaLbl);
             this.Controls.Add(this.CapcaleraPanel);
             this.Controls.Add(this.LateralPanel);
 
-            ((System.ComponentModel.ISupportInitialize)(this.ClientesDataGrid)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
         }
     }
 }

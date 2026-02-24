@@ -60,12 +60,21 @@ namespace PeluqueriaApp
             this.Hide();
         }
 
-        private void MiCuentaBoto_Click(object sender, EventArgs e)
+        private void ValoracionForm_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ValoracionesForm valoracionform = new ValoracionesForm();
+            valoracionform.Show();
+            this.Hide();
         }
 
-        
+        private void MiCuentaBoto_Click(object sender, EventArgs e)
+        {
+            MiCuentaForm form = new MiCuentaForm();
+            form.Show();
+            this.Hide();
+        }
+
+
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)
         {

@@ -7,6 +7,13 @@ namespace PeluqueriaApp
     {
         private Label TituloLbl;
         private MonthCalendar FechaCalendar;
+
+        // ✅ NUEVOS CAMPOS DE HORA
+        private Label HoraInicioLbl;
+        private TextBox HoraInicioTxt;
+        private Label HoraFinLbl;
+        private TextBox HoraFinTxt;
+
         private Label ClienteLbl;
         private ComboBox ClienteCombo;
         private Label ServicioLbl;
@@ -24,6 +31,13 @@ namespace PeluqueriaApp
             this.FormPanel = new Panel();
             this.TituloLbl = new Label();
             this.FechaCalendar = new MonthCalendar();
+
+            // Inicializar nuevos campos
+            this.HoraInicioLbl = new Label();
+            this.HoraInicioTxt = new TextBox();
+            this.HoraFinLbl = new Label();
+            this.HoraFinTxt = new TextBox();
+
             this.ClienteLbl = new Label();
             this.ClienteCombo = new ComboBox();
             this.ServicioLbl = new Label();
@@ -35,9 +49,7 @@ namespace PeluqueriaApp
             this.GuardarBtn = new Button();
             this.CancelarBtn = new Button();
 
-            // 
-            // CrearEditarCitaForm
-            // 
+            // Form
             this.ClientSize = new Size(750, 700);
             this.Text = "Gestión de Cita";
             this.StartPosition = FormStartPosition.CenterParent;
@@ -46,113 +58,94 @@ namespace PeluqueriaApp
             this.MaximizeBox = false;
             this.MinimizeBox = false;
 
-            // 
             // FormPanel
-            // 
             this.FormPanel.BackColor = Color.White;
-            this.FormPanel.Location = new Point(25, 20);
-            this.FormPanel.Size = new Size(700, 660);
+            this.FormPanel.Location = new Point(20, 20);
+            this.FormPanel.Size = new Size(700, 640);
+            this.FormPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            // 
             // TituloLbl
-            // 
-            this.TituloLbl.Text = "Crear Nueva Cita";
-            this.TituloLbl.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            this.TituloLbl.Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point);
             this.TituloLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.TituloLbl.AutoSize = false;
-            this.TituloLbl.Size = new Size(700, 50);
+            this.TituloLbl.Location = new Point(30, 20);
+            this.TituloLbl.Size = new Size(640, 40);
             this.TituloLbl.TextAlign = ContentAlignment.MiddleCenter;
-            this.TituloLbl.Location = new Point(0, 20);
 
-            // 
-            // FechaCalendar
-            // 
-            this.FechaCalendar.Location = new Point(50, 90);
+            // FechaCalendar (Izquierda)
+            this.FechaCalendar.Location = new Point(40, 80);
             this.FechaCalendar.MaxSelectionCount = 1;
-            this.FechaCalendar.Font = new Font("Segoe UI", 10F);
 
-            // 
-            // ClienteLbl
-            // 
-            this.ClienteLbl.Text = "Cliente *";
-            this.ClienteLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
-            this.ClienteLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ClienteLbl.AutoSize = true;
-            this.ClienteLbl.Location = new Point(360, 90);
+            // ✅ HORA INICIO (Izquierda, bajo el calendario)
+            this.HoraInicioLbl.Text = "Hora Inicio (HH:mm):";
+            this.HoraInicioLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.HoraInicioLbl.Location = new Point(40, 260);
+            this.HoraInicioLbl.Size = new Size(200, 25);
 
-            // 
-            // ClienteCombo
-            // 
-            this.ClienteCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.ClienteCombo.Size = new Size(290, 32);
-            this.ClienteCombo.Location = new Point(360, 115);
+            this.HoraInicioTxt.Font = new Font("Segoe UI", 11F);
+            this.HoraInicioTxt.Location = new Point(40, 290);
+            this.HoraInicioTxt.Size = new Size(227, 32);
+
+            // ✅ HORA FIN (Izquierda, bajo hora de inicio)
+            this.HoraFinLbl.Text = "Hora Fin (HH:mm):";
+            this.HoraFinLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.HoraFinLbl.Location = new Point(40, 340);
+            this.HoraFinLbl.Size = new Size(200, 25);
+
+            this.HoraFinTxt.Font = new Font("Segoe UI", 11F);
+            this.HoraFinTxt.Location = new Point(40, 370);
+            this.HoraFinTxt.Size = new Size(227, 32);
+
+            // Cliente (Derecha)
+            this.ClienteLbl.Text = "Cliente:";
+            this.ClienteLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.ClienteLbl.Location = new Point(340, 80);
+            this.ClienteLbl.Size = new Size(300, 25);
+
+            this.ClienteCombo.Font = new Font("Segoe UI", 11F);
+            this.ClienteCombo.Location = new Point(340, 110);
+            this.ClienteCombo.Size = new Size(320, 33);
             this.ClienteCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.ClienteCombo.BackColor = Color.FromArgb(250, 245, 240);
 
-            // 
-            // ServicioLbl
-            // 
-            this.ServicioLbl.Text = "Servicio *";
-            this.ServicioLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
-            this.ServicioLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ServicioLbl.AutoSize = true;
-            this.ServicioLbl.Location = new Point(360, 165);
+            // Servicio (Derecha)
+            this.ServicioLbl.Text = "Servicio:";
+            this.ServicioLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.ServicioLbl.Location = new Point(340, 160);
+            this.ServicioLbl.Size = new Size(300, 25);
 
-            // 
-            // ServicioCombo
-            // 
-            this.ServicioCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.ServicioCombo.Size = new Size(290, 32);
-            this.ServicioCombo.Location = new Point(360, 190);
+            this.ServicioCombo.Font = new Font("Segoe UI", 11F);
+            this.ServicioCombo.Location = new Point(340, 190);
+            this.ServicioCombo.Size = new Size(320, 33);
             this.ServicioCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.ServicioCombo.BackColor = Color.FromArgb(250, 245, 240);
 
-            // 
-            // HorariosLbl
-            // 
-            this.HorariosLbl.Text = "Horarios Disponibles *";
-            this.HorariosLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
-            this.HorariosLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.HorariosLbl.AutoSize = true;
-            this.HorariosLbl.Location = new Point(50, 315);
+            // HorariosDisponibles (Derecha)
+            this.HorariosLbl.Text = "Turnos Semanales Base:";
+            this.HorariosLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.HorariosLbl.Location = new Point(340, 240);
+            this.HorariosLbl.Size = new Size(300, 25);
 
-            // 
-            // HorariosListBox
-            // 
-            this.HorariosListBox.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            this.HorariosListBox.Size = new Size(600, 150);
-            this.HorariosListBox.Location = new Point(50, 340);
-            this.HorariosListBox.BackColor = Color.FromArgb(250, 245, 240);
-            this.HorariosListBox.BorderStyle = BorderStyle.FixedSingle;
-            this.HorariosListBox.SelectionMode = SelectionMode.One;
+            this.HorariosListBox.Font = new Font("Segoe UI", 10F);
+            this.HorariosListBox.Location = new Point(340, 270);
+            this.HorariosListBox.Size = new Size(320, 104);
+            // Evento para autocompletar horas al seleccionar un turno
+            this.HorariosListBox.SelectedIndexChanged += new System.EventHandler(this.HorariosListBox_SelectedIndexChanged);
 
-            // 
-            // EstadoLbl
-            // 
-            this.EstadoLbl.Text = "Estado *";
-            this.EstadoLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
-            this.EstadoLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.EstadoLbl.AutoSize = true;
-            this.EstadoLbl.Location = new Point(50, 510);
+            // Estado (Derecha)
+            this.EstadoLbl.Text = "Estado:";
+            this.EstadoLbl.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.EstadoLbl.Location = new Point(340, 390);
+            this.EstadoLbl.Size = new Size(300, 25);
 
-            // 
-            // EstadoCombo
-            // 
-            this.EstadoCombo.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            this.EstadoCombo.Size = new Size(600, 32);
-            this.EstadoCombo.Location = new Point(50, 535);
+            this.EstadoCombo.Font = new Font("Segoe UI", 11F);
+            this.EstadoCombo.Location = new Point(340, 420);
+            this.EstadoCombo.Size = new Size(320, 33);
             this.EstadoCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.EstadoCombo.BackColor = Color.FromArgb(250, 245, 240);
-            this.EstadoCombo.Items.AddRange(new object[] { "Pendiente", "Realizada", "Cancelada" });
-            this.EstadoCombo.SelectedIndex = 0;
+            this.EstadoCombo.Items.AddRange(new object[] { "pendiente", "realizada", "cancelada" });
 
-            // 
             // GuardarBtn
-            // 
-            this.GuardarBtn.Text = "💾 Guardar";
-            this.GuardarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            this.GuardarBtn.Text = "💾 Guardar Cita";
+            this.GuardarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             this.GuardarBtn.Size = new Size(280, 50);
-            this.GuardarBtn.Location = new Point(80, 590);
+            this.GuardarBtn.Location = new Point(40, 540);
             this.GuardarBtn.BackColor = Color.FromArgb(255, 140, 0);
             this.GuardarBtn.ForeColor = Color.White;
             this.GuardarBtn.FlatStyle = FlatStyle.Flat;
@@ -160,13 +153,11 @@ namespace PeluqueriaApp
             this.GuardarBtn.Cursor = Cursors.Hand;
             this.GuardarBtn.Click += new System.EventHandler(this.GuardarBtn_Click);
 
-            // 
             // CancelarBtn
-            // 
             this.CancelarBtn.Text = "❌ Cancelar";
-            this.CancelarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            this.CancelarBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             this.CancelarBtn.Size = new Size(280, 50);
-            this.CancelarBtn.Location = new Point(380, 590);
+            this.CancelarBtn.Location = new Point(380, 540);
             this.CancelarBtn.BackColor = Color.FromArgb(139, 90, 60);
             this.CancelarBtn.ForeColor = Color.White;
             this.CancelarBtn.FlatStyle = FlatStyle.Flat;
@@ -174,11 +165,16 @@ namespace PeluqueriaApp
             this.CancelarBtn.Cursor = Cursors.Hand;
             this.CancelarBtn.Click += new System.EventHandler(this.CancelarBtn_Click);
 
-            // 
             // Add controls to FormPanel
-            // 
             this.FormPanel.Controls.Add(this.TituloLbl);
             this.FormPanel.Controls.Add(this.FechaCalendar);
+
+            // Campos Hora
+            this.FormPanel.Controls.Add(this.HoraInicioLbl);
+            this.FormPanel.Controls.Add(this.HoraInicioTxt);
+            this.FormPanel.Controls.Add(this.HoraFinLbl);
+            this.FormPanel.Controls.Add(this.HoraFinTxt);
+
             this.FormPanel.Controls.Add(this.ClienteLbl);
             this.FormPanel.Controls.Add(this.ClienteCombo);
             this.FormPanel.Controls.Add(this.ServicioLbl);
@@ -190,9 +186,6 @@ namespace PeluqueriaApp
             this.FormPanel.Controls.Add(this.GuardarBtn);
             this.FormPanel.Controls.Add(this.CancelarBtn);
 
-            // 
-            // Add controls to Form
-            // 
             this.Controls.Add(this.FormPanel);
         }
     }

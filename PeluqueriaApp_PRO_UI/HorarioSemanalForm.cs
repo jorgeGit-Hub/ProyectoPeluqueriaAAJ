@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq; // ✅ IMPORTANTÍSIMO: Necesario para los Diccionarios
 using System.Windows.Forms;
-using System.Drawing;
 using PeluqueriaApp.Models;
 using PeluqueriaApp.Services;
 
@@ -19,41 +19,57 @@ namespace PeluqueriaApp
         private void ConfigurarDataGrid()
         {
             BloqueosDataGrid.Columns.Clear();
-            BloqueosDataGrid.Columns.Add("idBloqueo", "ID");
+
+            // ❌ ELIMINADA la columna visible de idBloqueo
             BloqueosDataGrid.Columns.Add("fecha", "Fecha");
             BloqueosDataGrid.Columns.Add("horaInicio", "Hora Inicio");
             BloqueosDataGrid.Columns.Add("horaFin", "Hora Fin");
             BloqueosDataGrid.Columns.Add("motivo", "Motivo");
-            BloqueosDataGrid.Columns.Add("administrador", "Administrador");
+            BloqueosDataGrid.Columns.Add("administrador", "Administrador"); // ✅ Mostrará el nombre
 
-            BloqueosDataGrid.Columns["idBloqueo"].Width = 50;
+            // ✅ NUEVO: Columna oculta para guardar el ID del bloqueo
+            BloqueosDataGrid.Columns.Add("idBloqueo", "ID Oculto");
+            BloqueosDataGrid.Columns["idBloqueo"].Visible = false;
+
+            BloqueosDataGrid.Columns["motivo"].Width = 200;
+            BloqueosDataGrid.Columns["administrador"].Width = 180;
         }
 
         private async void CargarBloqueos()
         {
             try
             {
+                // ✅ Descargamos Bloqueos y Usuarios al mismo tiempo
                 var bloqueos = await ApiService.GetAsync<List<BloqueoHorario>>("api/bloqueos");
+                var usuarios = await ApiService.GetAsync<List<Usuario>>("api/usuarios");
+
+                // ✅ Creamos el diccionario para buscar el nombre del administrador rapidísimo
+                var dictUsuarios = usuarios?.ToDictionary(u => u.idUsuario, u => $"{u.nombre} {u.apellidos}") ?? new Dictionary<int, string>();
 
                 BloqueosDataGrid.Rows.Clear();
 
                 if (bloqueos == null || bloqueos.Count == 0)
                 {
-                    MessageBox.Show("No hay bloqueos horarios registrados", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("No hay bloqueos registrados", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                foreach (var bloqueo in bloqueos)
+                foreach (var b in bloqueos)
                 {
-                    string adminNombre = bloqueo.administrador?.idUsuario.ToString() ?? "N/A";
+                    // Buscar el nombre cruzando el ID
+                    string adminNombre = "Desconocido";
+                    if (b.administrador != null && dictUsuarios.ContainsKey(b.administrador.idUsuario))
+                    {
+                        adminNombre = dictUsuarios[b.administrador.idUsuario];
+                    }
 
                     BloqueosDataGrid.Rows.Add(
-                        bloqueo.idBloqueo,
-                        bloqueo.fecha,
-                        bloqueo.horaInicio,
-                        bloqueo.horaFin,
-                        bloqueo.motivo ?? "N/A",
-                        adminNombre
+                        b.fecha ?? "N/A",
+                        b.horaInicio ?? "N/A",
+                        b.horaFin ?? "N/A",
+                        b.motivo ?? "N/A",
+                        adminNombre,
+                        b.idBloqueo // ✅ Guardamos el ID en la celda oculta
                     );
                 }
             }
@@ -63,55 +79,46 @@ namespace PeluqueriaApp
             }
         }
 
-        /*private void CrearBloqueoBtn_Click(object sender, EventArgs e)
-        {
-            CrearEditarBloqueoForm crearForm = new CrearEditarBloqueoForm();
-            DialogResult result = crearForm.ShowDialog();
+        // --- BOTONES DE ACCIÓN ---
 
-            if (result == DialogResult.OK)
-            {
-                CargarBloqueos();
-            }
+        /* NOTA: Asegúrate de tener un form llamado CrearEditarBloqueoForm si vas a usar esta lógica. 
+           Si el nombre de tu formulario es distinto, cámbialo aquí abajo. */
+
+        private void CrearBloqueoBtn_Click(object sender, EventArgs e)
+        {
+             CrearEditarBloqueoForm crearForm = new CrearEditarBloqueoForm();
+             if (crearForm.ShowDialog() == DialogResult.OK) CargarBloqueos();
         }
 
         private void EditarBtn_Click(object sender, EventArgs e)
         {
             if (BloqueosDataGrid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Por favor, selecciona un bloqueo para editar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Selecciona un bloqueo para editar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            // ✅ Usar el ID de la columna oculta
             int idBloqueo = Convert.ToInt32(BloqueosDataGrid.SelectedRows[0].Cells["idBloqueo"].Value);
 
-            CrearEditarBloqueoForm editarForm = new CrearEditarBloqueoForm(idBloqueo);
-            DialogResult result = editarForm.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                CargarBloqueos();
-            }
-        }*/
+             CrearEditarBloqueoForm editarForm = new CrearEditarBloqueoForm(idBloqueo);
+             if (editarForm.ShowDialog() == DialogResult.OK) CargarBloqueos();
+        }
 
         private async void EliminarBtn_Click(object sender, EventArgs e)
         {
             if (BloqueosDataGrid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Por favor, selecciona un bloqueo para eliminar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Selecciona un bloqueo para eliminar", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres eliminar este bloqueo?",
-                "Confirmar Eliminación",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning
-            );
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este bloqueo?", "Confirmar Eliminación",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 try
                 {
+                    // ✅ Usar el ID de la columna oculta
                     int idBloqueo = Convert.ToInt32(BloqueosDataGrid.SelectedRows[0].Cells["idBloqueo"].Value);
 
                     bool eliminado = await ApiService.DeleteAsync($"api/bloqueos/{idBloqueo}");
@@ -129,73 +136,42 @@ namespace PeluqueriaApp
             }
         }
 
-        private void IniciBoto_Click(object sender, EventArgs e)
+        // --- NAVEGACIÓN LATERAL ---
+        private void IniciBoto_Click(object sender, EventArgs e) { new HomeForm().Show(); this.Hide(); }
+        private void ServiciosBoto_Click(object sender, EventArgs e) { new ServiciosForm().Show(); this.Hide(); }
+        private void UsuariosBoto_Click(object sender, EventArgs e) { new UsuariosForm().Show(); this.Hide(); }
+        private void ClientesBoto_Click(object sender, EventArgs e) { new ClientesForm().Show(); this.Hide(); }
+        private void CitasBoto_Click(object sender, EventArgs e) { new CitasForm().Show(); this.Hide(); }
+        private void GruposBoto_Click(object sender, EventArgs e) { new GruposForm().Show(); this.Hide(); }
+        private void HorarioForm_Click(object sender, EventArgs e) { new HorarioForm().Show(); this.Hide(); }
+
+        private void HorarioSemanalBoto_Click(object sender, EventArgs e)
         {
-            HomeForm homeForm = new HomeForm();
-            homeForm.Show();
-            this.Hide();
+            // Ya estamos en esta pantalla
         }
 
-        private void ServiciosBoto_Click(object sender, EventArgs e)
+        private void ValoracionForm_Click(object sender, EventArgs e)
         {
-            ServiciosForm serviciosForm = new ServiciosForm();
-            serviciosForm.Show();
-            this.Hide();
-        }
-
-        private void UsuariosBoto_Click(object sender, EventArgs e)
-        {
-            UsuariosForm usuariosForm = new UsuariosForm();
-            usuariosForm.Show();
-            this.Hide();
-        }
-
-        private void ClientesBoto_Click(object sender, EventArgs e)
-        {
-            ClientesForm clientesForm = new ClientesForm();
-            clientesForm.Show();
-            this.Hide();
-        }
-
-        private void CitasBoto_Click(object sender, EventArgs e)
-        {
-            CitasForm citasForm = new CitasForm();
-            citasForm.Show();
-            this.Hide();
-        }
-
-        private void GruposBoto_Click(object sender, EventArgs e)
-        {
-            GruposForm gruposForm = new GruposForm();
-            gruposForm.Show();
-            this.Hide();
-        }
-
-        private void HorarioForm_Click(object sender, EventArgs e)
-        {
-            HorarioForm horarioForm = new HorarioForm();
-            horarioForm.Show();
+            ValoracionesForm valoracionform = new ValoracionesForm();
+            valoracionform.Show();
             this.Hide();
         }
 
         private void MiCuentaBoto_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Pantalla de Mi Cuenta en desarrollo", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MiCuentaForm form = new MiCuentaForm();
+            form.Show();
+            this.Hide();
         }
 
         private void TancarSessioBoto_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(
-                "¿Estás seguro de que quieres cerrar sesión?",
-                "Confirmar",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            );
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("¿Estás seguro de que quieres cerrar sesión?", "Confirmar",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                LoginForm loginForm = new LoginForm();
-                loginForm.Show();
+                ApiService.ClearAuthToken();
+                UserSession.CerrarSesion();
+                new LoginForm().Show();
                 this.Close();
             }
         }
