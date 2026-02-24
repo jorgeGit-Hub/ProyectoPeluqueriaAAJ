@@ -27,29 +27,19 @@ public class CitaController {
 
     @Autowired
     private CitaRepository repo;
-
     @Autowired
     private ClienteRepository clienteRepository;
-
     @Autowired
     private HorarioSemanalRepository horarioRepository;
-
-    // ✅ NUEVO: Inyectar el repositorio de bloqueos
     @Autowired
     private BloqueoHorarioRepository bloqueoRepository;
 
-    // --- CONSULTAS ---
-
     @GetMapping
-    public List<Cita> all() {
-        return repo.findAll();
-    }
+    public List<Cita> all() { return repo.findAll(); }
 
     @GetMapping("/{id}")
     public ResponseEntity<Cita> get(@PathVariable int id) {
-        return repo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return repo.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/mis-citas")
@@ -64,126 +54,86 @@ public class CitaController {
         return repo.findByGrupoAndFecha(idGrupo, LocalDate.parse(fecha));
     }
 
-    // --- GESTIÓN ---
-
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Cita c) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
 
-            // 1. ✅ CAMBIO CRÍTICO: Validar que venga el HorarioSemanal
             if (c.getHorarioSemanal() == null || c.getHorarioSemanal().getIdHorario() == null) {
-                return ResponseEntity.badRequest().body(createError("Debe especificar un horario semanal"));
+                return ResponseEntity.badRequest().body(createError("Debe especificar un horario semanal base"));
             }
 
-            // 2. Obtener el horario completo con todas sus relaciones
             HorarioSemanal horario = horarioRepository.findById(c.getHorarioSemanal().getIdHorario()).orElse(null);
-            if (horario == null) {
-                return ResponseEntity.badRequest().body(createError("El horario especificado no existe"));
-            }
+            if (horario == null) return ResponseEntity.badRequest().body(createError("El horario especificado no existe"));
+            if (horario.getServicio() == null) return ResponseEntity.badRequest().body(createError("El horario no tiene un servicio asociado"));
+            if (horario.getGrupo() == null) return ResponseEntity.badRequest().body(createError("El horario no tiene un grupo asociado"));
 
-            // 3. Validar que el horario tenga servicio y grupo
-            if (horario.getServicio() == null) {
-                return ResponseEntity.badRequest().body(createError("El horario no tiene un servicio asociado"));
-            }
-            if (horario.getGrupo() == null) {
-                return ResponseEntity.badRequest().body(createError("El horario no tiene un grupo asociado"));
-            }
-
-            // 4. Validar fecha
-            if (c.getFecha() == null) {
-                return ResponseEntity.badRequest().body(createError("Debe especificar una fecha"));
-            }
-
-            // ✅ VALIDACIÓN: No permitir fechas pasadas
+            if (c.getFecha() == null) return ResponseEntity.badRequest().body(createError("Debe especificar una fecha"));
             if (c.getFecha().isBefore(LocalDate.now())) {
+                return ResponseEntity.badRequest().body(createError("No se pueden crear citas en fechas pasadas."));
+            }
+
+            // ✅ VALIDACIONES DE HORA ESPECÍFICA
+            if (c.getHoraInicio() == null || c.getHoraFin() == null) {
+                return ResponseEntity.badRequest().body(createError("Debe especificar hora de inicio y fin para la cita."));
+            }
+            if (!c.getHoraInicio().isBefore(c.getHoraFin())) {
+                return ResponseEntity.badRequest().body(createError("La hora de inicio debe ser anterior a la hora de fin."));
+            }
+
+            // ✅ VALIDACIÓN: El horario de la cita debe estar dentro del bloque HorarioSemanal
+            if (c.getHoraInicio().isBefore(horario.getHoraInicio()) || c.getHoraFin().isAfter(horario.getHoraFin())) {
                 return ResponseEntity.badRequest().body(createError(
-                        "No se pueden crear citas en fechas pasadas. La fecha debe ser hoy o posterior."
+                        "El horario de la cita (" + c.getHoraInicio() + " a " + c.getHoraFin() +
+                                ") queda fuera del turno disponible (" + horario.getHoraInicio() + " a " + horario.getHoraFin() + ")."
                 ));
             }
 
-            // ✅ VALIDACIÓN: Si la fecha es hoy, validar que la hora del horario no sea pasada
-            if (c.getFecha().isEqual(LocalDate.now())) {
-                if (horario.getHoraInicio().isBefore(java.time.LocalTime.now())) {
-                    return ResponseEntity.badRequest().body(createError(
-                            "No se pueden crear citas para horarios que ya han pasado hoy. " +
-                                    "Hora actual: " + java.time.LocalTime.now().toString()
-                    ));
-                }
+            if (c.getFecha().isEqual(LocalDate.now()) && c.getHoraInicio().isBefore(LocalTime.now())) {
+                return ResponseEntity.badRequest().body(createError("No se pueden reservar horas que ya han pasado hoy."));
             }
 
-            // ✅✅ NUEVO: VALIDAR BLOQUEOS DE HORARIO
-            String motivoBloqueo = verificarBloqueoHorario(c.getFecha(), horario.getHoraInicio(), horario.getHoraFin());
-            if (motivoBloqueo != null) {
-                return ResponseEntity.badRequest().body(createError(
-                        "No se puede crear la cita. " + motivoBloqueo
-                ));
-            }
-
-            // 5. ✅ NUEVA VALIDACIÓN: Verificar que el día de la semana coincida con el horario
             String diaSemana = convertirDiaSemana(c.getFecha().getDayOfWeek());
             if (!horario.getDiaSemana().name().equals(diaSemana)) {
-                return ResponseEntity.badRequest().body(createError(
-                        "La fecha seleccionada (" + c.getFecha() + ") es " + diaSemana +
-                                ", pero el horario es para " + horario.getDiaSemana().name()
-                ));
+                return ResponseEntity.badRequest().body(createError("La fecha seleccionada no coincide con el día del horario semanal."));
             }
 
-            // 6. Validar Cliente/Permisos
-            boolean isAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+            // ✅ BLOQUEOS: Ahora evalúa la hora específica de la cita, no del bloque entero
+            String motivoBloqueo = verificarBloqueoHorario(c.getFecha(), c.getHoraInicio(), c.getHoraFin());
+            if (motivoBloqueo != null) {
+                return ResponseEntity.badRequest().body(createError("No se puede crear la cita. " + motivoBloqueo));
+            }
 
+            // Permisos
+            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
             Integer idClienteCita;
             if (!isAdmin) {
-                if (c.getCliente() == null || c.getCliente().getIdUsuario() == null) {
-                    return ResponseEntity.badRequest().body(createError("Falta el cliente"));
-                }
-                if (!c.getCliente().getIdUsuario().equals(userDetails.getId())) {
-                    return ResponseEntity.status(403).body(createError("No puedes crear citas para otros"));
-                }
+                if (c.getCliente() == null || c.getCliente().getIdUsuario() == null) return ResponseEntity.badRequest().body(createError("Falta el cliente"));
+                if (!c.getCliente().getIdUsuario().equals(userDetails.getId())) return ResponseEntity.status(403).body(createError("No puedes crear citas para otros"));
                 idClienteCita = userDetails.getId();
             } else {
-                if (c.getCliente() == null || c.getCliente().getIdUsuario() == null) {
-                    return ResponseEntity.badRequest().body(createError("Debe especificar un cliente"));
-                }
+                if (c.getCliente() == null || c.getCliente().getIdUsuario() == null) return ResponseEntity.badRequest().body(createError("Debe especificar un cliente"));
                 idClienteCita = c.getCliente().getIdUsuario();
             }
 
-            // 7. ✅ NUEVA VALIDACIÓN: Verificar si ya existe una cita duplicada
-            if (existeCitaDuplicada(idClienteCita, horario.getIdHorario(), c.getFecha())) {
+            // ✅ CITA DUPLICADA: Evita solapamientos para un mismo cliente
+            if (existeCitaSolapadaParaCliente(idClienteCita, c.getFecha(), c.getHoraInicio(), c.getHoraFin())) {
+                return ResponseEntity.badRequest().body(createError("Ya tienes otra cita programada que se solapa con este horario."));
+            }
+
+            // ✅ CAPACIDAD: Cuenta alumnos concurrentes en ESE intervalo específico
+            int capacidadMaxima = horario.getGrupo().getCantAlumnos() != null ? horario.getGrupo().getCantAlumnos() : Integer.MAX_VALUE;
+            int citasConcurrentes = contarCitasSolapadasEnIntervalo(horario.getIdHorario(), c.getFecha(), c.getHoraInicio(), c.getHoraFin());
+
+            if (citasConcurrentes >= capacidadMaxima) {
                 return ResponseEntity.badRequest().body(createError(
-                        "Ya existe una cita para este cliente en este horario y fecha. " +
-                                "No se pueden crear citas duplicadas."
+                        "No hay capacidad disponible en esa franja horaria. Máximo: " + capacidadMaxima + " alumnos."
                 ));
             }
 
-            // 8. ✅ VALIDAR CAPACIDAD: Contar cuántas citas hay en este horario para esta fecha
-            int capacidadMaxima = horario.getGrupo().getCantAlumnos() != null ?
-                    horario.getGrupo().getCantAlumnos() : Integer.MAX_VALUE;
-
-            int citasExistentes = contarCitasEnHorario(horario.getIdHorario(), c.getFecha());
-
-            if (citasExistentes >= capacidadMaxima) {
-                return ResponseEntity.badRequest().body(createError(
-                        "No hay capacidad disponible. Máximo: " + capacidadMaxima +
-                                " alumnos. Ya hay " + citasExistentes + " citas reservadas."
-                ));
-            }
-
-            // 9. Establecer el horario completo y estado por defecto
             c.setHorarioSemanal(horario);
-            if (c.getEstado() == null) {
-                c.setEstado(Cita.Estado.pendiente);
-            }
-
-            System.out.println("=== DEBUG CREAR CITA ===");
-            System.out.println("Fecha: " + c.getFecha());
-            System.out.println("Horario ID: " + horario.getIdHorario());
-            System.out.println("Servicio: " + horario.getServicio().getNombre());
-            System.out.println("Grupo: " + horario.getGrupo().getCurso());
-            System.out.println("Día semana: " + horario.getDiaSemana());
-            System.out.println("Horario: " + horario.getHoraInicio() + " - " + horario.getHoraFin());
+            if (c.getEstado() == null) c.setEstado(Cita.Estado.pendiente);
 
             return ResponseEntity.ok(repo.save(c));
 
@@ -196,91 +146,54 @@ public class CitaController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable int id, @RequestBody Cita c) {
         try {
-            if (!repo.existsById(id)) return ResponseEntity.notFound().build();
-
             Cita citaExistente = repo.findById(id).orElse(null);
-            if (citaExistente == null) {
-                return ResponseEntity.notFound().build();
-            }
+            if (citaExistente == null) return ResponseEntity.notFound().build();
 
-            // ✅ VALIDACIÓN: No permitir cambiar a fechas pasadas
             if (c.getFecha() != null && c.getFecha().isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest().body(createError(
-                        "No se puede actualizar la cita a una fecha pasada. La fecha debe ser hoy o posterior."
-                ));
+                return ResponseEntity.badRequest().body(createError("No se puede actualizar a una fecha pasada."));
             }
 
-            // Si se cambia el horario, validar todo de nuevo
             if (c.getHorarioSemanal() != null && c.getHorarioSemanal().getIdHorario() != null) {
+                HorarioSemanal nuevoHorario = horarioRepository.findById(c.getHorarioSemanal().getIdHorario()).orElse(null);
+                if (nuevoHorario == null) return ResponseEntity.badRequest().body(createError("El horario no existe"));
 
-                HorarioSemanal nuevoHorario = horarioRepository.findById(
-                        c.getHorarioSemanal().getIdHorario()
-                ).orElse(null);
+                if (c.getHoraInicio() == null) c.setHoraInicio(citaExistente.getHoraInicio());
+                if (c.getHoraFin() == null) c.setHoraFin(citaExistente.getHoraFin());
 
-                if (nuevoHorario == null) {
-                    return ResponseEntity.badRequest().body(createError("El horario especificado no existe"));
+                if (!c.getHoraInicio().isBefore(c.getHoraFin())) {
+                    return ResponseEntity.badRequest().body(createError("La hora de inicio debe ser anterior a la hora de fin."));
+                }
+                if (c.getHoraInicio().isBefore(nuevoHorario.getHoraInicio()) || c.getHoraFin().isAfter(nuevoHorario.getHoraFin())) {
+                    return ResponseEntity.badRequest().body(createError("El horario de la cita está fuera del turno semanal asignado."));
                 }
 
-                // Validar día de la semana
                 if (c.getFecha() != null) {
                     String diaSemana = convertirDiaSemana(c.getFecha().getDayOfWeek());
                     if (!nuevoHorario.getDiaSemana().name().equals(diaSemana)) {
-                        return ResponseEntity.badRequest().body(createError(
-                                "La fecha seleccionada no corresponde al día del horario"
-                        ));
+                        return ResponseEntity.badRequest().body(createError("La fecha no corresponde al día del horario."));
                     }
 
-                    // ✅✅ NUEVO: VALIDAR BLOQUEOS DE HORARIO
-                    String motivoBloqueo = verificarBloqueoHorario(
-                            c.getFecha(),
-                            nuevoHorario.getHoraInicio(),
-                            nuevoHorario.getHoraFin()
-                    );
-                    if (motivoBloqueo != null) {
-                        return ResponseEntity.badRequest().body(createError(
-                                "No se puede actualizar la cita. " + motivoBloqueo
-                        ));
+                    String motivoBloqueo = verificarBloqueoHorario(c.getFecha(), c.getHoraInicio(), c.getHoraFin());
+                    if (motivoBloqueo != null) return ResponseEntity.badRequest().body(createError("Conflicto con bloqueo: " + motivoBloqueo));
+
+                    Integer idCliente = c.getCliente() != null ? c.getCliente().getIdUsuario() : citaExistente.getCliente().getIdUsuario();
+                    if (existeCitaSolapadaParaClienteExcluyendo(idCliente, c.getFecha(), c.getHoraInicio(), c.getHoraFin(), id)) {
+                        return ResponseEntity.badRequest().body(createError("Solapamiento de horario con otra de tus citas."));
                     }
 
-                    // ✅ VALIDAR CITA DUPLICADA (excluyendo la cita actual)
-                    Integer idCliente = c.getCliente() != null ? c.getCliente().getIdUsuario() :
-                            citaExistente.getCliente().getIdUsuario();
-
-                    if (existeCitaDuplicadaExcluyendo(
-                            idCliente,
-                            nuevoHorario.getIdHorario(),
-                            c.getFecha(),
-                            id
-                    )) {
-                        return ResponseEntity.badRequest().body(createError(
-                                "Ya existe otra cita para este cliente en este horario y fecha."
-                        ));
-                    }
-
-                    // Validar capacidad (excluyendo la cita actual)
                     if (nuevoHorario.getGrupo() != null && nuevoHorario.getGrupo().getCantAlumnos() != null) {
                         int capacidadMaxima = nuevoHorario.getGrupo().getCantAlumnos();
-                        int citasExistentes = contarCitasEnHorarioExcluyendo(
-                                nuevoHorario.getIdHorario(),
-                                c.getFecha(),
-                                id
-                        );
-
-                        if (citasExistentes >= capacidadMaxima) {
-                            return ResponseEntity.badRequest().body(createError(
-                                    "No hay capacidad disponible. Máximo: " + capacidadMaxima +
-                                            " alumnos. Ya hay " + citasExistentes + " citas reservadas."
-                            ));
+                        int citasConcurrentes = contarCitasSolapadasEnIntervaloExcluyendo(nuevoHorario.getIdHorario(), c.getFecha(), c.getHoraInicio(), c.getHoraFin(), id);
+                        if (citasConcurrentes >= capacidadMaxima) {
+                            return ResponseEntity.badRequest().body(createError("No hay capacidad en este intervalo específico."));
                         }
                     }
                 }
-
                 c.setHorarioSemanal(nuevoHorario);
             }
 
             c.setIdCita(id);
             return ResponseEntity.ok(repo.save(c));
-
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(createError("Error: " + e.getMessage()));
         }
@@ -314,123 +227,60 @@ public class CitaController {
         }
     }
 
-    /**
-     * ✅✅ NUEVO: Verifica si existe un bloqueo de horario que impida crear la cita
-     *
-     * @param fecha Fecha de la cita
-     * @param horaInicio Hora de inicio del horario de la cita
-     * @param horaFin Hora de fin del horario de la cita
-     * @return String con el motivo del bloqueo, o null si no hay bloqueo
-     */
     private String verificarBloqueoHorario(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
-        // Obtener todos los bloqueos para la fecha especificada
         List<BloqueoHorario> bloqueosDelDia = bloqueoRepository.findByFecha(fecha);
+        if (bloqueosDelDia == null || bloqueosDelDia.isEmpty()) return null;
 
-        if (bloqueosDelDia == null || bloqueosDelDia.isEmpty()) {
-            return null; // No hay bloqueos para esta fecha
-        }
-
-        // Verificar si algún bloqueo interfiere con el horario de la cita
         for (BloqueoHorario bloqueo : bloqueosDelDia) {
             if (hayConflictoHorario(horaInicio, horaFin, bloqueo.getHoraInicio(), bloqueo.getHoraFin())) {
-                String motivo = bloqueo.getMotivo() != null && !bloqueo.getMotivo().trim().isEmpty()
-                        ? bloqueo.getMotivo()
-                        : "Horario bloqueado";
-
-                return "El horario está bloqueado de " +
-                        bloqueo.getHoraInicio() + " a " + bloqueo.getHoraFin() +
-                        ". Motivo: " + motivo;
+                String motivo = bloqueo.getMotivo() != null && !bloqueo.getMotivo().trim().isEmpty() ? bloqueo.getMotivo() : "Horario bloqueado";
+                return "Bloqueado de " + bloqueo.getHoraInicio() + " a " + bloqueo.getHoraFin() + ". Motivo: " + motivo;
             }
         }
-
-        return null; // No hay conflictos
+        return null;
     }
 
-    /**
-     * ✅✅ NUEVO: Verifica si dos rangos de horario se solapan
-     *
-     * @param inicio1 Hora de inicio del primer rango
-     * @param fin1 Hora de fin del primer rango
-     * @param inicio2 Hora de inicio del segundo rango
-     * @param fin2 Hora de fin del segundo rango
-     * @return true si hay solapamiento, false si no
-     */
-    private boolean hayConflictoHorario(LocalTime inicio1, LocalTime fin1,
-                                        LocalTime inicio2, LocalTime fin2) {
-        // Dos rangos se solapan si:
-        // - El inicio de uno está dentro del otro rango, O
-        // - El fin de uno está dentro del otro rango, O
-        // - Uno contiene completamente al otro
-
-        return !(fin1.isBefore(inicio2) || fin1.equals(inicio2) ||
-                inicio1.isAfter(fin2) || inicio1.equals(fin2));
+    private boolean hayConflictoHorario(LocalTime inicio1, LocalTime fin1, LocalTime inicio2, LocalTime fin2) {
+        return !(fin1.isBefore(inicio2) || fin1.equals(inicio2) || inicio1.isAfter(fin2) || inicio1.equals(fin2));
     }
 
-    /**
-     * ✅ Cuenta cuántas citas existen para un horario específico en una fecha
-     */
-    private int contarCitasEnHorario(Integer idHorario, LocalDate fecha) {
-        List<Cita> citas = repo.findByHorarioAndFromDate(idHorario, fecha);
-
+    // ✅ CUENTA CUANTAS CITAS HAY EXACTAMENTE EN ESE INTERVALO DE TIEMPO
+    private int contarCitasSolapadasEnIntervalo(Integer idHorario, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        List<Cita> citas = repo.findByHorarioAndFecha(idHorario, fecha);
         int contador = 0;
         for (Cita cita : citas) {
-            if (cita.getFecha().equals(fecha) && cita.getEstado() != Cita.Estado.cancelada) {
-                contador++;
+            if (cita.getEstado() != Cita.Estado.cancelada) {
+                if (hayConflictoHorario(horaInicio, horaFin, cita.getHoraInicio(), cita.getHoraFin())) contador++;
             }
         }
         return contador;
     }
 
-    /**
-     * ✅ Cuenta citas excluyendo una específica (para updates)
-     */
-    private int contarCitasEnHorarioExcluyendo(Integer idHorario, LocalDate fecha, Integer idCitaExcluir) {
-        List<Cita> citas = repo.findByHorarioAndFromDate(idHorario, fecha);
-
+    private int contarCitasSolapadasEnIntervaloExcluyendo(Integer idHorario, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin, Integer idCitaExcluir) {
+        List<Cita> citas = repo.findByHorarioAndFecha(idHorario, fecha);
         int contador = 0;
         for (Cita cita : citas) {
-            if (cita.getIdCita().equals(idCitaExcluir)) continue;
-            if (cita.getFecha().equals(fecha) && cita.getEstado() != Cita.Estado.cancelada) {
-                contador++;
-            }
+            if (cita.getIdCita().equals(idCitaExcluir) || cita.getEstado() == Cita.Estado.cancelada) continue;
+            if (hayConflictoHorario(horaInicio, horaFin, cita.getHoraInicio(), cita.getHoraFin())) contador++;
         }
         return contador;
     }
 
-    /**
-     * ✅ Verifica si existe una cita duplicada
-     */
-    private boolean existeCitaDuplicada(Integer idCliente, Integer idHorario, LocalDate fecha) {
-        List<Cita> citasDelCliente = repo.findByClienteId(idCliente);
-
+    // ✅ COMPRUEBA SI EL CLIENTE YA TIENE OTRA CITA EN ESE EXACTO MOMENTO
+    private boolean existeCitaSolapadaParaCliente(Integer idCliente, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        List<Cita> citasDelCliente = repo.findByClienteAndFecha(idCliente, fecha);
         for (Cita cita : citasDelCliente) {
             if (cita.getEstado() == Cita.Estado.cancelada) continue;
-
-            if (cita.getHorarioSemanal() != null &&
-                    cita.getHorarioSemanal().getIdHorario().equals(idHorario) &&
-                    cita.getFecha().equals(fecha)) {
-                return true;
-            }
+            if (hayConflictoHorario(horaInicio, horaFin, cita.getHoraInicio(), cita.getHoraFin())) return true;
         }
         return false;
     }
 
-    /**
-     * ✅ Verifica cita duplicada excluyendo una cita específica
-     */
-    private boolean existeCitaDuplicadaExcluyendo(Integer idCliente, Integer idHorario,
-                                                  LocalDate fecha, Integer idCitaExcluir) {
-        List<Cita> citasDelCliente = repo.findByClienteId(idCliente);
-
+    private boolean existeCitaSolapadaParaClienteExcluyendo(Integer idCliente, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin, Integer idCitaExcluir) {
+        List<Cita> citasDelCliente = repo.findByClienteAndFecha(idCliente, fecha);
         for (Cita cita : citasDelCliente) {
-            if (cita.getIdCita().equals(idCitaExcluir)) continue;
-            if (cita.getEstado() == Cita.Estado.cancelada) continue;
-
-            if (cita.getHorarioSemanal() != null &&
-                    cita.getHorarioSemanal().getIdHorario().equals(idHorario) &&
-                    cita.getFecha().equals(fecha)) {
-                return true;
-            }
+            if (cita.getIdCita().equals(idCitaExcluir) || cita.getEstado() == Cita.Estado.cancelada) continue;
+            if (hayConflictoHorario(horaInicio, horaFin, cita.getHoraInicio(), cita.getHoraFin())) return true;
         }
         return false;
     }

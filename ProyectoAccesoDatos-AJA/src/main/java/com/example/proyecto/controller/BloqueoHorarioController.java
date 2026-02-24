@@ -180,8 +180,8 @@ public class BloqueoHorarioController {
                 continue;
             }
 
-            LocalTime horaInicioCita = cita.getHorarioSemanal().getHoraInicio();
-            LocalTime horaFinCita = cita.getHorarioSemanal().getHoraFin();
+            LocalTime horaInicioCita = cita.getHoraInicio();
+            LocalTime horaFinCita = cita.getHoraFin();
 
             // Comprobar si hay solapamiento entre el bloqueo y la cita
             if (hayConflictoHorario(horaInicioCita, horaFinCita,
