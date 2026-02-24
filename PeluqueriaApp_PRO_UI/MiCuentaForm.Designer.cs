@@ -37,6 +37,13 @@ namespace PeluqueriaApp
         private Button GuardarCambiosBtn;
         private Button CambiarPasswordBtn;
 
+        // Controles para cambiar contraseña
+        private Label NuevaContrasenaLbl;
+        private TextBox NuevaContrasenaTxt;
+        private Label ConfirmarContrasenaLbl;
+        private TextBox ConfirmarContrasenaTxt;
+        private Button GuardarContrasenaBtn;
+
         private void InitializeComponent()
         {
             this.LateralPanel = new Panel();
@@ -69,6 +76,12 @@ namespace PeluqueriaApp
             this.RolTxt = new TextBox();
             this.GuardarCambiosBtn = new Button();
             this.CambiarPasswordBtn = new Button();
+
+            this.NuevaContrasenaLbl = new Label();
+            this.NuevaContrasenaTxt = new TextBox();
+            this.ConfirmarContrasenaLbl = new Label();
+            this.ConfirmarContrasenaTxt = new TextBox();
+            this.GuardarContrasenaBtn = new Button();
 
             this.SuspendLayout();
 
@@ -266,10 +279,10 @@ namespace PeluqueriaApp
             this.TitolPaginaLbl.AutoSize = true;
             this.TitolPaginaLbl.Location = new Point(290, 110);
 
-            // TarjetaPerfilPanel (Fondo blanco para los datos)
+            // TarjetaPerfilPanel
             this.TarjetaPerfilPanel.BackColor = Color.White;
             this.TarjetaPerfilPanel.Location = new Point(290, 170);
-            this.TarjetaPerfilPanel.Size = new Size(600, 450);
+            this.TarjetaPerfilPanel.Size = new Size(600, 580);
             this.TarjetaPerfilPanel.BorderStyle = BorderStyle.FixedSingle;
 
             // TituloDatosLbl
@@ -283,24 +296,24 @@ namespace PeluqueriaApp
             this.NombreLbl.Text = "Nombre:";
             this.NombreLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             this.NombreLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.NombreLbl.Location = new Point(30, 90);
+            this.NombreLbl.Location = new Point(30, 80);
             this.NombreLbl.AutoSize = true;
 
             this.NombreTxt.Font = new Font("Segoe UI", 11F);
-            this.NombreTxt.Location = new Point(30, 120);
+            this.NombreTxt.Location = new Point(30, 110);
             this.NombreTxt.Size = new Size(530, 32);
-            this.NombreTxt.ReadOnly = true; // Por ahora modo lectura
+            this.NombreTxt.ReadOnly = true;
             this.NombreTxt.BackColor = Color.FromArgb(245, 245, 245);
 
             // Apellidos
             this.ApellidosLbl.Text = "Apellidos:";
             this.ApellidosLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             this.ApellidosLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.ApellidosLbl.Location = new Point(30, 170);
+            this.ApellidosLbl.Location = new Point(30, 160);
             this.ApellidosLbl.AutoSize = true;
 
             this.ApellidosTxt.Font = new Font("Segoe UI", 11F);
-            this.ApellidosTxt.Location = new Point(30, 200);
+            this.ApellidosTxt.Location = new Point(30, 190);
             this.ApellidosTxt.Size = new Size(530, 32);
             this.ApellidosTxt.ReadOnly = true;
             this.ApellidosTxt.BackColor = Color.FromArgb(245, 245, 245);
@@ -309,11 +322,11 @@ namespace PeluqueriaApp
             this.CorreoLbl.Text = "Correo Electrónico:";
             this.CorreoLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             this.CorreoLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.CorreoLbl.Location = new Point(30, 250);
+            this.CorreoLbl.Location = new Point(30, 240);
             this.CorreoLbl.AutoSize = true;
 
             this.CorreoTxt.Font = new Font("Segoe UI", 11F);
-            this.CorreoTxt.Location = new Point(30, 280);
+            this.CorreoTxt.Location = new Point(30, 270);
             this.CorreoTxt.Size = new Size(530, 32);
             this.CorreoTxt.ReadOnly = true;
             this.CorreoTxt.BackColor = Color.FromArgb(245, 245, 245);
@@ -322,40 +335,81 @@ namespace PeluqueriaApp
             this.RolLbl.Text = "Rol en el Sistema:";
             this.RolLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             this.RolLbl.ForeColor = Color.FromArgb(45, 35, 30);
-            this.RolLbl.Location = new Point(30, 330);
+            this.RolLbl.Location = new Point(30, 320);
             this.RolLbl.AutoSize = true;
 
             this.RolTxt.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            this.RolTxt.Location = new Point(30, 360);
+            this.RolTxt.Location = new Point(30, 350);
             this.RolTxt.Size = new Size(530, 32);
             this.RolTxt.ReadOnly = true;
             this.RolTxt.BackColor = Color.FromArgb(245, 245, 245);
             this.RolTxt.ForeColor = Color.FromArgb(139, 90, 60);
 
-            // Botones de acción (Deshabilitados por ahora o muestran un mensaje)
-            this.GuardarCambiosBtn.Text = "💾 Guardar Cambios";
+            // --- CAMPOS NUEVA CONTRASEÑA ---
+
+            this.NuevaContrasenaLbl.Text = "Nueva Contraseña:";
+            this.NuevaContrasenaLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.NuevaContrasenaLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.NuevaContrasenaLbl.Location = new Point(30, 400);
+            this.NuevaContrasenaLbl.AutoSize = true;
+            this.NuevaContrasenaLbl.Visible = false;
+
+            this.NuevaContrasenaTxt.Font = new Font("Segoe UI", 11F);
+            this.NuevaContrasenaTxt.Location = new Point(30, 430);
+            this.NuevaContrasenaTxt.Size = new Size(530, 32);
+            this.NuevaContrasenaTxt.PasswordChar = '*';
+            this.NuevaContrasenaTxt.Visible = false;
+
+            this.ConfirmarContrasenaLbl.Text = "Confirmar Contraseña:";
+            this.ConfirmarContrasenaLbl.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            this.ConfirmarContrasenaLbl.ForeColor = Color.FromArgb(45, 35, 30);
+            this.ConfirmarContrasenaLbl.Location = new Point(30, 480);
+            this.ConfirmarContrasenaLbl.AutoSize = true;
+            this.ConfirmarContrasenaLbl.Visible = false;
+
+            this.ConfirmarContrasenaTxt.Font = new Font("Segoe UI", 11F);
+            this.ConfirmarContrasenaTxt.Location = new Point(30, 510);
+            this.ConfirmarContrasenaTxt.Size = new Size(530, 32);
+            this.ConfirmarContrasenaTxt.PasswordChar = '*';
+            this.ConfirmarContrasenaTxt.Visible = false;
+
+            // Botones de acción principales
+            this.GuardarCambiosBtn.Text = "✏️ Editar Perfil";
             this.GuardarCambiosBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
             this.GuardarCambiosBtn.Size = new Size(200, 45);
-            this.GuardarCambiosBtn.Location = new Point(290, 640);
+            this.GuardarCambiosBtn.Location = new Point(920, 170);
             this.GuardarCambiosBtn.BackColor = Color.FromArgb(139, 90, 60);
             this.GuardarCambiosBtn.ForeColor = Color.White;
             this.GuardarCambiosBtn.FlatStyle = FlatStyle.Flat;
             this.GuardarCambiosBtn.FlatAppearance.BorderSize = 0;
             this.GuardarCambiosBtn.Cursor = Cursors.Hand;
-            this.GuardarCambiosBtn.Click += new System.EventHandler(this.AccionDesarrollo_Click);
+            this.GuardarCambiosBtn.Click += new System.EventHandler(this.GuardarCambiosBtn_Click); // ENLAZADO
 
             this.CambiarPasswordBtn.Text = "🔑 Cambiar Contraseña";
             this.CambiarPasswordBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
             this.CambiarPasswordBtn.Size = new Size(220, 45);
-            this.CambiarPasswordBtn.Location = new Point(510, 640);
+            this.CambiarPasswordBtn.Location = new Point(920, 230);
             this.CambiarPasswordBtn.BackColor = Color.FromArgb(70, 130, 180);
             this.CambiarPasswordBtn.ForeColor = Color.White;
             this.CambiarPasswordBtn.FlatStyle = FlatStyle.Flat;
             this.CambiarPasswordBtn.FlatAppearance.BorderSize = 0;
             this.CambiarPasswordBtn.Cursor = Cursors.Hand;
-            this.CambiarPasswordBtn.Click += new System.EventHandler(this.AccionDesarrollo_Click);
+            this.CambiarPasswordBtn.Click += new System.EventHandler(this.AccionDesarrollo_Click); // ENLAZADO
 
-            // Agrupamos en Tarjeta
+            // Botón Guardar Nueva Contraseña
+            this.GuardarContrasenaBtn.Text = "✓ Guardar Nueva Contraseña";
+            this.GuardarContrasenaBtn.Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point);
+            this.GuardarContrasenaBtn.Size = new Size(250, 45);
+            this.GuardarContrasenaBtn.Location = new Point(920, 290);
+            this.GuardarContrasenaBtn.BackColor = Color.FromArgb(34, 139, 34);
+            this.GuardarContrasenaBtn.ForeColor = Color.White;
+            this.GuardarContrasenaBtn.FlatStyle = FlatStyle.Flat;
+            this.GuardarContrasenaBtn.FlatAppearance.BorderSize = 0;
+            this.GuardarContrasenaBtn.Cursor = Cursors.Hand;
+            this.GuardarContrasenaBtn.Visible = false;
+            this.GuardarContrasenaBtn.Click += new System.EventHandler(this.GuardarContrasenaBtn_Click); // ENLAZADO
+
+            // Agrupamos en Tarjeta 
             this.TarjetaPerfilPanel.Controls.Add(this.TituloDatosLbl);
             this.TarjetaPerfilPanel.Controls.Add(this.NombreLbl);
             this.TarjetaPerfilPanel.Controls.Add(this.NombreTxt);
@@ -365,8 +419,12 @@ namespace PeluqueriaApp
             this.TarjetaPerfilPanel.Controls.Add(this.CorreoTxt);
             this.TarjetaPerfilPanel.Controls.Add(this.RolLbl);
             this.TarjetaPerfilPanel.Controls.Add(this.RolTxt);
+            this.TarjetaPerfilPanel.Controls.Add(this.NuevaContrasenaLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.NuevaContrasenaTxt);
+            this.TarjetaPerfilPanel.Controls.Add(this.ConfirmarContrasenaLbl);
+            this.TarjetaPerfilPanel.Controls.Add(this.ConfirmarContrasenaTxt);
 
-            // Add controls to LateralPanel
+            // LateralPanel
             this.LateralPanel.Controls.Add(this.LogoLbl);
             this.LateralPanel.Controls.Add(this.IniciBoto);
             this.LateralPanel.Controls.Add(this.ServiciosBoto);
@@ -380,13 +438,14 @@ namespace PeluqueriaApp
             this.LateralPanel.Controls.Add(this.MiCuentaBoto);
             this.LateralPanel.Controls.Add(this.TancarSessioBoto);
 
-            // Add controls to CapcaleraPanel
+            // CapcaleraPanel
             this.CapcaleraPanel.Controls.Add(this.TitolAppLbl);
             this.CapcaleraPanel.Controls.Add(this.BienvenidaLbl);
 
-            // Add controls to Form
+            // Form
             this.Controls.Add(this.GuardarCambiosBtn);
             this.Controls.Add(this.CambiarPasswordBtn);
+            this.Controls.Add(this.GuardarContrasenaBtn);
             this.Controls.Add(this.TarjetaPerfilPanel);
             this.Controls.Add(this.TitolPaginaLbl);
             this.Controls.Add(this.CapcaleraPanel);

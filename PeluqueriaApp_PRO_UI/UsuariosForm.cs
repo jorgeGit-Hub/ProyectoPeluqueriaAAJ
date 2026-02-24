@@ -136,23 +136,45 @@ namespace PeluqueriaApp
                 return;
             }
 
-            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este usuario?\n\nEsta acción no se puede deshacer.",
+            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este usuario y sus perfiles (Cliente/Administrador)?\n\nEsta acción no se puede deshacer.",
                 "Confirmar Eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
+                int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
+                string rol = UsuariosDataGrid.SelectedRows[0].Cells["rol"].Value?.ToString() ?? "";
+
                 try
                 {
-                    int idUsuario = Convert.ToInt32(UsuariosDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
-                    bool eliminado = await ApiService.DeleteAsync($"api/usuarios/{idUsuario}");
-                    if (eliminado)
+                    // 1. Intentamos eliminar el perfil de rol específico primero
+                    try
                     {
-                        MessageBox.Show("Usuario eliminado correctamente", "Éxito",
+                        if (rol.Equals("CLIENTE", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await ApiService.DeleteAsync($"api/clientes/{idUsuario}");
+                        }
+                        else if (rol.Equals("ADMINISTRADOR", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Asumiendo que tu endpoint es /api/administradores. Cámbialo si es distinto.
+                            await ApiService.DeleteAsync($"api/administradores/{idUsuario}");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Dejamos que continúe por si el rol ya fue borrado previamente o no existía.
+                    }
+
+                    // 2. Eliminamos el usuario base de la tabla `usuario`
+                    bool eliminadoUsuario = await ApiService.DeleteAsync($"api/usuarios/{idUsuario}");
+                    if (eliminadoUsuario)
+                    {
+                        MessageBox.Show("Usuario y sus roles asociados eliminados correctamente", "Éxito",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                         CargarUsuarios();
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al eliminar usuario: {ex.Message}", "Error",
+                    // Error capturado si el usuario/cliente tiene entidades bloqueantes (ej: Cliente 7 y sus citas)
+                    MessageBox.Show($"Error al eliminar el usuario. Es posible que tenga citas, valoraciones o bloqueos de horario asociados que debes eliminar primero.\n\nDetalle técnico: {ex.Message}", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }

@@ -146,23 +146,38 @@ namespace PeluqueriaApp
                 return;
             }
 
-            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este cliente?",
+            if (MessageBox.Show("¿Estás seguro de que quieres eliminar este cliente y su cuenta de usuario asociado?\n\nEsta acción no se puede deshacer.",
                 "Confirmar Eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 try
                 {
                     int idCliente = Convert.ToInt32(ClientesDataGrid.SelectedRows[0].Cells["idUsuario"].Value);
-                    bool eliminado = await ApiService.DeleteAsync($"api/clientes/{idCliente}");
-                    if (eliminado)
+
+                    // 1. Eliminamos primero el cliente (rol)
+                    bool eliminadoCliente = await ApiService.DeleteAsync($"api/clientes/{idCliente}");
+
+                    if (eliminadoCliente)
                     {
-                        MessageBox.Show("Cliente eliminado correctamente", "Éxito",
+                        // 2. Si se eliminó el cliente correctamente, eliminamos el usuario base
+                        try
+                        {
+                            await ApiService.DeleteAsync($"api/usuarios/{idCliente}");
+                        }
+                        catch (Exception ex)
+                        {
+                            // Ignoramos o mostramos un pequeño aviso si el usuario ya no existe
+                            Console.WriteLine($"Nota: No se pudo eliminar el usuario base o ya estaba borrado. {ex.Message}");
+                        }
+
+                        MessageBox.Show("Cliente y usuario eliminados correctamente.", "Éxito",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                         CargarClientes();
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al eliminar cliente: {ex.Message}", "Error",
+                    // Aquí capturamos el error del Cliente 7 (Claves foráneas)
+                    MessageBox.Show($"No se puede eliminar el cliente porque tiene citas o valoraciones asociadas.\n\nDetalle técnico: {ex.Message}", "Error de Dependencias",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
