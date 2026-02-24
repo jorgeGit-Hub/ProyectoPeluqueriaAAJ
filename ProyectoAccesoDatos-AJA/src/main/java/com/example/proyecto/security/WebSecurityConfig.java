@@ -61,7 +61,6 @@ public class WebSecurityConfig {
                         // ✅ CRÍTICO: Endpoints de autenticación públicos (PRIMERO Y ESPECÍFICOS)
                         .requestMatchers("/api/auth/**").permitAll()
 
-
                         // Otros endpoints públicos
                         .requestMatchers("/api/dev/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
@@ -76,7 +75,9 @@ public class WebSecurityConfig {
 
                         // Solo ADMINISTRADOR
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
+
+                        // ✅ CORRECCIÓN: Cualquier usuario logueado puede editar su propio perfil y subir foto
+                        .requestMatchers("/api/usuarios/**").authenticated()
 
                         // Bloqueos: ADMINISTRADOR puede crear/modificar, ALUMNO solo consultar
                         .requestMatchers("/api/bloqueos").hasAnyRole("ADMINISTRADOR", "ALUMNO")

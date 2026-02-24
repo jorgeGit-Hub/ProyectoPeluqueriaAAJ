@@ -71,6 +71,21 @@ public class JwtUtils {
     }
 
     /**
+     * ✅ NUEVO: Genera un token JWT directamente desde un nombre de usuario (o correo).
+     * Ideal para inicios de sesión sociales donde no hay contraseña.
+     * @param username El correo o nombre del usuario.
+     * @return El token JWT generado.
+     */
+    public String generateJwtTokenFromUsername(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    /**
      * Extrae el nombre de usuario (Subject) del token JWT.
      * @param token El token JWT.
      * @return El nombre de usuario contenido en el token.

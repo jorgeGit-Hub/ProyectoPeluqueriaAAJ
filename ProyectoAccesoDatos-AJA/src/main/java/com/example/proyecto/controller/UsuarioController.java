@@ -62,6 +62,10 @@ public class UsuarioController {
                     usuario.setRol(Usuario.Rol.valueOf(((String) payload.get("rol")).toUpperCase()));
                 } catch (IllegalArgumentException ignored) {}
             }
+            // ✅ NUEVO: Actualizar la foto de perfil si se envía
+            if (payload.containsKey("fotoPerfil")) {
+                usuario.setFotoPerfil((String) payload.get("fotoPerfil"));
+            }
             return ResponseEntity.ok(repo.save(usuario));
         }).orElse(ResponseEntity.notFound().build());
     }
