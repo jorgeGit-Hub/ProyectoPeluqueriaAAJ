@@ -16,7 +16,9 @@ class ClienteProvider with ChangeNotifier {
       final data = await _service.getCliente(idUsuario);
       cliente = Cliente.fromJson(data);
     } catch (e) {
-      debugPrint("Error al cargar cliente: $e");
+      debugPrint("Cliente no encontrado (id=$idUsuario): $e");
+      // ✅ No relanzamos el error — simplemente dejamos cliente = null
+      // Esto evita el pantallazo rojo en usuarios de Google
       cliente = null;
     }
 
@@ -32,7 +34,6 @@ class ClienteProvider with ChangeNotifier {
     try {
       final data = await _service.updateCliente(idUsuario, changes);
       cliente = Cliente.fromJson(data);
-
       loading = false;
       notifyListeners();
       return true;

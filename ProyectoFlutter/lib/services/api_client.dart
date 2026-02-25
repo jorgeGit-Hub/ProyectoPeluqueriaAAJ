@@ -7,7 +7,7 @@ class ApiClient {
   factory ApiClient() => _instance;
   ApiClient._internal();
 
-  static const String baseUrl = 'http://172.20.10.9:8091/api';
+  static const String baseUrl = 'http://172.20.10.9:8090/api';
 
   late Dio _dio;
   String? _token;

@@ -35,7 +35,6 @@ class UserProvider with ChangeNotifier {
       await _api.loadToken();
 
       if (_api.token != null) {
-        debugPrint("Token encontrado: ${_api.token}"); // DEBUG
         final result = await _authService.validateToken();
 
         if (result["success"] == true) {
@@ -45,17 +44,14 @@ class UserProvider with ChangeNotifier {
           correo = result["correo"];
           rol = result["rol"];
           isLogged = true;
-          debugPrint("Usuario validado: $nombre"); // DEBUG
         } else {
           await _api.clearToken();
           isLogged = false;
         }
       } else {
-        debugPrint("No hay token guardado"); // DEBUG
         isLogged = false;
       }
     } catch (e) {
-      debugPrint("Error en loadUserFromToken: $e");
       await _api.clearToken();
       isLogged = false;
     } finally {
@@ -67,8 +63,6 @@ class UserProvider with ChangeNotifier {
     setLoading(true);
     try {
       final result = await _authService.login(email, password);
-      debugPrint("Login result: $result"); // DEBUG
-
       if (result["success"] == true) {
         id = result["id"];
         nombre = result["nombre"];
@@ -76,13 +70,37 @@ class UserProvider with ChangeNotifier {
         correo = result["correo"];
         rol = result["rol"];
         isLogged = true;
-
-        debugPrint("Login exitoso. Token: ${_api.token}"); // DEBUG
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint("Error en login: $e");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ✅ PROVEEDOR PARA LOGIN SOCIAL CORREGIDO
+  Future<bool> socialLogin(
+      String emailGoogle, String nombreGoogle, String? fotoUrl) async {
+    setLoading(true);
+    try {
+      final result =
+          await _authService.socialLogin(emailGoogle, nombreGoogle, fotoUrl);
+
+      if (result["success"] == true) {
+        id = result["id"];
+        nombre = result[
+            "nombre"]; // ✅ Ahora se guarda en la variable global correctamente
+        apellidos = result["apellidos"];
+        correo = result[
+            "correo"]; // ✅ Ahora se guarda en la variable global correctamente
+        rol = result["rol"];
+        isLogged = true;
+        return true;
+      }
+      return false;
+    } catch (e) {
       return false;
     } finally {
       setLoading(false);
@@ -94,8 +112,10 @@ class UserProvider with ChangeNotifier {
     required String apellidos,
     required String correo,
     required String password,
-    String? telefono,
-    String? direccion,
+    required String telefono,
+    required String direccion,
+    required String alergenos,
+    String? observaciones,
   }) async {
     setLoading(true);
     try {
@@ -106,11 +126,11 @@ class UserProvider with ChangeNotifier {
         password: password,
         telefono: telefono,
         direccion: direccion,
+        alergenos: alergenos,
+        observaciones: observaciones,
       );
-
       return result["success"] == true;
     } catch (e) {
-      debugPrint("Error en register: $e");
       return false;
     } finally {
       setLoading(false);

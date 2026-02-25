@@ -27,7 +27,9 @@ class _CrearValoracionScreenState extends State<CrearValoracionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final user = context.read<UserProvider>().usuario;
       if (user != null) {
-        await context.read<CitaProvider>().loadCitasByCliente(user["id"]);
+        final userId =
+            user["idUsuario"] ?? user["id"] ?? user["id_usuario"] ?? 0;
+        await context.read<CitaProvider>().loadCitasByCliente(userId);
       }
     });
   }

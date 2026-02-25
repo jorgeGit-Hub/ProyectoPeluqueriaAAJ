@@ -44,6 +44,25 @@ class ValoracionProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // ✅ NUEVO: Carga solo las valoraciones de un servicio concreto
+  Future<void> loadValoracionesByServicio(int idServicio) async {
+    loading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final List<dynamic> data =
+          await _service.getValoracionesByServicio(idServicio);
+      valoraciones = data.map((item) => Valoracion.fromJson(item)).toList();
+    } catch (e) {
+      debugPrint("Error al cargar valoraciones por servicio: $e");
+      error = e.toString();
+    }
+
+    loading = false;
+    notifyListeners();
+  }
+
   Future<bool> createValoracion(Valoracion nuevaValoracion) async {
     try {
       await _service.createValoracion(nuevaValoracion.toJson());

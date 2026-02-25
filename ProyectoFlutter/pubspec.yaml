@@ -9,40 +9,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # Estado
   provider: ^6.1.1
-  
-  # HTTP y Red
   dio: ^5.4.0
-  http: ^1.1.2
-  
-  # Persistencia
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.0.0
-  
-  # Imágenes
   cached_network_image: ^3.3.1
   image_picker: ^1.0.7
-  
-  # UI
   cupertino_icons: ^1.0.6
+  
+  # ✅ DEPENDENCIAS RECIÉN AÑADIDAS
+  url_launcher: ^6.2.5
+  google_sign_in: ^6.2.1
+  flutter_facebook_auth: ^7.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  flutter_native_splash: ^2.3.10
 
 flutter:
   uses-material-design: true
-
   assets:
     - assets/images/logo.jpg
-
-flutter_native_splash:
-  color: "#ffffff"
-  image: assets/images/logo.jpg
-  android: true
-  ios: true
-

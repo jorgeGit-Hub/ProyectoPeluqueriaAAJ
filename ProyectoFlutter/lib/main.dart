@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:peluqueria_aja/screens/auth/forgot_password_screen.dart';
-import 'package:peluqueria_aja/screens/booking/cita_detalle_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/user_provider.dart';
@@ -13,14 +11,16 @@ import 'services/api_client.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 import 'screens/home/home_shell.dart';
-import 'screens/account/EditAccountScreen.dart';
+import 'screens/home/splash_screen.dart';
+import 'screens/account/edit_account_screen.dart';
 import 'screens/booking/mis_citas_screen.dart';
 import 'screens/booking/reservar_cita_screen.dart';
 import 'screens/booking/booking_screen.dart';
 import 'screens/booking/reservation_confirmed_screen.dart';
+import 'screens/booking/cita_detalle_screen.dart';
 import 'screens/services/service_detail_screen.dart';
-import 'screens/home/splash_screen.dart';
 import 'screens/valoraciones/crear_valoracion_screen.dart';
 
 void main() {
@@ -54,7 +54,7 @@ class PeluqueriaApp extends StatelessWidget {
         '/splash': (_) => const SplashScreen(),
         '/login': (_) => const LoginScreen(),
         '/register': (_) => const RegisterScreen(),
-        '/forgot-password': (_) => const ForgotPasswordScreen(), // ✅ NUEVO
+        '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/home': (_) => const HomeShell(),
         '/service-detail': (_) => const ServiceDetailScreen(),
         '/booking': (_) => const BookingScreen(),
@@ -62,7 +62,7 @@ class PeluqueriaApp extends StatelessWidget {
         '/reservation-confirmed': (_) => const ReservationConfirmedScreen(),
         '/edit-account': (_) => const EditAccountScreen(),
         '/mis-citas': (_) => const MisCitasScreen(),
-        '/detalle-cita': (_) => const DetalleCitaScreen(), // ✅ NUEVO
+        '/detalle-cita': (_) => const DetalleCitaScreen(),
         '/crear-valoracion': (_) => const CrearValoracionScreen(),
       },
     );

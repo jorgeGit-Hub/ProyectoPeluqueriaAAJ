@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../../models/cita.dart';
 import '../../providers/valoracion_provider.dart';
 import '../../models/valoracion.dart';
@@ -17,59 +15,38 @@ class DetalleCitaScreen extends StatefulWidget {
 class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
   final _comentarioController = TextEditingController();
   int _calificacion = 5;
-  File? _imagenSeleccionada;
   bool _loading = false;
+  bool _cargandoValoracion = true;
+  Valoracion? _valoracionExistente;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargarValoracion());
+  }
+
+  Future<void> _cargarValoracion() async {
+    final cita = ModalRoute.of(context)!.settings.arguments as Cita;
+    if (cita.estado.toLowerCase() != 'realizada') {
+      setState(() => _cargandoValoracion = false);
+      return;
+    }
+
+    await context.read<ValoracionProvider>().loadValoraciones();
+    final valoraciones = context.read<ValoracionProvider>().valoraciones;
+    final existente =
+        valoraciones.where((v) => v.idCita == cita.idCita).firstOrNull;
+
+    setState(() {
+      _valoracionExistente = existente;
+      _cargandoValoracion = false;
+    });
+  }
 
   @override
   void dispose() {
     _comentarioController.dispose();
     super.dispose();
-  }
-
-  Future<void> _seleccionarImagen() async {
-    final ImagePicker picker = ImagePicker();
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await picker.pickImage(
-                  source: ImageSource.gallery,
-                  maxWidth: 1024,
-                  maxHeight: 1024,
-                  imageQuality: 85,
-                );
-                if (image != null) {
-                  setState(() => _imagenSeleccionada = File(image.path));
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await picker.pickImage(
-                  source: ImageSource.camera,
-                  maxWidth: 1024,
-                  maxHeight: 1024,
-                  imageQuality: 85,
-                );
-                if (image != null) {
-                  setState(() => _imagenSeleccionada = File(image.path));
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _enviarValoracion(Cita cita) async {
@@ -100,13 +77,17 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
       setState(() => _loading = false);
 
       if (success) {
+        setState(() => _valoracionExistente = nuevaValoracion.copyWith(
+              puntuacion: _calificacion,
+              comentario: _comentarioController.text.trim(),
+              fechaValoracion: DateTime.now().toString().split(' ')[0],
+            ));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('¡Valoración enviada con éxito!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -184,7 +165,7 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
 
             const SizedBox(height: 20),
 
-            // INFORMACIÓN DE LA CITA (INACTIVA)
+            // INFORMACIÓN DE LA CITA
             Padding(
               padding: const EdgeInsets.all(20),
               child: Container(
@@ -205,10 +186,8 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
                   children: [
                     const Text(
                       'Información de la Cita',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
                     _buildInfoField('Fecha', cita.fecha, Icons.calendar_today),
@@ -226,164 +205,15 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
               ),
             ),
 
-            // SECCIÓN DE VALORACIÓN (SOLO SI LA CITA ESTÁ REALIZADA)
+            // SECCIÓN DE VALORACIÓN
             if (puedeValorar) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Valora tu experiencia',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // CALIFICACIÓN CON ESTRELLAS
-                      const Text('Calificación',
-                          style: TextStyle(fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(5, (index) {
-                          return IconButton(
-                            iconSize: 40,
-                            icon: Icon(
-                              index < _calificacion
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              color: Colors.amber,
-                            ),
-                            onPressed: () =>
-                                setState(() => _calificacion = index + 1),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // COMENTARIO
-                      const Text('Comentario',
-                          style: TextStyle(fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _comentarioController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Cuéntanos tu experiencia...',
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // IMAGEN (OPCIONAL)
-                      const Text('Imagen (opcional)',
-                          style: TextStyle(fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 10),
-                      if (_imagenSeleccionada != null)
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                _imagenSeleccionada!,
-                                height: 200,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: IconButton(
-                                icon: const Icon(Icons.close,
-                                    color: Colors.white),
-                                onPressed: () =>
-                                    setState(() => _imagenSeleccionada = null),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black54,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        InkWell(
-                          onTap: _seleccionarImagen,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: Colors.grey[300]!, width: 2),
-                            ),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_photo_alternate,
-                                      size: 40, color: Colors.grey[400]),
-                                  const SizedBox(height: 8),
-                                  Text('Agregar imagen',
-                                      style:
-                                          TextStyle(color: Colors.grey[600])),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 30),
-
-                      // BOTÓN ENVIAR VALORACIÓN
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          onPressed:
-                              _loading ? null : () => _enviarValoracion(cita),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: _loading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                              : const Text(
-                                  'Enviar Valoración',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _cargandoValoracion
+                    ? const Center(child: CircularProgressIndicator())
+                    : _valoracionExistente != null
+                        ? _buildResumenValoracion(_valoracionExistente!)
+                        : _buildFormularioValoracion(cita),
               ),
             ] else
               Padding(
@@ -417,6 +247,183 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
     );
   }
 
+  // ── RESUMEN de valoración ya enviada ──────────────────────────────────────
+  Widget _buildResumenValoracion(Valoracion v) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle,
+                    color: Colors.green, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Tu valoración',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Estrellas (solo lectura)
+          const Text('Calificación',
+              style: TextStyle(fontSize: 13, color: Colors.grey)),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(
+                5,
+                (i) => Icon(
+                      i < v.puntuacion ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 32,
+                    )),
+          ),
+          const SizedBox(height: 20),
+
+          // Comentario
+          const Text('Comentario',
+              style: TextStyle(fontSize: 13, color: Colors.grey)),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppTheme.pastelLavender,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              v.comentario,
+              style: const TextStyle(fontSize: 15, height: 1.5),
+            ),
+          ),
+
+          if (v.fechaValoracion != null) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 6),
+                Text(
+                  'Enviada el ${v.fechaValoracion}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── FORMULARIO para enviar valoración ────────────────────────────────────
+  Widget _buildFormularioValoracion(Cita cita) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Valora tu experiencia',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+
+          // CALIFICACIÓN CON ESTRELLAS
+          const Text('Calificación',
+              style: TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              return IconButton(
+                iconSize: 40,
+                icon: Icon(
+                  index < _calificacion ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                ),
+                onPressed: () => setState(() => _calificacion = index + 1),
+              );
+            }),
+          ),
+          const SizedBox(height: 20),
+
+          // COMENTARIO
+          const Text('Comentario',
+              style: TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _comentarioController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'Cuéntanos tu experiencia...',
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // BOTÓN ENVIAR
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _loading ? null : () => _enviarValoracion(cita),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: _loading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'Enviar Valoración',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoField(String label, String value, IconData icon) {
     return Row(
       children: [
@@ -433,18 +440,12 @@ class _DetalleCitaScreenState extends State<DetalleCitaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
+              Text(label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500)),
             ],
           ),
         ),

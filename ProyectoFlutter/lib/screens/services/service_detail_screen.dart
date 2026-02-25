@@ -17,7 +17,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ValoracionProvider>().loadValoraciones();
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Servicio && args.idServicio != null) {
+        // ✅ ARREGLADO: Carga solo las valoraciones de ESTE servicio
+        context
+            .read<ValoracionProvider>()
+            .loadValoracionesByServicio(args.idServicio!);
+      }
     });
   }
 
@@ -47,35 +53,21 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         children: [
           CustomScrollView(
             slivers: [
-              // Header con imagen
               _buildHeader(servicio),
-
-              // Contenido
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    // Información principal
                     _buildMainInfo(
                         servicio, promedio, todasValoraciones.length),
-
-                    // Qué incluye
                     _buildWhatIncludes(),
-
-                    // Descripción
                     _buildDescription(servicio),
-
-                    // Valoraciones
                     _buildReviews(todasValoraciones, promedio),
-
-                    const SizedBox(
-                        height: 100), // Espacio para el botón flotante
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ],
           ),
-
-          // Botón flotante de reserva
           _buildFloatingBookButton(context, servicio),
         ],
       ),
@@ -108,7 +100,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            // Imagen de fondo
+            // Imagen del servicio o asset por defecto
             if (servicio.imagen != null && servicio.imagen!.isNotEmpty)
               Image.network(
                 servicio.imagen!,
@@ -156,7 +148,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   ],
                 ),
                 child: const Text(
-                  'Cabello',
+                  'Peluquería AJA',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -171,6 +163,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
   }
 
+  // ✅ ARREGLADO: Usa imagen de assets en vez de icono de tijeras
   Widget _buildDefaultBackground() {
     return Container(
       decoration: BoxDecoration(
@@ -183,11 +176,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           ],
         ),
       ),
-      child: const Center(
-        child: Icon(
-          Icons.content_cut_rounded,
-          size: 100,
-          color: Colors.white,
+      child: Center(
+        child: Image.asset(
+          'assets/images/logo.jpg',
+          width: 120,
+          height: 120,
+          fit: BoxFit.contain,
         ),
       ),
     );
@@ -212,7 +206,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título
           Text(
             servicio.nombre,
             style: const TextStyle(
@@ -222,11 +215,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Rating y duración
           Row(
             children: [
-              // Rating
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -239,74 +229,73 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     const Icon(Icons.star, color: Colors.amber, size: 20),
                     const SizedBox(width: 6),
                     Text(
-                      promedio > 0 ? promedio.toStringAsFixed(1) : '5.0',
+                      numValoraciones > 0
+                          ? promedio.toStringAsFixed(1)
+                          : 'Sin valorar',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '($numValoraciones)',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                    if (numValoraciones > 0) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '($numValoraciones)',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
-
               const SizedBox(width: 12),
-
-              // Duración
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time,
-                        color: AppTheme.primary, size: 20),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${servicio.duracion} min',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+              if (servicio.duracion > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time,
+                          size: 18, color: Colors.blue[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${servicio.duracion} min',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
-
-          const SizedBox(height: 20),
-
-          // Precio
-          Row(
-            children: [
-              Text(
-                'Precio',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.euro, color: AppTheme.primary, size: 28),
+                const SizedBox(width: 6),
+                Text(
+                  '${servicio.precio.toStringAsFixed(2)} €',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '\$${servicio.precio.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -315,7 +304,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   Widget _buildWhatIncludes() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -332,54 +321,43 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Qué Incluye',
+            '¿Qué incluye?',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 16),
-          _buildIncludeItem('Consulta de estilo personalizada'),
-          _buildIncludeItem('Lavado y acondicionamiento profundo'),
-          _buildIncludeItem('Corte profesional con técnicas avanzadas'),
-          _buildIncludeItem('Estilizado y secado'),
-          _buildIncludeItem('Productos de acabado premium'),
-          _buildIncludeItem('Consejos de mantenimiento en casa'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIncludeItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            height: 24,
-            width: 24,
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check,
-              color: Colors.green,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-                height: 1.4,
-              ),
-            ),
-          ),
+          ...[
+            'Atención personalizada por profesionales titulados',
+            'Productos de alta calidad incluidos',
+            'Asesoramiento gratuito durante el servicio',
+            'Ambiente relajado y profesional',
+          ].map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check,
+                          size: 14, color: AppTheme.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
         ],
       ),
     );
@@ -387,7 +365,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   Widget _buildDescription(Servicio servicio) {
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -406,7 +384,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           const Text(
             'Descripción',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -415,7 +393,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           Text(
             servicio.descripcion.isNotEmpty
                 ? servicio.descripcion
-                : 'Nuestro servicio premium de corte y estilizado está diseñado para transformar tu look con técnicas profesionales y productos de alta calidad. Cada servicio incluye una consulta personalizada para asegurar que obtengas exactamente el estilo que deseas.',
+                : 'Servicio profesional de peluquería realizado por nuestro equipo de expertos con los mejores productos del mercado.',
             style: TextStyle(
               fontSize: 15,
               color: Colors.grey[700],
@@ -429,7 +407,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   Widget _buildReviews(List<Valoracion> valoraciones, double promedio) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -445,25 +423,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Valoraciones de Clientes',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              if (valoraciones.isNotEmpty)
-                TextButton(
-                  onPressed: () {
-                    // Navegar a ver todas las valoraciones
-                  },
-                  child: const Text('Ver todas'),
-                ),
-            ],
+          const Text(
+            'Valoraciones de este Servicio',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
           if (valoraciones.isEmpty)
@@ -484,7 +450,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               ),
             )
           else ...[
-            // Resumen de rating
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -533,8 +498,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Lista de valoraciones
             ...valoraciones.take(3).map((v) => _buildReviewCard(v)),
           ],
         ],
@@ -556,12 +519,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: AppTheme.primary.withOpacity(0.1),
-                child:
-                    const Icon(Icons.person, color: AppTheme.primary, size: 20),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

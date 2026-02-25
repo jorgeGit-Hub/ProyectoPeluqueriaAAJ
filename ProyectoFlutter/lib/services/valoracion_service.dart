@@ -37,6 +37,18 @@ class ValoracionService {
     }
   }
 
+  // ✅ NUEVO: Valoraciones filtradas por servicio
+  Future<List<dynamic>> getValoracionesByServicio(int idServicio) async {
+    try {
+      final response = await _api.get('/valoraciones/servicio/$idServicio');
+      if (response.data is List) return response.data;
+      return [];
+    } catch (e) {
+      debugPrint("Error en getValoracionesByServicio ($idServicio): $e");
+      return [];
+    }
+  }
+
   Future<Map<String, dynamic>> createValoracion(
       Map<String, dynamic> data) async {
     try {

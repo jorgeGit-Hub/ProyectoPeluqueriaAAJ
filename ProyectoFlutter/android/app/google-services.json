@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "771668624694",
+    "project_id": "peluqueriaaja",
+    "storage_bucket": "peluqueriaaja.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771668624694:android:edb1e117b28299379e5f97",
+        "android_client_info": {
+          "package_name": "com.example.peluqueria_aja"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1K2heA0yiJneblkuhz3ka_gR1nDIa6XE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

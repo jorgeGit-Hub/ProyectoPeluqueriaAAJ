@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 
@@ -26,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     FocusScope.of(context).unfocus();
-
     final correo = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
@@ -51,9 +51,37 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       _showSnackBar(
-        "Error de conexión: Verifica que tu móvil y PC estén en la misma red Wi-Fi",
+        "Error de conexión: Verifica tu red Wi-Fi",
         Colors.redAccent,
       );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _loginConGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      setState(() => loading = true);
+
+      final success = await context.read<UserProvider>().socialLogin(
+            googleUser.email,
+            googleUser.displayName ?? "Usuario Google",
+            googleUser.photoUrl,
+          );
+
+      if (success && mounted) {
+        Navigator.pushReplacementNamed(context, "/home");
+      } else {
+        if (mounted)
+          _showSnackBar("Error al iniciar con Google", Colors.redAccent);
+      }
+    } catch (error) {
+      debugPrint("Error Google: $error");
+      if (mounted)
+        _showSnackBar("No se pudo conectar con Google", Colors.redAccent);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -84,7 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding:
+                      const EdgeInsets.all(12), // Espacio para el borde blanco
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -96,10 +125,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.content_cut_rounded,
-                    size: 60,
-                    color: AppTheme.primary,
+                  child: ClipOval(
+                    // ✅ Sustitución del Icon por Image.asset
+                    child: Image.asset(
+                      'assets/images/logo.jpg',
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -117,8 +150,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.grey[600], fontSize: 16),
                 ),
                 const SizedBox(height: 40),
-
-                // 🔹 TARJETA DE LOGIN
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -168,8 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
-
-                      // 🔹 BOTÓN LOGIN
                       SizedBox(
                         width: double.infinity,
                         height: 54,
@@ -200,10 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // 🔹 RECUPERAR CONTRASEÑA
                       TextButton(
                         onPressed: () => Navigator.pushNamed(
                           context,
@@ -218,13 +244,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+                      const Divider(height: 30),
+                      const Text("O inicia sesión con:",
+                          style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.g_mobiledata, size: 30),
+                          label: const Text("Google"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.red,
+                            elevation: 2,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 8),
+                          ),
+                          onPressed: loading ? null : _loginConGoogle,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // 🔹 REGISTRO
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

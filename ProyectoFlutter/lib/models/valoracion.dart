@@ -38,4 +38,20 @@ class Valoracion {
       if (fechaValoracion != null) "fechaValoracion": fechaValoracion,
     };
   }
+
+  Valoracion copyWith({
+    int? idValoracion,
+    int? puntuacion,
+    String? comentario,
+    int? idCita,
+    String? fechaValoracion,
+  }) {
+    return Valoracion(
+      idValoracion: idValoracion ?? this.idValoracion,
+      puntuacion: puntuacion ?? this.puntuacion,
+      comentario: comentario ?? this.comentario,
+      idCita: idCita ?? this.idCita,
+      fechaValoracion: fechaValoracion ?? this.fechaValoracion,
+    );
+  }
 }

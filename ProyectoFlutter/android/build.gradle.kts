@@ -1,3 +1,14 @@
+// ✅ Nueva versión simplificada para evitar conflictos de "classpath"
+plugins {
+    // Dejamos que Flutter gestione las versiones de Android internamente
+    id("com.android.application") apply false
+    id("com.android.library") apply false
+    id("org.jetbrains.kotlin.android") apply false
+    
+    // Solo definimos la de Google Services, que es la nueva que estamos inyectando
+    id("com.google.gms.google-services") version "4.4.1" apply false
+}
+
 allprojects {
     repositories {
         google()
@@ -15,6 +26,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

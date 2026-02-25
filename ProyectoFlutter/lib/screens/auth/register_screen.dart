@@ -18,6 +18,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final correoCtrl = TextEditingController();
   final passCtrl = TextEditingController();
 
+  final telefonoCtrl = TextEditingController();
+  final direccionCtrl = TextEditingController();
+  final alergenosCtrl = TextEditingController();
+  final observacionesCtrl = TextEditingController();
+
   bool loading = false;
   bool _obscureText = true;
 
@@ -27,12 +32,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     apellidosCtrl.dispose();
     correoCtrl.dispose();
     passCtrl.dispose();
+    telefonoCtrl.dispose();
+    direccionCtrl.dispose();
+    alergenosCtrl.dispose();
+    observacionesCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _signup() async {
     FocusScope.of(context).unfocus();
 
+    // ✅ ESTO COMPRUEBA QUE NINGÚN CAMPO OBLIGATORIO ESTÉ VACÍO
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => loading = true);
@@ -45,6 +55,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         apellidos: apellidosCtrl.text.trim(),
         correo: correoCtrl.text.trim(),
         password: passCtrl.text.trim(),
+        telefono: telefonoCtrl.text.trim(),
+        direccion: direccionCtrl.text.trim(),
+        alergenos: alergenosCtrl.text.trim(),
+        observaciones: observacionesCtrl.text.trim(),
       );
 
       if (!mounted) return;
@@ -54,8 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushReplacementNamed(context, "/login");
       } else {
         _showSnackBar(
-            "No se pudo crear la cuenta. El correo podría estar en uso.",
-            Colors.orange);
+            "No se pudo crear la cuenta. Verifica tus datos.", Colors.orange);
       }
     } catch (e) {
       if (!mounted) return;
@@ -130,9 +143,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: nombreCtrl,
                         decoration: const InputDecoration(
-                          labelText: "Nombre",
-                          prefixIcon: Icon(Icons.person_outline),
-                        ),
+                            labelText: "Nombre",
+                            prefixIcon: Icon(Icons.person_outline)),
                         validator: (v) =>
                             v!.isEmpty ? "El nombre es obligatorio" : null,
                       ),
@@ -140,9 +152,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: apellidosCtrl,
                         decoration: const InputDecoration(
-                          labelText: "Apellidos",
-                          prefixIcon: Icon(Icons.badge_outlined),
-                        ),
+                            labelText: "Apellidos",
+                            prefixIcon: Icon(Icons.badge_outlined)),
                         validator: (v) => v!.isEmpty
                             ? "Los apellidos son obligatorios"
                             : null,
@@ -152,9 +163,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: correoCtrl,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
-                          labelText: "Correo electrónico",
-                          prefixIcon: Icon(Icons.email_outlined),
-                        ),
+                            labelText: "Correo electrónico",
+                            prefixIcon: Icon(Icons.email_outlined)),
                         validator: (v) {
                           if (v!.isEmpty) return "El correo es obligatorio";
                           if (!v.contains("@")) return "Correo inválido";
@@ -179,6 +189,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         validator: (v) =>
                             v!.length < 6 ? "Mínimo 6 caracteres" : null,
                       ),
+                      const Divider(height: 40),
+
+                      // ✅ TÍTULO CAMBIADO (YA NO DICE OPCIONAL)
+                      const Text("Información de Contacto y Salud",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primary)),
+                      const SizedBox(height: 16),
+
+                      // ✅ CAMPOS CON VALIDACIÓN OBLIGATORIA
+                      TextFormField(
+                        controller: telefonoCtrl,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                            labelText: "Teléfono",
+                            prefixIcon: Icon(Icons.phone_outlined)),
+                        validator: (v) =>
+                            v!.isEmpty ? "El teléfono es obligatorio" : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: direccionCtrl,
+                        decoration: const InputDecoration(
+                            labelText: "Dirección",
+                            prefixIcon: Icon(Icons.home_outlined)),
+                        validator: (v) =>
+                            v!.isEmpty ? "La dirección es obligatoria" : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: alergenosCtrl,
+                        decoration: const InputDecoration(
+                            labelText: "Alérgenos",
+                            hintText: "Escribe 'Ninguno' si no tienes",
+                            prefixIcon: Icon(Icons.warning_amber_rounded)),
+                        validator: (v) => v!.isEmpty
+                            ? "Por favor, indica si tienes alérgenos o escribe 'Ninguno'"
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ✅ ESTE ES EL ÚNICO OPCIONAL (SIN VALIDADOR)
+                      TextFormField(
+                        controller: observacionesCtrl,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                            labelText: "Observaciones (Opcional)",
+                            prefixIcon: Icon(Icons.note_alt_outlined)),
+                      ),
+
                       const SizedBox(height: 30),
                       SizedBox(
                         width: double.infinity,

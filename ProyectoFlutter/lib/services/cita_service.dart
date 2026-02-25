@@ -15,19 +15,13 @@ class CitaService {
     }
   }
 
+  /// Usa el endpoint /citas/mis-citas que filtra por el token JWT del usuario actual.
+  /// Más eficiente y correcto que descargar todas las citas y filtrar en cliente.
   Future<List<dynamic>> getCitasByCliente(int idUsuario) async {
     try {
-      final allCitas = await getCitas();
-      return allCitas.where((c) {
-        if (c is! Map<String, dynamic>) return false;
-        final cliente = c["cliente"];
-        if (cliente is Map<String, dynamic>) {
-          final id = cliente["idUsuario"] ?? cliente["id_usuario"];
-          return id == idUsuario;
-        }
-        if (cliente is int) return cliente == idUsuario;
-        return false;
-      }).toList();
+      final response = await _api.get('/citas/mis-citas');
+      if (response.data is List) return response.data;
+      return [];
     } catch (e) {
       debugPrint("Error en getCitasByCliente: $e");
       return [];
@@ -36,7 +30,6 @@ class CitaService {
 
   Future<bool> createCita(Map<String, dynamic> data) async {
     try {
-      // ✅ El interceptor ya maneja el token automáticamente
       debugPrint("🔵 Creando cita con datos: $data");
       await _api.post('/citas', data: data);
       return true;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart'; // ✅ IMPORTACIÓN CRÍTICA
 import '../services/services_screen.dart';
 import '../booking/mis_citas_screen.dart';
 import '../account/account_screen.dart';
@@ -13,12 +14,33 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
+  final String telefonoPeluqueria = "+34600123456";
 
   final List<Widget> pages = const [
     ServicesScreen(),
     MisCitasScreen(),
     AccountScreen(),
   ];
+
+  // ✅ MÉTODO DE LLAMADA CORREGIDO
+  Future<void> _llamarPeluqueria() async {
+    final Uri url = Uri.parse('tel:$telefonoPeluqueria');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text("No se pudo abrir el marcador"),
+                backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error al intentar llamar: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,53 +50,23 @@ class _HomeShellState extends State<HomeShell> {
         index: index,
         children: pages,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: index,
-          elevation: 0,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppTheme.primary,
-          unselectedItemColor: Colors.grey.shade500,
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          type: BottomNavigationBarType.fixed,
-          onTap: (i) => setState(() => index = i),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.content_cut_rounded),
-              ),
-              activeIcon: Icon(Icons.content_cut_rounded),
-              label: "Servicios",
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.calendar_month_rounded),
-              ),
-              activeIcon: Icon(Icons.calendar_month_rounded),
-              label: "Mis Citas",
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Icon(Icons.person_rounded),
-              ),
-              activeIcon: Icon(Icons.person_rounded),
-              label: "Mi Perfil",
-            ),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _llamarPeluqueria,
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.phone, color: Colors.white),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: index,
+        selectedItemColor: AppTheme.primary,
+        onTap: (i) => setState(() => index = i),
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.content_cut_rounded), label: "Servicios"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month_rounded), label: "Mis Citas"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded), label: "Mi Perfil"),
+        ],
       ),
     );
   }

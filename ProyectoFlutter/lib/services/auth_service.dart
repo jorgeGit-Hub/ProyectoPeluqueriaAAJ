@@ -31,13 +31,44 @@ class AuthService {
     }
   }
 
+  // ✅ MÉTODO PARA LOGIN SOCIAL
+  Future<Map<String, dynamic>> socialLogin(
+      String correo, String nombre, String? fotoUrl) async {
+    try {
+      final response = await _api.post(
+        '/auth/social-login',
+        data: {"correo": correo, "nombre": nombre, "fotoUrl": fotoUrl ?? ""},
+      );
+
+      final data = response.data;
+      final String token = data["accessToken"];
+
+      await _api.setToken(token);
+
+      return {
+        "success": true,
+        "token": token,
+        "id": data["id"],
+        "nombre": data["nombre"],
+        "apellidos": data["apellidos"],
+        "correo": data["correo"],
+        "rol": data["rol"],
+      };
+    } catch (e) {
+      debugPrint("Error en social login: $e");
+      return {"success": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> register({
     required String nombre,
     required String apellidos,
     required String correo,
     required String password,
-    String? telefono,
-    String? direccion,
+    required String telefono,
+    required String direccion,
+    required String alergenos, // ✅ CAMPO OBLIGATORIO
+    String? observaciones, // ✅ CAMPO OPCIONAL
   }) async {
     try {
       final response = await _api.post(
@@ -48,8 +79,11 @@ class AuthService {
           "correo": correo,
           "contrasena": password,
           "rol": "cliente",
-          if (telefono != null) "telefono": telefono,
-          if (direccion != null) "direccion": direccion,
+          "telefono": telefono,
+          "direccion": direccion,
+          "alergenos": alergenos,
+          if (observaciones != null && observaciones.isNotEmpty)
+            "observaciones": observaciones,
         },
       );
 

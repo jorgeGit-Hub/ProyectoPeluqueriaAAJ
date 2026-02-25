@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primary = Color(0xFF6750A4);
-  static const Color pastelLavender = Color(0xFFF3E5F5);
+  static const Color primary = Color(0xFFE65100); // Naranja oscuro vibrante
+  static const Color pastelLavender =
+      Color(0xFFFFF3E0); // Fondo crema-naranja suave
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color.fromARGB(255, 164, 147, 80),
+        seedColor: primary,
         primary: primary,
         surface: pastelLavender,
         onSurface: Colors.black,
